@@ -14,7 +14,7 @@ export default function Home() {
             </h1>
 
             <p className="text-gray-600 text-lg mt-6">
-              Estoque amplo, entrega rápida e produtos das melhores marcas.
+              AQUI VOCÊ ENCONTRA Estoque amplo, entrega rápida e produtos das melhores marcas.
             </p>
 
             <button className="mt-8 bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-2xl font-semibold transition">
