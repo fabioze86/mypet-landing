@@ -27,11 +27,13 @@ export async function CatalogSection({
           name="q"
           defaultValue={q ?? ""}
           placeholder="Buscar por nome..."
+          aria-label="Buscar produtos por nome"
           style={{ flex: "1 1 220px", padding: "10px 14px", borderRadius: 10, border: `1px solid ${PALETTE.gray200}`, fontSize: 14 }}
         />
         <select
           name="brand"
           defaultValue={brand ?? ""}
+          aria-label="Filtrar por marca"
           style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${PALETTE.gray200}`, fontSize: 14, background: PALETTE.white }}
         >
           <option value="">Todas as marcas</option>
@@ -67,13 +69,13 @@ export async function CatalogSection({
           {page > 1 ? (
             <a href={buildCatalogQuery({ q, brand, page: page - 1 })} className="cat-btn">← Anterior</a>
           ) : (
-            <span className="cat-btn" style={{ opacity: 0.4, pointerEvents: "none" }}>← Anterior</span>
+            <span className="cat-btn" style={{ opacity: 0.4, pointerEvents: "none" }} aria-disabled="true">← Anterior</span>
           )}
           <span style={{ fontSize: 14, color: PALETTE.gray600 }}>Página {page} de {catalog.totalPages}</span>
           {page < catalog.totalPages ? (
             <a href={buildCatalogQuery({ q, brand, page: page + 1 })} className="cat-btn">Próxima →</a>
           ) : (
-            <span className="cat-btn" style={{ opacity: 0.4, pointerEvents: "none" }}>Próxima →</span>
+            <span className="cat-btn" style={{ opacity: 0.4, pointerEvents: "none" }} aria-disabled="true">Próxima →</span>
           )}
         </div>
       )}
