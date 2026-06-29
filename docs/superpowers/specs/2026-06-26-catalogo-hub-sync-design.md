@@ -53,9 +53,16 @@ Consequências que moldaram o design:
 - Exibição de badges **manuais** (ex.: "Escolha da My Pet", "Novidade") lidos do Hub.
 - `STATS` da landing passa a usar a contagem real de produtos.
 
+### Tratamento de preço e do "desbloqueio" (gate de leads)
+A landing hoje exibe um preço **fixo/fake** ("R$ 89,90" em todos os cards) que aparece após o
+cadastro. Como não há preço real no Hub, esse valor é removido. O **gate de cadastro é
+preservado** (é o objetivo da landing — capturar leads via `/api/leads`): o fluxo de
+"Desbloquear → modal de cadastro" continua, mas, após desbloquear, o card mostra **"Preço sob
+consulta / Solicite cotação"** em vez de um valor inventado.
+
 ### Fora de escopo (fases futuras)
 - Categorias e filtro por categoria (depende de categorizar os produtos no Hub).
-- Preços.
+- Preços reais por produto.
 - Badge "Promoção" automático (depende de definir regra e campo de promoção no Hub).
 - Badges "Mais vendidos" (depende de dados de venda) e "Mais visitados" (depende de
   integração com Google Analytics).
