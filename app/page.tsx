@@ -64,7 +64,7 @@ async function DynamicCatalog({
 }) {
   const sp = await searchParams;
   return (
-    <section style={{ maxWidth: 1200, margin: "0 auto", padding: "52px 24px 80px" }}>
+    <section id="catalogo" style={{ maxWidth: 1200, margin: "0 auto", padding: "52px 24px 80px" }}>
       <div style={{ marginBottom: 28 }}>
         <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
       </div>
@@ -295,9 +295,9 @@ export default function Home({
               <UnlockButton className="cta-primary">
                 🔓 Liberar preços agora
               </UnlockButton>
-              <button className="cta-secondary">
+              <a href="#catalogo" className="cta-secondary" style={{ textDecoration: "none", display: "inline-block" }}>
                 Ver catálogo
-              </button>
+              </a>
             </div>
 
             {/* pills */}
