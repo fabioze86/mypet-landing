@@ -3,6 +3,7 @@ import { PALETTE } from "@/lib/theme";
 import { LeadGateProvider, UnlockButton } from "@/components/lead-gate";
 import { CatalogSection } from "@/components/catalog-section";
 import { getProductCount } from "@/lib/catalog";
+import { SiteNav } from "@/components/site-nav";
 
 const STATS_STATIC = [
   { value: "10.000+", label: "Pet shops ativos" },
@@ -238,25 +239,7 @@ export default function Home({
       <LeadGateProvider>
 
         {/* NAV */}
-        <nav style={{ background: PALETTE.white, borderBottom: `1px solid ${PALETTE.gray200}`, position: "sticky", top: 0, zIndex: 100 }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 34, height: 34, background: PALETTE.pink, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 18 }}>🐾</span>
-              </div>
-              <div>
-                <div style={{ fontWeight: 900, fontSize: 15, color: PALETTE.navy, lineHeight: 1 }}>My Pet Brasil</div>
-                <div style={{ fontSize: 10, fontWeight: 600, color: PALETTE.pink, letterSpacing: "0.12em", textTransform: "uppercase" }}>Atacado B2B</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 13, color: PALETTE.gray600, fontWeight: 600 }}>Exclusivo para lojistas</span>
-              <UnlockButton className="cta-primary" style={{ padding: "10px 22px", fontSize: 14 }}>
-                Solicitar cotação
-              </UnlockButton>
-            </div>
-          </div>
-        </nav>
+        <SiteNav />
 
         {/* HERO */}
         <section style={{

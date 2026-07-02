@@ -2,6 +2,7 @@ import { badgeStyle, PALETTE } from "@/lib/theme";
 import { PriceLockSlot, UnlockButton } from "@/components/lead-gate";
 import type { CatalogProduct } from "@/lib/catalog-utils";
 import Link from "next/link";
+import { AddToCartControl } from "@/components/add-to-cart-control";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const style = product.badge ? badgeStyle(product.badge.code) : null;
@@ -37,6 +38,9 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         <UnlockButton className="unlock-btn">
           <><span>💬</span> Solicitar cotação</>
         </UnlockButton>
+        <AddToCartControl
+          product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img }}
+        />
       </div>
     </div>
   );
