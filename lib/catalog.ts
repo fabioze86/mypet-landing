@@ -4,6 +4,8 @@ import {
   mapProduct,
   pageRange,
   totalPages,
+  mainImage,
+  pickActiveBadge,
   type CatalogResult,
   type RawProductRow,
 } from "./catalog-utils";
@@ -87,4 +89,37 @@ export async function getProductCount(): Promise<number> {
     return 0;
   }
   return count ?? 0;
+}
+
+export async function getProductById(id: string) {
+  "use cache";
+  cacheLife("days");
+  cacheTag("catalog");
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at)")
+    .eq("id", id)
+    .eq("status", "active")
+    .single();
+
+  if (error || !data) {
+    console.error("[catalog] erro ao buscar produto por id:", error?.message);
+    return null;
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    sku: data.reference ?? "",
+    brand: data.brand,
+    description: data.description,
+    barcode: data.barcode,
+    weight_kg: data.weight_kg,
+    width_cm: data.width_cm,
+    height_cm: data.height_cm,
+    length_cm: data.length_cm,
+    img: mainImage(data.product_assets),
+    badge: pickActiveBadge(data.product_badges),
+  };
 }

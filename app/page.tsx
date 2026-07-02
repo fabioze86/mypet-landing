@@ -252,7 +252,7 @@ export default function Home({
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontSize: 13, color: PALETTE.gray600, fontWeight: 600 }}>Exclusivo para lojistas</span>
               <UnlockButton className="cta-primary" style={{ padding: "10px 22px", fontSize: 14 }}>
-                Liberar preços
+                Solicitar cotação
               </UnlockButton>
             </div>
           </div>
@@ -288,12 +288,12 @@ export default function Home({
             </h1>
 
             <p className="fade-up fade-up-2" style={{ fontSize: 18, color: "rgba(255,255,255,0.75)", marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", lineHeight: 1.6 }}>
-              Catálogo completo de ração, higiene, brinquedos e mais. Preços de atacado liberados instantaneamente após cadastro gratuito.
+              Catálogo completo de ração, higiene, brinquedos e mais com preços sob consulta para lojistas.
             </p>
 
             <div className="fade-up fade-up-3" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 48 }}>
               <UnlockButton className="cta-primary">
-                🔓 Liberar preços agora
+                💬 Solicitar cotação
               </UnlockButton>
               <a href="#catalogo" className="cta-secondary" style={{ textDecoration: "none", display: "inline-block" }}>
                 Ver catálogo
@@ -301,14 +301,14 @@ export default function Home({
             </div>
 
             {/* pills */}
-            <div className="fade-up" style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-              {["✅ Cadastro em 10 segundos", "📦 Estoque em tempo real", "🚚 Entrega em 48h SP", "💬 Sem atendimento necessário", "🏷️ Preços de lojista"].map((t) => (
+            <p className="fade-up" style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
+              {["✅ Cadastro em 10 segundos", "📦 Estoque em tempo real", "🚚 Entrega em 48h SP", "💬 Sem atendimento necessário", "🏷️ Preços sob consulta"].map((t) => (
                 <span key={t} style={{
                   background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.15)",
                   borderRadius: 100, padding: "6px 14px", fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600,
                 }}>{t}</span>
               ))}
-            </div>
+            </p>
           </div>
         </section>
 
@@ -359,10 +359,10 @@ export default function Home({
               Pronto para comprar no atacado?
             </h2>
             <p style={{ fontSize: 16, color: "rgba(255,255,255,0.82)", marginBottom: 32, lineHeight: 1.6 }}>
-              Mais de 10.000 pet shops já compram pela My Pet Brasil. Cadastro gratuito, sem burocracia, preços liberados na hora.
+              Mais de 10.000 pet shops já compram pela My Pet Brasil. Cadastro gratuito, sem burocracia e cotações sob consulta.
             </p>
             <UnlockButton className="cta-secondary" style={{ fontSize: 16 }}>
-              Criar conta grátis agora
+              Solicitar cotação agora
             </UnlockButton>
           </div>
         </section>

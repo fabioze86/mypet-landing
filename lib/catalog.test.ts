@@ -2,10 +2,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const calls: Record<string, unknown> = {};
 
+type QueryBuilder = {
+  select: (...args: unknown[]) => QueryBuilder;
+  eq: (...args: unknown[]) => QueryBuilder;
+  ilike: (...args: unknown[]) => QueryBuilder;
+  order: (...args: unknown[]) => QueryBuilder;
+  not: (...args: unknown[]) => QueryBuilder;
+  range: (...args: unknown[]) => Promise<{ data: unknown[]; count: number; error: null }>;
+};
+
 vi.mock("./supabase", () => {
   return {
     getHubClient: () => {
-      const builder: any = {};
+      const builder = {} as QueryBuilder;
       const chain = (name: string) => (...args: unknown[]) => {
         calls[name] = args;
         return builder;
