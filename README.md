@@ -50,15 +50,23 @@ npm install
 ```dotenv
 GOOGLE_CREDENTIALS={"type":"service_account","project_id":"..."}
 GOOGLE_SHEET_ID=id_da_planilha
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=sua_chave_anonima
+NEXT_PUBLIC_WHATSAPP_NUMBER=5511999999999
 ```
 
 `GOOGLE_CREDENTIALS` deve conter o JSON completo da conta de serviço. A planilha
 precisa ter uma aba chamada `Leads`, e o e-mail da conta de serviço deve ter
 permissão para editá-la.
 
-Não adicione `.env.local` ou credenciais ao controle de versão. Como essas
-variáveis não usam o prefixo `NEXT_PUBLIC_`, permanecem disponíveis apenas no
-ambiente do servidor.
+`NEXT_PUBLIC_WHATSAPP_NUMBER` é o número de WhatsApp (DDI+DDD+número, só dígitos)
+para onde o link da cotação consolidada é enviado. É uma variável pública (com
+prefixo `NEXT_PUBLIC_`) porque compõe o link `wa.me` no navegador.
+
+Não adicione `.env.local` ou credenciais ao controle de versão. Como
+`GOOGLE_CREDENTIALS`, `GOOGLE_SHEET_ID`, `SUPABASE_URL` e `SUPABASE_ANON_KEY`
+não usam o prefixo `NEXT_PUBLIC_`, permanecem disponíveis apenas no ambiente do
+servidor.
 
 ### Estrutura da planilha
 
