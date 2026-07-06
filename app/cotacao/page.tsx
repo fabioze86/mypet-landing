@@ -6,7 +6,10 @@ import { PALETTE } from "@/lib/theme";
 import { useCart } from "@/components/cart-provider";
 import { LeadGateProvider } from "@/components/lead-gate";
 import { SiteNav } from "@/components/site-nav";
+import { submitLead } from "@/lib/leads";
 import { buildQuoteMessage, buildWhatsAppLink } from "@/lib/whatsapp";
+
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 
 export default function CotacaoPage() {
   return (
@@ -151,27 +154,25 @@ function CotacaoContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!WHATSAPP_NUMBER) {
+      setSubmitError("Não foi possível abrir o WhatsApp agora. Tente novamente mais tarde.");
+      return;
+    }
     setSubmitting(true);
     setSubmitError("");
-    try {
-      const res = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error("Erro ao salvar");
-
-      const message = buildQuoteMessage(cart.items, form);
-      const phoneNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
-      window.open(buildWhatsAppLink(phoneNumber, message), "_blank");
-
-      clear();
-      setSubmitted(true);
-    } catch {
-      setSubmitError("Não foi possível enviar sua cotação. Tente novamente.");
-    } finally {
+    const error = await submitLead(form);
+    if (error) {
+      setSubmitError(error);
       setSubmitting(false);
+      return;
     }
+
+    const message = buildQuoteMessage(cart.items, form);
+    window.open(buildWhatsAppLink(WHATSAPP_NUMBER, message), "_blank");
+
+    clear();
+    setSubmitted(true);
+    setSubmitting(false);
   };
 
   return (

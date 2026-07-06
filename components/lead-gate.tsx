@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 import { PALETTE } from "@/lib/theme";
+import { submitLead } from "@/lib/leads";
 
 type LeadGateValue = { openModal: () => void };
 const LeadGateContext = createContext<LeadGateValue | null>(null);
@@ -24,19 +25,13 @@ export function LeadGateProvider({ children }: { children: React.ReactNode }) {
     e.preventDefault();
     setSubmitting(true);
     setSubmitError("");
-    try {
-      const res = await fetch("/api/leads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (!res.ok) throw new Error("Erro ao salvar");
+    const error = await submitLead(form);
+    if (error) {
+      setSubmitError(error);
+    } else {
       setShowModal(false);
-    } catch {
-      setSubmitError("Não foi possível salvar seu cadastro. Tente novamente.");
-    } finally {
-      setSubmitting(false);
     }
+    setSubmitting(false);
   };
 
   return (
