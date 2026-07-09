@@ -18,6 +18,19 @@ Princípios da fundação:
 - permitir a troca do Google Sheets por um CRM ou banco sem reescrever a UI;
 - observar conversão e falhas sem coletar dados além do necessário.
 
+## 1.1 Estrutura multi-cliente
+
+O projeto é um monorepo pnpm: `apps/mypet` e `apps/distribuidora` são apps Next.js
+independentes (deploy próprio, domínio próprio), compartilhando `packages/core`
+(catálogo, carrinho, leads, tema, componentes React). Cada app define sua marca,
+paleta e canal de catálogo em `client.config.ts`. Visibilidade de produto por app é
+controlada pela tabela `product_channel_links` do Supabase `hub_catalogo`
+(campo `channel`), populada fora deste repositório.
+
+Variáveis de ambiente por app (`.env.local`, não versionado):
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_WHATSAPP_NUMBER`,
+`GOOGLE_CREDENTIALS`, `GOOGLE_SHEET_ID`.
+
 ## 2. Estado atual
 
 ```mermaid
