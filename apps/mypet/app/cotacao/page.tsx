@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PALETTE } from "@/lib/theme";
-import { useCart } from "@/components/cart-provider";
-import { LeadGateProvider } from "@/components/lead-gate";
-import { SiteNav } from "@/components/site-nav";
-import { submitLead } from "@/lib/leads";
-import { buildQuoteMessage, buildWhatsAppLink } from "@/lib/whatsapp";
+import { PALETTE } from "@mypet/core/theme";
+import { useCart } from "@mypet/core/components/cart-provider";
+import { LeadGateProvider } from "@mypet/core/components/lead-gate";
+import { SiteNav } from "@mypet/core/components/site-nav";
+import { submitLead } from "@mypet/core/leads";
+import { buildQuoteMessage, buildWhatsAppLink } from "@mypet/core/whatsapp";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 

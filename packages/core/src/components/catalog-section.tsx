@@ -1,8 +1,8 @@
-import { getCatalog, getBrands } from "@/lib/catalog";
-import { parsePage } from "@/lib/catalog-utils";
-import { buildCatalogQuery } from "@/lib/querystring";
-import { ProductCard } from "@/components/product-card";
-import { PALETTE } from "@/lib/theme";
+import { getCatalog, getBrands } from "../catalog";
+import { parsePage } from "../catalog-utils";
+import { buildCatalogQuery } from "../querystring";
+import { ProductCard } from "./product-card";
+import { PALETTE } from "../theme";
 
 export async function CatalogSection({
   q,

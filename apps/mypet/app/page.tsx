@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import { PALETTE } from "@/lib/theme";
-import { LeadGateProvider, UnlockButton } from "@/components/lead-gate";
-import { CatalogSection } from "@/components/catalog-section";
-import { getProductCount } from "@/lib/catalog";
-import { SiteNav } from "@/components/site-nav";
+import { PALETTE } from "@mypet/core/theme";
+import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
+import { CatalogSection } from "@mypet/core/components/catalog-section";
+import { getProductCount } from "@mypet/core/catalog";
+import { SiteNav } from "@mypet/core/components/site-nav";
 
 const STATS_STATIC = [
   { value: "10.000+", label: "Pet shops ativos" },

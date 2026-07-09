@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PALETTE } from "@/lib/theme";
-import { useCart } from "@/components/cart-provider";
-import type { CartItem } from "@/lib/cart";
+import { PALETTE } from "../theme";
+import { useCart } from "./cart-provider";
+import type { CartItem } from "../cart";
 
 export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }) {
   const { addItem } = useCart();

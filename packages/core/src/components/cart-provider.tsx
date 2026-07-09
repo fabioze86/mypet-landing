@@ -8,7 +8,7 @@ import {
   updateQty as updateQtyPure,
   type Cart,
   type CartItem,
-} from "@/lib/cart";
+} from "../cart";
 
 const STORAGE_KEY = "mypet_cart";
 const CART_EVENT = "mypet_cart_updated";

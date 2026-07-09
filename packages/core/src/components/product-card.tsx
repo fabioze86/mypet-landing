@@ -1,8 +1,8 @@
-import { badgeStyle, PALETTE } from "@/lib/theme";
-import { PriceLockSlot, UnlockButton } from "@/components/lead-gate";
-import type { CatalogProduct } from "@/lib/catalog-utils";
+import { badgeStyle, PALETTE } from "../theme";
+import { PriceLockSlot, UnlockButton } from "./lead-gate";
+import type { CatalogProduct } from "../catalog-utils";
 import Link from "next/link";
-import { AddToCartControl } from "@/components/add-to-cart-control";
+import { AddToCartControl } from "./add-to-cart-control";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const style = product.badge ? badgeStyle(product.badge.code) : null;

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { PALETTE } from "@/lib/theme";
-import { useCart } from "@/components/cart-provider";
+import { PALETTE } from "../theme";
+import { useCart } from "./cart-provider";
 
 export function CartBadge() {
   const { totalItems } = useCart();

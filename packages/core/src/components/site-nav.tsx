@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { PALETTE } from "@/lib/theme";
-import { UnlockButton } from "@/components/lead-gate";
-import { CartBadge } from "@/components/cart-badge";
+import { PALETTE } from "../theme";
+import { UnlockButton } from "./lead-gate";
+import { CartBadge } from "./cart-badge";
 
 export function SiteNav() {
   return (

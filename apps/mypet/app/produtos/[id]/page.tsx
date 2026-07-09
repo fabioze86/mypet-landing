@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { PALETTE, badgeStyle } from "@/lib/theme";
-import { getProductById } from "@/lib/catalog";
-import { LeadGateProvider, UnlockButton } from "@/components/lead-gate";
+import { PALETTE, badgeStyle } from "@mypet/core/theme";
+import { getProductById } from "@mypet/core/catalog";
+import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SiteNav } from "@/components/site-nav";
-import { AddToCartControl } from "@/components/add-to-cart-control";
+import { SiteNav } from "@mypet/core/components/site-nav";
+import { AddToCartControl } from "@mypet/core/components/add-to-cart-control";
 
 export async function generateMetadata({
   params,

@@ -1,0 +1,32 @@
+{
+  "name": "@mypet/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./catalog": "./src/catalog.ts",
+    "./catalog-utils": "./src/catalog-utils.ts",
+    "./cart": "./src/cart.ts",
+    "./leads": "./src/leads.ts",
+    "./whatsapp": "./src/whatsapp.ts",
+    "./querystring": "./src/querystring.ts",
+    "./supabase": "./src/supabase.ts",
+    "./theme": "./src/theme.ts",
+    "./components/*": "./src/components/*.tsx"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.2",
+    "googleapis": "^173.0.0"
+  },
+  "peerDependencies": {
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.9"
+  }
+}

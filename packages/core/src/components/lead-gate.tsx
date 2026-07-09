@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import { PALETTE } from "@/lib/theme";
-import { submitLead } from "@/lib/leads";
+import { PALETTE } from "../theme";
+import { submitLead } from "../leads";
 
 type LeadGateValue = { openModal: () => void };
 const LeadGateContext = createContext<LeadGateValue | null>(null);
