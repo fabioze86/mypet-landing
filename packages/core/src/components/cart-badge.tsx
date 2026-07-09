@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { PALETTE } from "../theme";
+import { useClientConfig } from "../theme";
 import { useCart } from "./cart-provider";
 
 export function CartBadge() {
   const { totalItems } = useCart();
+  const { palette } = useClientConfig();
 
   return (
     <Link
@@ -23,7 +24,7 @@ export function CartBadge() {
         width: 38,
         height: 38,
         borderRadius: "50%",
-        background: PALETTE.gray100,
+        background: palette.gray100,
         textDecoration: "none",
         fontSize: 18,
       }}
@@ -39,8 +40,8 @@ export function CartBadge() {
             height: 18,
             padding: "0 4px",
             borderRadius: 100,
-            background: PALETTE.pink,
-            color: PALETTE.white,
+            background: palette.pink,
+            color: palette.white,
             fontSize: 11,
             fontWeight: 800,
             display: "flex",

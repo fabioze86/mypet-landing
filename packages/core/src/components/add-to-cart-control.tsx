@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { PALETTE } from "../theme";
+import { useClientConfig } from "../theme";
 import { useCart } from "./cart-provider";
 import type { CartItem } from "../cart";
 
 export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }) {
   const { addItem } = useCart();
+  const { palette } = useClientConfig();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
@@ -19,21 +20,21 @@ export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", border: `1.5px solid ${PALETTE.gray200}`, borderRadius: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", border: `1.5px solid ${palette.gray200}`, borderRadius: 8 }}>
         <button
           type="button"
           onClick={() => setQty((q) => Math.max(1, q - 1))}
           aria-label="Diminuir quantidade"
-          style={{ width: 28, height: 28, border: "none", background: "transparent", cursor: "pointer", fontSize: 16, color: PALETTE.gray600 }}
+          style={{ width: 28, height: 28, border: "none", background: "transparent", cursor: "pointer", fontSize: 16, color: palette.gray600 }}
         >
           −
         </button>
-        <span style={{ minWidth: 24, textAlign: "center", fontSize: 13, fontWeight: 700, color: PALETTE.navy }}>{qty}</span>
+        <span style={{ minWidth: 24, textAlign: "center", fontSize: 13, fontWeight: 700, color: palette.navy }}>{qty}</span>
         <button
           type="button"
           onClick={() => setQty((q) => q + 1)}
           aria-label="Aumentar quantidade"
-          style={{ width: 28, height: 28, border: "none", background: "transparent", cursor: "pointer", fontSize: 16, color: PALETTE.gray600 }}
+          style={{ width: 28, height: 28, border: "none", background: "transparent", cursor: "pointer", fontSize: 16, color: palette.gray600 }}
         >
           +
         </button>
@@ -44,8 +45,8 @@ export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }
         style={{
           flex: 1,
           padding: "8px 0",
-          background: added ? PALETTE.green : PALETTE.gray100,
-          color: added ? PALETTE.white : PALETTE.navy,
+          background: added ? palette.green : palette.gray100,
+          color: added ? palette.white : palette.navy,
           border: "none",
           borderRadius: 8,
           fontFamily: "Nunito, sans-serif",

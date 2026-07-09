@@ -1,11 +1,14 @@
-import { badgeStyle, PALETTE } from "../theme";
+"use client";
+
+import { badgeStyle, useClientConfig } from "../theme";
 import { PriceLockSlot, UnlockButton } from "./lead-gate";
 import type { CatalogProduct } from "../catalog-utils";
 import Link from "next/link";
 import { AddToCartControl } from "./add-to-cart-control";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
-  const style = product.badge ? badgeStyle(product.badge.code) : null;
+  const { palette } = useClientConfig();
+  const style = product.badge ? badgeStyle(product.badge.code, palette) : null;
   return (
     <div className="product-card">
       <Link href={`/produtos/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
@@ -17,18 +20,18 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             </span>
           )}
           {product.brand && (
-            <span style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,255,255,0.92)", color: PALETTE.gray600, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 100, letterSpacing: "0.04em" }}>
+            <span style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,255,255,0.92)", color: palette.gray600, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 100, letterSpacing: "0.04em" }}>
               {product.brand.toUpperCase()}
             </span>
           )}
         </div>
         <div style={{ padding: "14px 14px 0" }}>
           {product.sku && (
-            <p style={{ fontSize: 10, color: PALETTE.gray400, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>
+            <p style={{ fontSize: 10, color: palette.gray400, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>
               SKU: {product.sku}
             </p>
           )}
-          <h3 style={{ fontSize: 14, fontWeight: 800, color: PALETTE.navy, lineHeight: 1.35, marginBottom: 14, minHeight: 38 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 800, color: palette.navy, lineHeight: 1.35, marginBottom: 14, minHeight: 38 }}>
             {product.name}
           </h3>
         </div>

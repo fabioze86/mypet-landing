@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { PALETTE } from "@mypet/core/theme";
 import { useCart } from "@mypet/core/components/cart-provider";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { submitLead } from "@mypet/core/leads";
 import { buildQuoteMessage, buildWhatsAppLink } from "@mypet/core/whatsapp";
+import { clientConfig } from "@/client.config";
+
+const { palette: PALETTE } = clientConfig;
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 

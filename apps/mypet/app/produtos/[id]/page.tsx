@@ -1,11 +1,14 @@
 import { Suspense } from "react";
-import { PALETTE, badgeStyle } from "@mypet/core/theme";
+import { badgeStyle } from "@mypet/core/theme";
 import { getProductById } from "@mypet/core/catalog";
 import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { AddToCartControl } from "@mypet/core/components/add-to-cart-control";
+import { clientConfig } from "@/client.config";
+
+const { palette: PALETTE } = clientConfig;
 
 export async function generateMetadata({
   params,
@@ -13,12 +16,12 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = await getProductById(id, "mypetbrasil");
-  if (!product) return { title: "Produto não encontrado — My Pet Brasil" };
+  const product = await getProductById(id, clientConfig.catalogChannel);
+  if (!product) return { title: `Produto não encontrado — ${clientConfig.name}` };
 
   return {
-    title: `${product.name} — My Pet Brasil Atacado`,
-    description: `Confira os detalhes de ${product.name} no atacado B2B da My Pet Brasil. Solicite cotação sem compromisso.`,
+    title: `${product.name} — ${clientConfig.name} Atacado`,
+    description: `Confira os detalhes de ${product.name} no atacado B2B da ${clientConfig.name}. Solicite cotação sem compromisso.`,
   };
 }
 
@@ -175,10 +178,10 @@ export default function ProductPage({
         <footer style={{ background: PALETTE.navyDark, padding: "32px 24px" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 20 }}>🐾</span>
-              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>My Pet Brasil — Atacado B2B</span>
+              <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
+              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
             </div>
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 My Pet Brasil. Todos os direitos reservados.</span>
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
           </div>
         </footer>
       </LeadGateProvider>
@@ -188,13 +191,13 @@ export default function ProductPage({
 
 async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getProductById(id, "mypetbrasil");
+  const product = await getProductById(id, clientConfig.catalogChannel);
 
   if (!product) {
     notFound();
   }
 
-  const styleBadge = product.badge ? badgeStyle(product.badge.code) : null;
+  const styleBadge = product.badge ? badgeStyle(product.badge.code, PALETTE) : null;
 
   return (
     <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>

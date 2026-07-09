@@ -11,7 +11,7 @@
     "./whatsapp": "./src/whatsapp.ts",
     "./querystring": "./src/querystring.ts",
     "./supabase": "./src/supabase.ts",
-    "./theme": "./src/theme.ts",
+    "./theme": "./src/theme.tsx",
     "./components/*": "./src/components/*.tsx"
   },
   "scripts": {

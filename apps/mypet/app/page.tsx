@@ -1,9 +1,12 @@
 import { Suspense } from "react";
-import { PALETTE } from "@mypet/core/theme";
+import type { Palette } from "@mypet/core/theme";
 import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { getProductCount } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { clientConfig } from "@/client.config";
+
+const { palette: PALETTE } = clientConfig;
 
 const STATS_STATIC = [
   { value: "10.000+", label: "Pet shops ativos" },
@@ -12,8 +15,8 @@ const STATS_STATIC = [
   { value: "R$0", label: "Taxa de cadastro" },
 ];
 
-async function StatsCount() {
-  const total = await getProductCount("mypetbrasil");
+async function StatsCount({ channel }: { channel: string }) {
+  const total = await getProductCount(channel);
   const totalLabel = `${total.toLocaleString("pt-BR")}+`;
   const STATS = [
     { value: "10.000+", label: "Pet shops ativos" },
@@ -41,27 +44,35 @@ async function CatalogContent({
   q,
   brand,
   page,
+  channel,
+  palette,
 }: {
   q?: string;
   brand?: string;
   page?: string;
+  channel: string;
+  palette: Palette;
 }) {
-  const total = await getProductCount("mypetbrasil");
+  const total = await getProductCount(channel);
   const totalLabel = `${total.toLocaleString("pt-BR")}+`;
   return (
     <>
       <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
         Mais de {totalLabel} produtos disponíveis no atacado
       </p>
-      <CatalogSection q={q} brand={brand} page={page} />
+      <CatalogSection q={q} brand={brand} page={page} channel={channel} palette={palette} />
     </>
   );
 }
 
 async function DynamicCatalog({
   searchParams,
+  channel,
+  palette,
 }: {
   searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
+  channel: string;
+  palette: Palette;
 }) {
   const sp = await searchParams;
   return (
@@ -70,7 +81,7 @@ async function DynamicCatalog({
         <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
       </div>
       <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando catálogo…</p>}>
-        <CatalogContent q={sp.q} brand={sp.brand} page={sp.page} />
+        <CatalogContent q={sp.q} brand={sp.brand} page={sp.page} channel={channel} palette={palette} />
       </Suspense>
     </section>
   );
@@ -313,7 +324,7 @@ export default function Home({
                   ))}
                 </>
               }>
-                <StatsCount />
+                <StatsCount channel={clientConfig.catalogChannel} />
               </Suspense>
             </div>
           </div>
@@ -328,7 +339,7 @@ export default function Home({
             <p style={{ color: PALETTE.gray600 }}>Carregando catálogo…</p>
           </section>
         }>
-          <DynamicCatalog searchParams={searchParams} />
+          <DynamicCatalog searchParams={searchParams} channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
         </Suspense>
 
         {/* CTA BANNER */}
@@ -354,10 +365,10 @@ export default function Home({
         <footer style={{ background: PALETTE.navyDark, padding: "32px 24px" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 20 }}>🐾</span>
-              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>My Pet Brasil — Atacado B2B</span>
+              <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
+              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
             </div>
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 My Pet Brasil. Todos os direitos reservados.</span>
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
           </div>
         </footer>
 
