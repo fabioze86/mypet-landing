@@ -17,15 +17,17 @@ export async function queryCatalog(params: {
   q?: string;
   brand?: string;
   page: number;
+  channel: string;
 }): Promise<CatalogResult> {
-  const { q, brand, page } = params;
+  const { q, brand, page, channel } = params;
   const supabase = getHubClient();
   const { from, to } = pageRange(page);
 
   let query = supabase
     .from("products")
-    .select(CATALOG_SELECT, { count: "exact" })
+    .select(`${CATALOG_SELECT}, product_channel_links!inner(channel)`, { count: "exact" })
     .eq("status", "active")
+    .eq("product_channel_links.channel", channel)
     .order("name", { ascending: true });
 
   if (q) query = query.ilike("name", `%${q}%`);
@@ -47,6 +49,7 @@ export async function getCatalog(params: {
   q?: string;
   brand?: string;
   page: number;
+  channel: string;
 }): Promise<CatalogResult> {
   "use cache";
   cacheLife("days");
@@ -54,15 +57,16 @@ export async function getCatalog(params: {
   return queryCatalog(params);
 }
 
-export async function getBrands(): Promise<string[]> {
+export async function getBrands(channel: string): Promise<string[]> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
   const supabase = getHubClient();
   const { data, error } = await supabase
     .from("products")
-    .select("brand")
+    .select("brand, product_channel_links!inner(channel)")
     .eq("status", "active")
+    .eq("product_channel_links.channel", channel)
     .not("brand", "is", null);
   if (error) {
     console.error("[catalog] erro ao consultar marcas:", error.message);
@@ -75,15 +79,16 @@ export async function getBrands(): Promise<string[]> {
   return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
-export async function getProductCount(): Promise<number> {
+export async function getProductCount(channel: string): Promise<number> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
   const supabase = getHubClient();
   const { count, error } = await supabase
     .from("products")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "active");
+    .select("id, product_channel_links!inner(channel)", { count: "exact", head: true })
+    .eq("status", "active")
+    .eq("product_channel_links.channel", channel);
   if (error) {
     console.error("[catalog] erro ao contar produtos:", error.message);
     return 0;
@@ -91,16 +96,19 @@ export async function getProductCount(): Promise<number> {
   return count ?? 0;
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string, channel: string) {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
   const supabase = getHubClient();
   const { data, error } = await supabase
     .from("products")
-    .select("id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at)")
+    .select(
+      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_links!inner(channel)"
+    )
     .eq("id", id)
     .eq("status", "active")
+    .eq("product_channel_links.channel", channel)
     .single();
 
   if (error || !data) {

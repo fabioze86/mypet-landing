@@ -15,8 +15,8 @@ export async function CatalogSection({
 }) {
   const page = parsePage(pageRaw);
   const [catalog, brands] = await Promise.all([
-    getCatalog({ q, brand, page }),
-    getBrands(),
+    getCatalog({ q, brand, page, channel: "mypetbrasil" }),
+    getBrands("mypetbrasil"),
   ]);
 
   return (

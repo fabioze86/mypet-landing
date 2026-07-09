@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = await getProductById(id);
+  const product = await getProductById(id, "mypetbrasil");
   if (!product) return { title: "Produto não encontrado — My Pet Brasil" };
 
   return {
@@ -188,7 +188,7 @@ export default function ProductPage({
 
 async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getProductById(id);
+  const product = await getProductById(id, "mypetbrasil");
 
   if (!product) {
     notFound();

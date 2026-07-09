@@ -13,7 +13,7 @@ const STATS_STATIC = [
 ];
 
 async function StatsCount() {
-  const total = await getProductCount();
+  const total = await getProductCount("mypetbrasil");
   const totalLabel = `${total.toLocaleString("pt-BR")}+`;
   const STATS = [
     { value: "10.000+", label: "Pet shops ativos" },
@@ -46,7 +46,7 @@ async function CatalogContent({
   brand?: string;
   page?: string;
 }) {
-  const total = await getProductCount();
+  const total = await getProductCount("mypetbrasil");
   const totalLabel = `${total.toLocaleString("pt-BR")}+`;
   return (
     <>
