@@ -8,6 +8,7 @@
     "./catalog-utils": "./src/catalog-utils.ts",
     "./cart": "./src/cart.ts",
     "./leads": "./src/leads.ts",
+    "./leads-server": "./src/leads-server.ts",
     "./whatsapp": "./src/whatsapp.ts",
     "./querystring": "./src/querystring.ts",
     "./supabase": "./src/supabase.ts",
