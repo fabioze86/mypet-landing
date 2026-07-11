@@ -42,7 +42,7 @@ export async function queryCatalog(params: {
     return { items: [], total: 0, page, totalPages: 1 };
   }
 
-  const items = ((data as RawProductRow[]) ?? []).map((row) => mapProduct(row));
+  const items = ((data as unknown as RawProductRow[]) ?? []).map((row) => mapProduct(row));
   const total = count ?? 0;
   return { items, total, page, totalPages: totalPages(total) };
 }
