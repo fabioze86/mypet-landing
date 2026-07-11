@@ -4,6 +4,7 @@ import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { getProductCount } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { AssistantSearch } from "@mypet/core/components/assistant-search";
 import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
@@ -305,6 +306,11 @@ export default function Home({
             </p>
           </div>
         </section>
+
+        {/* ASSISTENTE DE BUSCA COM IA */}
+        <div style={{ padding: "0 24px", marginTop: -32, position: "relative", zIndex: 1 }}>
+          <AssistantSearch channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
+        </div>
 
         {/* STATS */}
         <section style={{ background: PALETTE.white, borderBottom: `1px solid ${PALETTE.gray200}` }}>
