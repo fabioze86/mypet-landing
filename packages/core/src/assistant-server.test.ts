@@ -67,6 +67,20 @@ describe("parseAssistantRequest", () => {
     });
     expect(result).toEqual({ ok: false, message: "Papel de mensagem inválido." });
   });
+
+  it("rejeita mais de 20 mensagens", () => {
+    const messages = Array.from({ length: 21 }, (_, i) => ({ role: "user" as const, content: `msg ${i}` }));
+    const result = parseAssistantRequest({ channel: "mypetbrasil", messages });
+    expect(result).toEqual({ ok: false, message: "Conversa muito longa. Recarregue a página para recomeçar." });
+  });
+
+  it("rejeita mensagem com mais de 2000 caracteres", () => {
+    const result = parseAssistantRequest({
+      channel: "mypetbrasil",
+      messages: [{ role: "user", content: "a".repeat(2001) }],
+    });
+    expect(result).toEqual({ ok: false, message: "Mensagem muito longa. Tente ser mais direto." });
+  });
 });
 
 describe("buildAssistantTools", () => {
@@ -90,11 +104,13 @@ describe("buildAssistantTools", () => {
 
     const foundProducts = new Map();
     const profileState = { guess: null };
+    const selectionState: { ids: string[] | null } = { ids: null };
     const tools = buildAssistantTools({
       channel: "mypetbrasil",
       categories: [{ id: "cat-1", parentId: null, slug: "banho-tosa", name: "Banho & Tosa", level: 1 }],
       foundProducts,
       profileState,
+      selectionState,
     });
 
     const output = await tools.buscar_produtos.execute(
@@ -118,11 +134,13 @@ describe("buildAssistantTools", () => {
 
   it("registrar_perfil guarda a conclusão no profileState", async () => {
     const profileState: { guess: unknown } = { guess: null };
+    const selectionState: { ids: string[] | null } = { ids: null };
     const tools = buildAssistantTools({
       channel: "mypetbrasil",
       categories: [],
       foundProducts: new Map(),
       profileState: profileState as never,
+      selectionState,
     });
 
     await tools.registrar_perfil.execute(
@@ -131,6 +149,24 @@ describe("buildAssistantTools", () => {
     );
 
     expect(profileState.guess).toEqual({ perfil: "banho_tosa", confianca: "alta" });
+  });
+
+  it("recomendar_produtos guarda os IDs selecionados no selectionState", async () => {
+    const selectionState: { ids: string[] | null } = { ids: null };
+    const tools = buildAssistantTools({
+      channel: "mypetbrasil",
+      categories: [],
+      foundProducts: new Map(),
+      profileState: { guess: null },
+      selectionState,
+    });
+
+    await tools.recomendar_produtos.execute(
+      { productIds: ["p1", "p2"] },
+      { toolCallId: "t3", messages: [] } as never,
+    );
+
+    expect(selectionState.ids).toEqual(["p1", "p2"]);
   });
 });
 
@@ -213,5 +249,71 @@ describe("POST /api/assistant", () => {
       ],
       profileGuess: { label: "banho_tosa", confidence: "alta" },
     });
+  });
+
+  it("usa a ordem escolhida por recomendar_produtos em vez da ordem de insercao", async () => {
+    (getCategories as Mock).mockResolvedValue([]);
+    (getCatalog as Mock)
+      .mockResolvedValueOnce({
+        items: [
+          { id: "p1", name: "Produto 1", sku: "1", brand: "X", img: "https://img/1", badge: null, category: null },
+        ],
+        total: 1,
+        page: 1,
+        totalPages: 1,
+      })
+      .mockResolvedValueOnce({
+        items: [
+          { id: "p2", name: "Produto 2", sku: "2", brand: "Y", img: "https://img/2", badge: null, category: null },
+        ],
+        total: 1,
+        page: 1,
+        totalPages: 1,
+      });
+
+    (generateText as Mock).mockImplementation(async ({ tools }) => {
+      await tools.buscar_produtos.execute({ query: "produto 1" }, { toolCallId: "t1", messages: [] } as never);
+      await tools.buscar_produtos.execute({ query: "produto 2" }, { toolCallId: "t2", messages: [] } as never);
+      await tools.recomendar_produtos.execute(
+        { productIds: ["p2", "p1"] },
+        { toolCallId: "t3", messages: [] } as never,
+      );
+      return { text: "Aqui estão as opções." };
+    });
+
+    const res = await POST(
+      makeRequest({ channel: "mypetbrasil", messages: [{ role: "user", content: "quero opcoes" }] }),
+    );
+
+    const json = await res.json();
+    expect(json.products.map((p: { id: string }) => p.id)).toEqual(["p2", "p1"]);
+  });
+
+  it("ignora IDs de recomendar_produtos que nao vieram de uma busca real", async () => {
+    (getCategories as Mock).mockResolvedValue([]);
+    (getCatalog as Mock).mockResolvedValue({
+      items: [
+        { id: "p1", name: "Produto 1", sku: "1", brand: "X", img: "https://img/1", badge: null, category: null },
+      ],
+      total: 1,
+      page: 1,
+      totalPages: 1,
+    });
+
+    (generateText as Mock).mockImplementation(async ({ tools }) => {
+      await tools.buscar_produtos.execute({ query: "produto 1" }, { toolCallId: "t1", messages: [] } as never);
+      await tools.recomendar_produtos.execute(
+        { productIds: ["p1", "p999-inventado"] },
+        { toolCallId: "t2", messages: [] } as never,
+      );
+      return { text: "Aqui está." };
+    });
+
+    const res = await POST(
+      makeRequest({ channel: "mypetbrasil", messages: [{ role: "user", content: "oi" }] }),
+    );
+
+    const json = await res.json();
+    expect(json.products.map((p: { id: string }) => p.id)).toEqual(["p1"]);
   });
 });

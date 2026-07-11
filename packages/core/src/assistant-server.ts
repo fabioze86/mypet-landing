@@ -7,6 +7,9 @@ import type { CatalogProduct } from "./catalog-utils";
 
 export type AssistantMessage = { role: "user" | "assistant"; content: string };
 
+const MAX_MESSAGES = 20;
+const MAX_MESSAGE_LENGTH = 2000;
+
 type ProfileGuess = {
   perfil: "pet_shop" | "banho_tosa" | "outro";
   confianca: "alta" | "baixa";
@@ -29,6 +32,9 @@ export function parseAssistantRequest(
   if (!Array.isArray(messages) || messages.length === 0) {
     return { ok: false, message: "Nenhuma mensagem informada." };
   }
+  if (messages.length > MAX_MESSAGES) {
+    return { ok: false, message: "Conversa muito longa. Recarregue a página para recomeçar." };
+  }
 
   const parsedMessages: AssistantMessage[] = [];
   for (const raw of messages) {
@@ -41,6 +47,9 @@ export function parseAssistantRequest(
     }
     if (typeof content !== "string" || !content.trim()) {
       return { ok: false, message: "Mensagem vazia." };
+    }
+    if (content.length > MAX_MESSAGE_LENGTH) {
+      return { ok: false, message: "Mensagem muito longa. Tente ser mais direto." };
     }
     parsedMessages.push({ role, content });
   }
@@ -66,6 +75,7 @@ Regras obrigatórias:
 3. Se não tiver confiança suficiente sobre o perfil, registre confianca "baixa" e inclua de 2 a 3 opções curtas em "opcoes" para o visitante escolher (ex.: "Sou pet shop", "Sou banho e tosa", "Só estou pesquisando").
 4. Categorias com "(PRO)" no nome são de uso profissional em banho e tosa. A categoria "Montagem de Loja" costuma indicar pet shop novo.
 5. Responda sempre em português, em 1 a 3 frases, direto ao ponto.
+6. Antes de terminar, se sua resposta menciona ou recomenda produtos, chame a ferramenta "recomendar_produtos" com os IDs exatos (só os que vieram de "buscar_produtos" nesta conversa) que devem aparecer para o visitante, na ordem de relevância. Não chame essa ferramenta se você não estiver recomendando nenhum produto específico.
 
 Árvore de categorias do catálogo (formato "slug: caminho completo"):
 ${formatCategories(categories)}`;
@@ -76,9 +86,16 @@ type BuildToolsOptions = {
   categories: CategoryNode[];
   foundProducts: Map<string, CatalogProduct>;
   profileState: { guess: ProfileGuess | null };
+  selectionState: { ids: string[] | null };
 };
 
-export function buildAssistantTools({ channel, categories, foundProducts, profileState }: BuildToolsOptions) {
+export function buildAssistantTools({
+  channel,
+  categories,
+  foundProducts,
+  profileState,
+  selectionState,
+}: BuildToolsOptions) {
   const categoryIdBySlug = new Map(categories.map((c) => [c.slug, c.id]));
 
   return {
@@ -127,6 +144,21 @@ export function buildAssistantTools({ channel, categories, foundProducts, profil
         return { registrado: true };
       },
     }),
+    recomendar_produtos: tool({
+      description:
+        "Define quais produtos (dentre os já encontrados por buscar_produtos) devem aparecer para o visitante, na ordem de relevância.",
+      inputSchema: z.object({
+        productIds: z
+          .array(z.string())
+          .min(1)
+          .max(8)
+          .describe("IDs de produtos retornados por buscar_produtos nesta conversa, do mais para o menos relevante"),
+      }),
+      execute: async ({ productIds }) => {
+        selectionState.ids = productIds;
+        return { registrado: true };
+      },
+    }),
   };
 }
 
@@ -145,7 +177,8 @@ export async function POST(req: NextRequest) {
   const categories = await getCategories();
   const foundProducts = new Map<string, CatalogProduct>();
   const profileState: { guess: ProfileGuess | null } = { guess: null };
-  const tools = buildAssistantTools({ channel, categories, foundProducts, profileState });
+  const selectionState: { ids: string[] | null } = { ids: null };
+  const tools = buildAssistantTools({ channel, categories, foundProducts, profileState, selectionState });
 
   let result: { text: string };
   try {
@@ -170,6 +203,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const selectedProducts = (selectionState.ids ?? [])
+    .map((id) => foundProducts.get(id))
+    .filter((p): p is CatalogProduct => Boolean(p));
+
   const response: {
     ok: true;
     reply: string;
@@ -179,7 +216,7 @@ export async function POST(req: NextRequest) {
   } = {
     ok: true,
     reply: result.text,
-    products: [...foundProducts.values()].slice(0, 8),
+    products: selectedProducts.length > 0 ? selectedProducts.slice(0, 8) : [...foundProducts.values()].slice(0, 8),
   };
 
   if (profileState.guess) {

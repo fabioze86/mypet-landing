@@ -27,7 +27,6 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
     if (!trimmed || loading) return;
 
     const nextMessages: AssistantMessage[] = [...messages, { role: "user", content: trimmed }];
-    setMessages(nextMessages);
     setLastUserMessage(trimmed);
     setInput("");
     setError(null);
