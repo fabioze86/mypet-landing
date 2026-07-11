@@ -29,7 +29,9 @@ controlada pela tabela `product_channel_links` do Supabase `hub_catalogo`
 
 Variáveis de ambiente por app (`.env.local`, não versionado):
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_WHATSAPP_NUMBER`,
-`GOOGLE_CREDENTIALS`, `GOOGLE_SHEET_ID`.
+`GOOGLE_CREDENTIALS`, `GOOGLE_SHEET_ID`, `AI_PROVIDER`, `AI_MODEL`,
+e a chave do provedor de IA escolhido (`GOOGLE_GENERATIVE_AI_API_KEY`,
+`OPENAI_API_KEY` ou `ANTHROPIC_API_KEY`).
 
 ## 2. Estado atual
 
@@ -223,6 +225,18 @@ API externa, com cache e revalidação definidos conforme a frequência de
 atualização.
 
 Preços protegidos não devem ser enviados ao navegador antes da autorização.
+
+### Assistente de compras com IA
+
+O bloco de destaque na home (`AssistantSearch`) chama `POST /api/assistant`
+(`packages/core/src/assistant-server.ts`), que usa a Vercel AI SDK com tool
+use sobre o catálogo real: a IA só pode citar produtos retornados por uma
+busca de verdade em `getCatalog`. O modelo/provedor de IA é resolvido por
+`packages/core/src/ai-provider.ts` a partir de `AI_PROVIDER`/`AI_MODEL` —
+trocar de provedor (Google, OpenAI ou Anthropic) é uma mudança de variável
+de ambiente, não de código. O perfil do visitante (pet shop revendedor vs.
+banho-e-tosa) é inferido pela IA a cada conversa e vive apenas em memória
+da sessão do navegador; nada é persistido no Supabase nesta fase.
 
 ## 8. Qualidade e operação
 
