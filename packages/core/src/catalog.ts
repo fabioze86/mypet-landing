@@ -11,15 +11,16 @@ import {
 } from "./catalog-utils";
 
 export const CATALOG_SELECT =
-  "id, name, reference, brand, product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at)";
+  "id, name, reference, brand, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at)";
 
 export async function queryCatalog(params: {
   q?: string;
   brand?: string;
+  categoryId?: string;
   page: number;
   channel: string;
 }): Promise<CatalogResult> {
-  const { q, brand, page, channel } = params;
+  const { q, brand, categoryId, page, channel } = params;
   const supabase = getHubClient();
   const { from, to } = pageRange(page);
 
@@ -32,6 +33,7 @@ export async function queryCatalog(params: {
 
   if (q) query = query.ilike("name", `%${q}%`);
   if (brand) query = query.eq("brand", brand);
+  if (categoryId) query = query.eq("category_id", categoryId);
 
   const { data, count, error } = await query.range(from, to);
 
@@ -48,6 +50,7 @@ export async function queryCatalog(params: {
 export async function getCatalog(params: {
   q?: string;
   brand?: string;
+  categoryId?: string;
   page: number;
   channel: string;
 }): Promise<CatalogResult> {
@@ -130,4 +133,39 @@ export async function getProductById(id: string, channel: string) {
     img: mainImage(data.product_assets),
     badge: pickActiveBadge(data.product_badges),
   };
+}
+
+export type CategoryNode = {
+  id: string;
+  parentId: string | null;
+  slug: string;
+  name: string;
+  level: number | null;
+};
+
+export async function getCategories(): Promise<CategoryNode[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("catalog");
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, parent_id, slug, name, level")
+    .order("level", { ascending: true })
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("[catalog] erro ao consultar categorias:", error.message);
+    return [];
+  }
+
+  return (
+    (data as { id: string; parent_id: string | null; slug: string; name: string; level: number | null }[]) ?? []
+  ).map((row) => ({
+    id: row.id,
+    parentId: row.parent_id,
+    slug: row.slug,
+    name: row.name,
+    level: row.level,
+  }));
 }

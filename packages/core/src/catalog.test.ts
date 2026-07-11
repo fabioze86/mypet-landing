@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("next/cache", () => ({
+  cacheLife: () => {},
+  cacheTag: () => {},
+}));
+
 const calls: Record<string, unknown> = {};
 
 type QueryBuilder = {
@@ -9,6 +14,7 @@ type QueryBuilder = {
   order: (...args: unknown[]) => QueryBuilder;
   not: (...args: unknown[]) => QueryBuilder;
   range: (...args: unknown[]) => Promise<{ data: unknown[]; count: number; error: null }>;
+  then: (resolve: (value: { data: unknown[]; error: null }) => void) => void;
 };
 
 vi.mock("./supabase", () => {
@@ -36,6 +42,8 @@ vi.mock("./supabase", () => {
               name: "RAÇÃO X",
               reference: "100",
               brand: "NAPI",
+              category_id: "cat-1",
+              categories: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
               product_assets: [{ url: "https://img/1", type: "main_image" }],
               product_badges: null,
             },
@@ -44,12 +52,21 @@ vi.mock("./supabase", () => {
           error: null,
         });
       };
+      builder.then = (resolve) => {
+        resolve({
+          data: [
+            { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1 },
+            { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2 },
+          ],
+          error: null,
+        });
+      };
       return { from: chain("from") };
     },
   };
 });
 
-import { queryCatalog } from "./catalog";
+import { queryCatalog, getCategories } from "./catalog";
 
 beforeEach(() => {
   for (const k of Object.keys(calls)) delete calls[k];
@@ -66,6 +83,29 @@ describe("queryCatalog", () => {
     expect(calls["range"]).toEqual([24, 47]);
     expect(result.total).toBe(50);
     expect(result.totalPages).toBe(3);
-    expect(result.items[0]).toMatchObject({ id: "p1", sku: "100", img: "https://img/1" });
+    expect(result.items[0]).toMatchObject({
+      id: "p1",
+      sku: "100",
+      img: "https://img/1",
+      category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
+    });
+  });
+});
+
+describe("queryCatalog com filtro de categoria", () => {
+  it("filtra por categoryId quando informado", async () => {
+    await queryCatalog({ page: 1, channel: "mypetbrasil", categoryId: "cat-9" });
+    expect(calls["eq"]).toContainEqual(["category_id", "cat-9"]);
+  });
+});
+
+describe("getCategories", () => {
+  it("consulta a tabela categories e mapeia parent_id para parentId", async () => {
+    const categories = await getCategories();
+    expect(calls["from"]).toEqual(["categories"]);
+    expect(categories).toEqual([
+      { id: "cat-1", parentId: null, slug: "caes", name: "Cães", level: 1 },
+      { id: "cat-2", parentId: "cat-1", slug: "caes-racao", name: "Ração", level: 2 },
+    ]);
   });
 });
