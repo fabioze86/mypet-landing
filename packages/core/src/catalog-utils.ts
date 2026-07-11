@@ -12,11 +12,15 @@ export type RawBadge = {
   ends_at: string | null;
 };
 
+export type RawCategory = { id: string; name: string; slug: string };
+
 export type RawProductRow = {
   id: string;
   name: string;
   reference: string | null;
   brand: string | null;
+  category_id: string | null;
+  categories: RawCategory | null;
   product_assets: { url: string; type: string }[] | null;
   product_badges: RawBadge[] | null;
 };
@@ -28,6 +32,7 @@ export type CatalogProduct = {
   brand: string | null;
   img: string;
   badge: Badge | null;
+  category: RawCategory | null;
 };
 
 export type CatalogResult = {
@@ -80,5 +85,6 @@ export function mapProduct(row: RawProductRow, now: Date = new Date()): CatalogP
     brand: row.brand,
     img: mainImage(row.product_assets),
     badge: pickActiveBadge(row.product_badges, now),
+    category: row.categories ?? null,
   };
 }

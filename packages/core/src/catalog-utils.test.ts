@@ -76,6 +76,8 @@ describe("mapProduct", () => {
       name: "RAÇÃO PREMIUM 15KG",
       reference: "15675",
       brand: "PLAST PET",
+      category_id: "cat-1",
+      categories: { id: "cat-1", name: "Cães", slug: "caes" },
       product_assets: [{ url: "https://img/x", type: "main_image" }],
       product_badges: [{ code: "novidade", label: "Novidade", kind: "manual", priority: 1, starts_at: null, ends_at: null }],
     };
@@ -86,15 +88,18 @@ describe("mapProduct", () => {
       brand: "PLAST PET",
       img: "https://img/x",
       badge: { code: "novidade", label: "Novidade" },
+      category: { id: "cat-1", name: "Cães", slug: "caes" },
     });
   });
-  it("usa placeholder e sku vazio quando faltam dados", () => {
+  it("usa placeholder, sku vazio e categoria nula quando faltam dados", () => {
     const row: RawProductRow = {
-      id: "z", name: "CAMA", reference: null, brand: null, product_assets: null, product_badges: null,
+      id: "z", name: "CAMA", reference: null, brand: null, category_id: null, categories: null,
+      product_assets: null, product_badges: null,
     };
     const p = mapProduct(row);
     expect(p.img).toBe(PLACEHOLDER_IMAGE);
     expect(p.sku).toBe("");
     expect(p.badge).toBeNull();
+    expect(p.category).toBeNull();
   });
 });
