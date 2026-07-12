@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Palette } from "../theme";
 import type { CatalogProduct } from "../catalog-utils";
 import { askAssistant, type AssistantMessage, type AssistantProfileOption } from "../assistant-client";
@@ -17,17 +17,21 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reply, setReply] = useState<string | null>(null);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [profileOptions, setProfileOptions] = useState<AssistantProfileOption[]>([]);
-  const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const hasConversation = messages.length > 0;
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, loading]);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
 
     const nextMessages: AssistantMessage[] = [...messages, { role: "user", content: trimmed }];
-    setLastUserMessage(trimmed);
+    setMessages(nextMessages);
     setInput("");
     setError(null);
     setLoading(true);
@@ -42,7 +46,6 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
       return;
     }
 
-    setReply(result.reply);
     setProducts(result.products);
     setProfileOptions(result.profileOptions ?? []);
     setMessages([...nextMessages, { role: "assistant", content: result.reply }]);
@@ -67,12 +70,76 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
         Descreva o que precisa — a gente entende se você é pet shop ou banho e tosa e recomenda os produtos certos.
       </p>
 
+      {hasConversation && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+            maxHeight: 360,
+            overflowY: "auto",
+            padding: "4px 4px 12px",
+            marginBottom: 12,
+          }}
+        >
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              style={{
+                alignSelf: message.role === "user" ? "flex-end" : "flex-start",
+                maxWidth: "80%",
+                background: message.role === "user" ? palette.navy : palette.gray100,
+                color: message.role === "user" ? palette.white : palette.gray800,
+                borderRadius: 14,
+                padding: "10px 14px",
+                fontSize: 15,
+                lineHeight: 1.5,
+              }}
+            >
+              {message.content}
+            </div>
+          ))}
+          {loading && (
+            <div
+              style={{
+                alignSelf: "flex-start",
+                maxWidth: "80%",
+                background: palette.gray100,
+                color: palette.gray600,
+                borderRadius: 14,
+                padding: "10px 14px",
+                fontSize: 15,
+              }}
+            >
+              Digitando…
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      )}
+
+      {profileOptions.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+          {profileOptions.map((opt: AssistantProfileOption) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => sendMessage(opt.value)}
+              className="cat-btn"
+              disabled={loading}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
           sendMessage(input);
         }}
-        style={{ display: "flex", gap: 8, marginBottom: 16 }}
+        style={{ display: "flex", gap: 8, marginBottom: hasConversation ? 0 : 16 }}
       >
         <input
           value={input}
@@ -92,57 +159,31 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
         </button>
       </form>
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-          justifyContent: "center",
-          marginBottom: reply ? 24 : 0,
-        }}
-      >
-        {SUGESTOES_INICIAIS.map((s) => (
-          <button key={s} type="button" onClick={() => sendMessage(s)} className="cat-btn" disabled={loading}>
-            {s}
-          </button>
-        ))}
-      </div>
+      {!hasConversation && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 16 }}>
+          {SUGESTOES_INICIAIS.map((s) => (
+            <button key={s} type="button" onClick={() => sendMessage(s)} className="cat-btn" disabled={loading}>
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
 
       {error && <p style={{ color: "#B42318", fontSize: 14, textAlign: "center", marginTop: 16 }}>{error}</p>}
 
-      {reply && (
-        <div style={{ marginTop: 8 }}>
-          {lastUserMessage && (
-            <p style={{ fontSize: 13, color: palette.gray400, marginBottom: 8 }}>Você: {lastUserMessage}</p>
-          )}
-          <p style={{ fontSize: 15, color: palette.gray800, lineHeight: 1.6, marginBottom: 16 }}>{reply}</p>
-
-          {profileOptions.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-              {profileOptions.map((opt: AssistantProfileOption) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => sendMessage(opt.value)}
-                  className="cat-btn"
-                  disabled={loading}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {products.length > 0 && (
-            <div
-              className="products-grid"
-              style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 16 }}
-            >
-              {products.map((product: CatalogProduct) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+      {products.length > 0 && (
+        <div
+          className="products-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+            gap: 16,
+            marginTop: 24,
+          }}
+        >
+          {products.map((product: CatalogProduct) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
       )}
     </section>

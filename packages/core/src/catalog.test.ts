@@ -79,7 +79,7 @@ describe("queryCatalog", () => {
     expect(calls["eq"]).toContainEqual(["status", "active"]);
     expect(calls["eq"]).toContainEqual(["brand", "NAPI"]);
     expect(calls["eq"]).toContainEqual(["product_channel_links.channel", "mypetbrasil"]);
-    expect(calls["select"][0]).toContain("product_channel_links");
+    expect((calls["select"] as unknown[])[0]).toContain("product_channel_links");
     expect(calls["range"]).toEqual([24, 47]);
     expect(result.total).toBe(50);
     expect(result.totalPages).toBe(3);
