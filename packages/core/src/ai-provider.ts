@@ -1,20 +1,22 @@
 import { google } from "@ai-sdk/google";
+import { vertex } from "@ai-sdk/google-vertex";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import type { LanguageModel } from "ai";
 
-export type AssistantProvider = "google" | "openai" | "anthropic";
+export type AssistantProvider = "google" | "google-vertex" | "openai" | "anthropic";
 
 const DEFAULT_PROVIDER: AssistantProvider = "google";
 
 const DEFAULT_MODEL_BY_PROVIDER: Record<AssistantProvider, string> = {
   google: "gemini-2.5-flash",
+  "google-vertex": "gemini-2.5-flash",
   openai: "gpt-4o-mini",
   anthropic: "claude-haiku-4-5",
 };
 
 function isAssistantProvider(value: string): value is AssistantProvider {
-  return value === "google" || value === "openai" || value === "anthropic";
+  return value === "google" || value === "google-vertex" || value === "openai" || value === "anthropic";
 }
 
 export function getAssistantModel(): LanguageModel {
@@ -22,7 +24,7 @@ export function getAssistantModel(): LanguageModel {
 
   if (!isAssistantProvider(providerEnv)) {
     throw new Error(
-      `AI_PROVIDER desconhecido: "${providerEnv}". Use "google", "openai" ou "anthropic".`,
+      `AI_PROVIDER desconhecido: "${providerEnv}". Use "google", "google-vertex", "openai" ou "anthropic".`,
     );
   }
 
@@ -31,6 +33,8 @@ export function getAssistantModel(): LanguageModel {
   switch (providerEnv) {
     case "google":
       return google(modelId);
+    case "google-vertex":
+      return vertex(modelId);
     case "openai":
       return openai(modelId);
     case "anthropic":

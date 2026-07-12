@@ -30,8 +30,13 @@ controlada pela tabela `product_channel_links` do Supabase `hub_catalogo`
 Variáveis de ambiente por app (`.env.local`, não versionado):
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_WHATSAPP_NUMBER`,
 `GOOGLE_CREDENTIALS`, `GOOGLE_SHEET_ID`, `AI_PROVIDER`, `AI_MODEL`,
-e a chave do provedor de IA escolhido (`GOOGLE_GENERATIVE_AI_API_KEY`,
-`OPENAI_API_KEY` ou `ANTHROPIC_API_KEY`).
+e as credenciais do provedor de IA escolhido:
+
+- `google`: `GOOGLE_GENERATIVE_AI_API_KEY`
+- `google-vertex`: `GOOGLE_APPLICATION_CREDENTIALS` (caminho para a service
+  account), `GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_LOCATION`
+- `openai`: `OPENAI_API_KEY`
+- `anthropic`: `ANTHROPIC_API_KEY`
 
 ## 2. Estado atual
 

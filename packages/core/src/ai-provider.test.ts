@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@ai-sdk/google", () => ({
   google: vi.fn((modelId: string) => ({ provider: "google", modelId })),
 }));
+vi.mock("@ai-sdk/google-vertex", () => ({
+  vertex: vi.fn((modelId: string) => ({ provider: "google-vertex", modelId })),
+}));
 vi.mock("@ai-sdk/openai", () => ({
   openai: vi.fn((modelId: string) => ({ provider: "openai", modelId })),
 }));
@@ -32,10 +35,15 @@ describe("getAssistantModel", () => {
     expect(getAssistantModel()).toEqual({ provider: "anthropic", modelId: "claude-haiku-4-5" });
   });
 
+  it("usa Gemini via Vertex AI quando AI_PROVIDER=google-vertex", () => {
+    vi.stubEnv("AI_PROVIDER", "google-vertex");
+    expect(getAssistantModel()).toEqual({ provider: "google-vertex", modelId: "gemini-2.5-flash" });
+  });
+
   it("lança erro para um provedor desconhecido", () => {
     vi.stubEnv("AI_PROVIDER", "cohere");
     expect(() => getAssistantModel()).toThrow(
-      'AI_PROVIDER desconhecido: "cohere". Use "google", "openai" ou "anthropic".',
+      'AI_PROVIDER desconhecido: "cohere". Use "google", "google-vertex", "openai" ou "anthropic".',
     );
   });
 });
