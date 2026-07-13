@@ -3,10 +3,10 @@ import { vertex } from "@ai-sdk/google-vertex";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import type { LanguageModel } from "ai";
+import { isAssistantProvider, type AssistantProvider } from "./ai-models";
 
-export type AssistantProvider = "google" | "google-vertex" | "openai" | "anthropic";
-
-const DEFAULT_PROVIDER: AssistantProvider = "google";
+export { SELECTABLE_MODELS, isAssistantProvider, isSelectableModel } from "./ai-models";
+export type { AssistantProvider } from "./ai-models";
 
 const DEFAULT_MODEL_BY_PROVIDER: Record<AssistantProvider, string> = {
   google: "gemini-2.5-flash",
@@ -15,29 +15,42 @@ const DEFAULT_MODEL_BY_PROVIDER: Record<AssistantProvider, string> = {
   anthropic: "claude-haiku-4-5",
 };
 
-function isAssistantProvider(value: string): value is AssistantProvider {
-  return value === "google" || value === "google-vertex" || value === "openai" || value === "anthropic";
+const DEFAULT_FALLBACK_CHAIN: AssistantProvider[] = ["openai", "google"];
+
+function buildModel(provider: AssistantProvider, modelId?: string): LanguageModel {
+  const id = modelId ?? DEFAULT_MODEL_BY_PROVIDER[provider];
+  switch (provider) {
+    case "google":
+      return google(id);
+    case "google-vertex":
+      return vertex(id);
+    case "openai":
+      return openai(id);
+    case "anthropic":
+      return anthropic(id);
+  }
 }
 
-export function getAssistantModel(): LanguageModel {
-  const providerEnv = process.env.AI_PROVIDER ?? DEFAULT_PROVIDER;
+export type AssistantModelCandidate = { provider: AssistantProvider; model: LanguageModel };
+export type AssistantModelOverride = { provider: AssistantProvider; model: string };
 
-  if (!isAssistantProvider(providerEnv)) {
-    throw new Error(
-      `AI_PROVIDER desconhecido: "${providerEnv}". Use "google", "google-vertex", "openai" ou "anthropic".`,
-    );
+// Sem AI_PROVIDER, tenta OpenAI e cai para Google Gemini se o primeiro falhar.
+// `override` (painel admin) força um único provedor/modelo específico, sem fallback.
+export function getAssistantModelChain(override?: AssistantModelOverride): AssistantModelCandidate[] {
+  if (override) {
+    return [{ provider: override.provider, model: buildModel(override.provider, override.model) }];
   }
 
-  const modelId = process.env.AI_MODEL ?? DEFAULT_MODEL_BY_PROVIDER[providerEnv];
+  const providerEnv = process.env.AI_PROVIDER;
 
-  switch (providerEnv) {
-    case "google":
-      return google(modelId);
-    case "google-vertex":
-      return vertex(modelId);
-    case "openai":
-      return openai(modelId);
-    case "anthropic":
-      return anthropic(modelId);
+  if (providerEnv) {
+    if (!isAssistantProvider(providerEnv)) {
+      throw new Error(
+        `AI_PROVIDER desconhecido: "${providerEnv}". Use "google", "google-vertex", "openai" ou "anthropic".`,
+      );
+    }
+    return [{ provider: providerEnv, model: buildModel(providerEnv, process.env.AI_MODEL) }];
   }
+
+  return DEFAULT_FALLBACK_CHAIN.map((provider) => ({ provider, model: buildModel(provider) }));
 }

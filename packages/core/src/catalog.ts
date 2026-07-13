@@ -16,7 +16,7 @@ export const CATALOG_SELECT =
 export async function queryCatalog(params: {
   q?: string;
   brand?: string;
-  categoryId?: string;
+  categoryId?: string | string[];
   page: number;
   channel: string;
 }): Promise<CatalogResult> {
@@ -33,7 +33,11 @@ export async function queryCatalog(params: {
 
   if (q) query = query.ilike("name", `%${q}%`);
   if (brand) query = query.eq("brand", brand);
-  if (categoryId) query = query.eq("category_id", categoryId);
+  if (Array.isArray(categoryId)) {
+    if (categoryId.length > 0) query = query.in("category_id", categoryId);
+  } else if (categoryId) {
+    query = query.eq("category_id", categoryId);
+  }
 
   const { data, count, error } = await query.range(from, to);
 
@@ -50,7 +54,7 @@ export async function queryCatalog(params: {
 export async function getCatalog(params: {
   q?: string;
   brand?: string;
-  categoryId?: string;
+  categoryId?: string | string[];
   page: number;
   channel: string;
 }): Promise<CatalogResult> {

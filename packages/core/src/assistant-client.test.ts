@@ -60,4 +60,20 @@ describe("askAssistant", () => {
       error: "Não foi possível conectar. Verifique sua internet e tente novamente.",
     });
   });
+
+  it("inclui provider/model/adminKey no corpo quando um override é informado", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ ok: true, reply: "ok", products: [] }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await askAssistant("mypetbrasil", messages, { provider: "openai", model: "gpt-4o", adminKey: "segredo" });
+
+    const [, options] = fetchMock.mock.calls[0];
+    expect(JSON.parse(options.body)).toEqual({
+      channel: "mypetbrasil",
+      messages,
+      provider: "openai",
+      model: "gpt-4o",
+      adminKey: "segredo",
+    });
+  });
 });

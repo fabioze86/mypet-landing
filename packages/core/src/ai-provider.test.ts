@@ -13,37 +13,56 @@ vi.mock("@ai-sdk/anthropic", () => ({
   anthropic: vi.fn((modelId: string) => ({ provider: "anthropic", modelId })),
 }));
 
-import { getAssistantModel } from "./ai-provider";
+import { getAssistantModelChain, isSelectableModel } from "./ai-provider";
 
 beforeEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("getAssistantModel", () => {
-  it("usa Google Gemini 2.5 Flash por padrão", () => {
-    expect(getAssistantModel()).toEqual({ provider: "google", modelId: "gemini-2.5-flash" });
+describe("getAssistantModelChain", () => {
+  it("por padrão tenta OpenAI primeiro e cai para Google Gemini em seguida", () => {
+    expect(getAssistantModelChain()).toEqual([
+      { provider: "openai", model: { provider: "openai", modelId: "gpt-4o-mini" } },
+      { provider: "google", model: { provider: "google", modelId: "gemini-2.5-flash" } },
+    ]);
   });
 
-  it("usa o provedor e o modelo definidos por variável de ambiente", () => {
-    vi.stubEnv("AI_PROVIDER", "openai");
-    vi.stubEnv("AI_MODEL", "gpt-4o");
-    expect(getAssistantModel()).toEqual({ provider: "openai", modelId: "gpt-4o" });
-  });
-
-  it("usa o modelo padrão do provedor quando AI_MODEL não é definido", () => {
+  it("com AI_PROVIDER definido, usa só esse provedor, sem fallback", () => {
     vi.stubEnv("AI_PROVIDER", "anthropic");
-    expect(getAssistantModel()).toEqual({ provider: "anthropic", modelId: "claude-haiku-4-5" });
+    vi.stubEnv("AI_MODEL", "claude-opus-4-8");
+    expect(getAssistantModelChain()).toEqual([
+      { provider: "anthropic", model: { provider: "anthropic", modelId: "claude-opus-4-8" } },
+    ]);
   });
 
-  it("usa Gemini via Vertex AI quando AI_PROVIDER=google-vertex", () => {
+  it("usa o modelo padrão do provedor forçado quando AI_MODEL não é definido", () => {
     vi.stubEnv("AI_PROVIDER", "google-vertex");
-    expect(getAssistantModel()).toEqual({ provider: "google-vertex", modelId: "gemini-2.5-flash" });
+    expect(getAssistantModelChain()).toEqual([
+      { provider: "google-vertex", model: { provider: "google-vertex", modelId: "gemini-2.5-flash" } },
+    ]);
   });
 
-  it("lança erro para um provedor desconhecido", () => {
+  it("lança erro para um provedor forçado desconhecido", () => {
     vi.stubEnv("AI_PROVIDER", "cohere");
-    expect(() => getAssistantModel()).toThrow(
+    expect(() => getAssistantModelChain()).toThrow(
       'AI_PROVIDER desconhecido: "cohere". Use "google", "google-vertex", "openai" ou "anthropic".',
     );
+  });
+
+  it("com override (painel admin), usa só o provedor/modelo indicados, sem fallback e ignorando AI_PROVIDER", () => {
+    vi.stubEnv("AI_PROVIDER", "anthropic");
+    expect(getAssistantModelChain({ provider: "openai", model: "gpt-4o" })).toEqual([
+      { provider: "openai", model: { provider: "openai", modelId: "gpt-4o" } },
+    ]);
+  });
+});
+
+describe("isSelectableModel", () => {
+  it("aceita um modelo da lista permitida do provedor", () => {
+    expect(isSelectableModel("openai", "gpt-4o-mini")).toBe(true);
+  });
+
+  it("rejeita um modelo fora da lista permitida", () => {
+    expect(isSelectableModel("openai", "gpt-4-turbo-super-caro")).toBe(false);
   });
 });

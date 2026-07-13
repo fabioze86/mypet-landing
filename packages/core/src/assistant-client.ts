@@ -16,8 +16,11 @@ export type AssistantResult =
       products: CatalogProduct[];
       profileGuess?: AssistantProfileGuess;
       profileOptions?: AssistantProfileOption[];
+      usedProvider?: string;
     }
   | { ok: false; error: string };
+
+export type AssistantModelOverride = { provider: string; model: string; adminKey: string };
 
 const GENERIC_CLIENT_ERROR = "Não entendi sua mensagem. Tente reformular.";
 const GENERIC_SERVER_ERROR = "Não foi possível processar sua mensagem agora. Tente novamente em instantes.";
@@ -26,13 +29,20 @@ const NETWORK_ERROR = "Não foi possível conectar. Verifique sua internet e ten
 export async function askAssistant(
   channel: string,
   messages: AssistantMessage[],
+  override?: AssistantModelOverride,
 ): Promise<AssistantResult> {
   let res: Response;
   try {
     res = await fetch("/api/assistant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ channel, messages }),
+      body: JSON.stringify({
+        channel,
+        messages,
+        ...(override
+          ? { provider: override.provider, model: override.model, adminKey: override.adminKey }
+          : {}),
+      }),
     });
   } catch {
     return { ok: false, error: NETWORK_ERROR };

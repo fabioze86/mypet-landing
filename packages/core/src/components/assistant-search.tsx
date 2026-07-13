@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Palette } from "../theme";
 import type { CatalogProduct } from "../catalog-utils";
 import { askAssistant, type AssistantMessage, type AssistantProfileOption } from "../assistant-client";
+import { SELECTABLE_MODELS, type AssistantProvider } from "../ai-models";
 import { ProductCard } from "./product-card";
 
 const SUGESTOES_INICIAIS = [
@@ -12,6 +13,8 @@ const SUGESTOES_INICIAIS = [
   "Buscar ração para filhotes",
 ];
 
+const ADMIN_KEY_STORAGE = "mypet-assistant-admin-key";
+
 export function AssistantSearch({ channel, palette }: { channel: string; palette: Palette }) {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [input, setInput] = useState("");
@@ -19,12 +22,33 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [profileOptions, setProfileOptions] = useState<AssistantProfileOption[]>([]);
+  const [usedProvider, setUsedProvider] = useState<string | null>(null);
+  const [adminKey, setAdminKey] = useState<string | null>(null);
+  const [adminProvider, setAdminProvider] = useState<AssistantProvider>("openai");
+  const [adminModel, setAdminModel] = useState(SELECTABLE_MODELS.openai[0]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasConversation = messages.length > 0;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    const publicKey = process.env.NEXT_PUBLIC_ASSISTANT_ADMIN_KEY;
+    if (!publicKey) return;
+
+    const fromUrl = new URLSearchParams(window.location.search).get("assistantAdmin");
+    if (fromUrl && fromUrl === publicKey) {
+      window.localStorage.setItem(ADMIN_KEY_STORAGE, fromUrl);
+      setAdminKey(fromUrl);
+      return;
+    }
+
+    const stored = window.localStorage.getItem(ADMIN_KEY_STORAGE);
+    if (stored === publicKey) {
+      setAdminKey(stored);
+    }
+  }, []);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -37,7 +61,11 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
     setLoading(true);
     setProfileOptions([]);
 
-    const result = await askAssistant(channel, nextMessages);
+    const result = await askAssistant(
+      channel,
+      nextMessages,
+      adminKey ? { provider: adminProvider, model: adminModel, adminKey } : undefined,
+    );
 
     setLoading(false);
 
@@ -48,6 +76,7 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
 
     setProducts(result.products);
     setProfileOptions(result.profileOptions ?? []);
+    setUsedProvider(result.usedProvider ?? null);
     setMessages([...nextMessages, { role: "assistant", content: result.reply }]);
   }
 
@@ -131,6 +160,38 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
               {opt.label}
             </button>
           ))}
+        </div>
+      )}
+
+      {adminKey && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, fontSize: 12 }}>
+          <select
+            value={adminProvider}
+            onChange={(e) => {
+              const provider = e.target.value as AssistantProvider;
+              setAdminProvider(provider);
+              setAdminModel(SELECTABLE_MODELS[provider][0]);
+            }}
+            style={{ fontSize: 12, padding: "4px 6px", borderRadius: 8, border: `1px solid ${palette.gray200}` }}
+          >
+            {Object.keys(SELECTABLE_MODELS).map((provider) => (
+              <option key={provider} value={provider}>
+                {provider}
+              </option>
+            ))}
+          </select>
+          <select
+            value={adminModel}
+            onChange={(e) => setAdminModel(e.target.value)}
+            style={{ fontSize: 12, padding: "4px 6px", borderRadius: 8, border: `1px solid ${palette.gray200}` }}
+          >
+            {SELECTABLE_MODELS[adminProvider].map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+          {usedProvider && <span style={{ color: palette.gray600 }}>respondeu: {usedProvider}</span>}
         </div>
       )}
 

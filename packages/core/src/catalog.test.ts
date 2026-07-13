@@ -11,6 +11,7 @@ type QueryBuilder = {
   select: (...args: unknown[]) => QueryBuilder;
   eq: (...args: unknown[]) => QueryBuilder;
   ilike: (...args: unknown[]) => QueryBuilder;
+  in: (...args: unknown[]) => QueryBuilder;
   order: (...args: unknown[]) => QueryBuilder;
   not: (...args: unknown[]) => QueryBuilder;
   range: (...args: unknown[]) => Promise<{ data: unknown[]; count: number; error: null }>;
@@ -31,6 +32,7 @@ vi.mock("./supabase", () => {
         return builder;
       };
       builder.ilike = chain("ilike");
+      builder.in = chain("in");
       builder.order = chain("order");
       builder.not = chain("not");
       builder.range = (...args: unknown[]) => {
@@ -96,6 +98,11 @@ describe("queryCatalog com filtro de categoria", () => {
   it("filtra por categoryId quando informado", async () => {
     await queryCatalog({ page: 1, channel: "mypetbrasil", categoryId: "cat-9" });
     expect(calls["eq"]).toContainEqual(["category_id", "cat-9"]);
+  });
+
+  it("filtra por uma lista de categoryIds (subárvore) quando informado um array", async () => {
+    await queryCatalog({ page: 1, channel: "mypetbrasil", categoryId: ["cat-9", "cat-10", "cat-11"] });
+    expect(calls["in"]).toEqual(["category_id", ["cat-9", "cat-10", "cat-11"]]);
   });
 });
 

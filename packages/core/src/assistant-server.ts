@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 import { getCatalog, getCategories, type CategoryNode } from "./catalog";
-import { getAssistantModel } from "./ai-provider";
+import { getAssistantModelChain, isAssistantProvider, isSelectableModel, type AssistantModelOverride } from "./ai-provider";
 import type { CatalogProduct } from "./catalog-utils";
 
 export type AssistantMessage = { role: "user" | "assistant"; content: string };
@@ -16,7 +16,12 @@ type ProfileGuess = {
   opcoes?: string[];
 };
 
-type ParsedAssistantRequest = { channel: string; messages: AssistantMessage[] };
+type ParsedAssistantRequest = {
+  channel: string;
+  messages: AssistantMessage[];
+  modelOverride?: AssistantModelOverride;
+  adminKey?: string;
+};
 
 export function parseAssistantRequest(
   body: unknown,
@@ -24,7 +29,7 @@ export function parseAssistantRequest(
   if (!body || typeof body !== "object") {
     return { ok: false, message: "Corpo da requisição inválido." };
   }
-  const { channel, messages } = body as Record<string, unknown>;
+  const { channel, messages, provider, model, adminKey } = body as Record<string, unknown>;
 
   if (typeof channel !== "string" || !channel.trim()) {
     return { ok: false, message: "Canal não informado." };
@@ -54,7 +59,43 @@ export function parseAssistantRequest(
     parsedMessages.push({ role, content });
   }
 
-  return { ok: true, value: { channel, messages: parsedMessages } };
+  let modelOverride: AssistantModelOverride | undefined;
+  if (provider !== undefined || model !== undefined) {
+    if (typeof provider !== "string" || !isAssistantProvider(provider)) {
+      return { ok: false, message: "Provedor de IA inválido." };
+    }
+    if (typeof model !== "string" || !isSelectableModel(provider, model)) {
+      return { ok: false, message: "Modelo de IA inválido para este provedor." };
+    }
+    modelOverride = { provider, model };
+  }
+
+  return {
+    ok: true,
+    value: {
+      channel,
+      messages: parsedMessages,
+      modelOverride,
+      adminKey: typeof adminKey === "string" ? adminKey : undefined,
+    },
+  };
+}
+
+function collectCategorySubtreeIds(categories: CategoryNode[], rootId: string): string[] {
+  const childrenByParent = new Map<string, string[]>();
+  for (const c of categories) {
+    if (!c.parentId) continue;
+    const siblings = childrenByParent.get(c.parentId) ?? [];
+    siblings.push(c.id);
+    childrenByParent.set(c.parentId, siblings);
+  }
+  const ids: string[] = [];
+  const visit = (id: string) => {
+    ids.push(id);
+    for (const childId of childrenByParent.get(id) ?? []) visit(childId);
+  };
+  visit(rootId);
+  return ids;
 }
 
 function formatCategories(categories: CategoryNode[]): string {
@@ -70,7 +111,7 @@ function buildSystemPrompt(categories: CategoryNode[]): string {
   return `Você é o assistente de compras de um atacado B2B para pet shops. Seu trabalho é entender o que o visitante precisa, identificar se ele é (a) um pet shop querendo montar ou repor estoque para revenda, ou (b) um banho-e-tosa/estética animal que consome os produtos no próprio negócio, e recomendar produtos reais do catálogo.
 
 Regras obrigatórias:
-1. Nunca cite ou recomende um produto que não tenha vindo de uma chamada à ferramenta "buscar_produtos" nesta conversa. Se ainda não buscou nada relevante para a pergunta atual, use a ferramenta antes de responder.
+1. Nunca cite ou recomende um produto que não tenha vindo de uma chamada à ferramenta "buscar_produtos" nesta conversa. Se ainda não buscou nada relevante para a pergunta atual, use a ferramenta antes de responder. A busca por categoria já inclui automaticamente todas as subcategorias: pode usar uma categoria de nível mais alto (ex.: "banho-tosa") sem precisar acertar a subcategoria exata. Prefira usar "query" com o tipo de produto (ex.: "shampoo") em vez de frases do perfil do visitante (ex.: não busque por "banho e tosa").
 2. Assim que tiver uma opinião sobre o perfil do visitante (mesmo que tentativa), chame a ferramenta "registrar_perfil" com sua conclusão.
 3. Se não tiver confiança suficiente sobre o perfil, registre confianca "baixa" e inclua de 2 a 3 opções curtas em "opcoes" para o visitante escolher (ex.: "Sou pet shop", "Sou banho e tosa", "Só estou pesquisando").
 4. Categorias com "(PRO)" no nome são de uso profissional em banho e tosa. A categoria "Montagem de Loja" costuma indicar pet shop novo.
@@ -112,7 +153,8 @@ export function buildAssistantTools({
       }),
       execute: async ({ query, categorySlug, brand }) => {
         const categoryId = categorySlug ? categoryIdBySlug.get(categorySlug) : undefined;
-        const result = await getCatalog({ q: query, brand, categoryId, page: 1, channel });
+        const categoryIds = categoryId ? collectCategorySubtreeIds(categories, categoryId) : undefined;
+        const result = await getCatalog({ q: query, brand, categoryId: categoryIds, page: 1, channel });
         for (const item of result.items) {
           foundProducts.set(item.id, item);
         }
@@ -162,35 +204,62 @@ export function buildAssistantTools({
   };
 }
 
-export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  const parsed = parseAssistantRequest(body);
+export function createAssistantHandler(expectedChannel: string) {
+  return async function POST(req: NextRequest) {
+    const body = await req.json().catch(() => null);
+    const parsed = parseAssistantRequest(body);
 
-  if (!parsed.ok) {
-    return Response.json(
-      { ok: false, error: { code: "INVALID_INPUT", message: parsed.message } },
-      { status: 400 },
-    );
-  }
+    if (!parsed.ok) {
+      return Response.json(
+        { ok: false, error: { code: "INVALID_INPUT", message: parsed.message } },
+        { status: 400 },
+      );
+    }
 
-  const { channel, messages } = parsed.value;
+    if (parsed.value.channel !== expectedChannel) {
+      return Response.json(
+        { ok: false, error: { code: "CHANNEL_MISMATCH", message: "Canal não corresponde a este site." } },
+        { status: 403 },
+      );
+    }
+
+    const adminKeyEnv = process.env.ADMIN_AI_OVERRIDE_KEY;
+    const override =
+      adminKeyEnv && parsed.value.adminKey === adminKeyEnv ? parsed.value.modelOverride : undefined;
+
+    return handleAssistantRequest(parsed.value, override);
+  };
+}
+
+async function handleAssistantRequest(
+  { channel, messages }: ParsedAssistantRequest,
+  override?: AssistantModelOverride,
+) {
   const categories = await getCategories();
   const foundProducts = new Map<string, CatalogProduct>();
   const profileState: { guess: ProfileGuess | null } = { guess: null };
   const selectionState: { ids: string[] | null } = { ids: null };
   const tools = buildAssistantTools({ channel, categories, foundProducts, profileState, selectionState });
 
-  let result: { text: string };
-  try {
-    result = await generateText({
-      model: getAssistantModel(),
-      system: buildSystemPrompt(categories),
-      messages,
-      tools,
-      stopWhen: stepCountIs(5),
-    });
-  } catch (error) {
-    console.error("[assistant] erro no provedor de IA:", error);
+  let result: { text: string } | undefined;
+  let usedProvider: string | undefined;
+  for (const candidate of getAssistantModelChain(override)) {
+    try {
+      result = await generateText({
+        model: candidate.model,
+        system: buildSystemPrompt(categories),
+        messages,
+        tools,
+        stopWhen: stepCountIs(5),
+      });
+      usedProvider = candidate.provider;
+      break;
+    } catch (error) {
+      console.error(`[assistant] erro no provedor "${candidate.provider}":`, error);
+    }
+  }
+
+  if (!result) {
     return Response.json(
       {
         ok: false,
@@ -213,10 +282,12 @@ export async function POST(req: NextRequest) {
     products: CatalogProduct[];
     profileGuess?: { label: ProfileGuess["perfil"]; confidence: ProfileGuess["confianca"] };
     profileOptions?: { label: string; value: string }[];
+    usedProvider?: string;
   } = {
     ok: true,
     reply: result.text,
     products: selectedProducts.length > 0 ? selectedProducts.slice(0, 8) : [...foundProducts.values()].slice(0, 8),
+    usedProvider,
   };
 
   if (profileState.guess) {
