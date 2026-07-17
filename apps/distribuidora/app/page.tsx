@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Palette } from "@mypet/core/theme";
 import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
-import { getProductCount } from "@mypet/core/catalog";
+import { getProductCount, getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { AssistantSearch } from "@mypet/core/components/assistant-search";
 import { clientConfig } from "@/client.config";
@@ -88,11 +88,12 @@ async function DynamicCatalog({
   );
 }
 
-export default function Home({
+export default async function Home({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
 }) {
+  const categories = await getCategories();
   return (
     <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
 
@@ -251,7 +252,7 @@ export default function Home({
       <LeadGateProvider>
 
         {/* NAV */}
-        <SiteNav />
+        <SiteNav categories={categories} />
 
         {/* HERO */}
         <section style={{

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { badgeStyle } from "@mypet/core/theme";
-import { getProductById } from "@mypet/core/catalog";
+import { getProductById, getCategories } from "@mypet/core/catalog";
 import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -25,11 +25,12 @@ export async function generateMetadata({
   };
 }
 
-export default function ProductPage({
+export default async function ProductPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const categories = await getCategories();
   return (
     <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
       {/* GOOGLE FONTS */}
@@ -159,7 +160,7 @@ export default function ProductPage({
 
       <LeadGateProvider>
         {/* NAV */}
-        <SiteNav />
+        <SiteNav categories={categories} />
 
         {/* CONTAINER */}
         <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
