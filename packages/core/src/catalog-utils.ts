@@ -14,6 +14,16 @@ export type RawBadge = {
 
 export type RawCategory = { id: string; name: string; slug: string };
 
+export type CategoryNode = {
+  id: string;
+  parentId: string | null;
+  slug: string;
+  name: string;
+  level: number | null;
+};
+
+export type CategoryTreeNode = CategoryNode & { children: CategoryTreeNode[] };
+
 export type RawProductRow = {
   id: string;
   name: string;
@@ -87,4 +97,21 @@ export function mapProduct(row: RawProductRow, now: Date = new Date()): CatalogP
     badge: pickActiveBadge(row.product_badges, now),
     category: row.categories ?? null,
   };
+}
+
+export function buildCategoryTree(categories: CategoryNode[]): CategoryTreeNode[] {
+  const nodesById = new Map<string, CategoryTreeNode>();
+  for (const c of categories) {
+    nodesById.set(c.id, { ...c, children: [] });
+  }
+  const roots: CategoryTreeNode[] = [];
+  for (const c of categories) {
+    const node = nodesById.get(c.id)!;
+    if (c.parentId && nodesById.has(c.parentId)) {
+      nodesById.get(c.parentId)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+  return roots;
 }

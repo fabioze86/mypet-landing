@@ -8,6 +8,7 @@ import {
   pickActiveBadge,
   type CatalogResult,
   type RawProductRow,
+  type CategoryNode,
 } from "./catalog-utils";
 
 export const CATALOG_SELECT =
@@ -138,14 +139,6 @@ export async function getProductById(id: string, channel: string) {
     badge: pickActiveBadge(data.product_badges),
   };
 }
-
-export type CategoryNode = {
-  id: string;
-  parentId: string | null;
-  slug: string;
-  name: string;
-  level: number | null;
-};
 
 export async function getCategories(): Promise<CategoryNode[]> {
   "use cache";
