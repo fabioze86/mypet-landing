@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
-import { getCatalog, getCategories, type CategoryNode } from "./catalog";
+import { getCatalog, getCategories } from "./catalog";
+import { collectCategorySubtreeIds, getCategoryPath, type CategoryNode } from "./catalog-utils";
 import { getAssistantModelChain, isAssistantProvider, isSelectableModel, type AssistantModelOverride } from "./ai-provider";
 import type { CatalogProduct } from "./catalog-utils";
 
@@ -81,30 +82,10 @@ export function parseAssistantRequest(
   };
 }
 
-function collectCategorySubtreeIds(categories: CategoryNode[], rootId: string): string[] {
-  const childrenByParent = new Map<string, string[]>();
-  for (const c of categories) {
-    if (!c.parentId) continue;
-    const siblings = childrenByParent.get(c.parentId) ?? [];
-    siblings.push(c.id);
-    childrenByParent.set(c.parentId, siblings);
-  }
-  const ids: string[] = [];
-  const visit = (id: string) => {
-    ids.push(id);
-    for (const childId of childrenByParent.get(id) ?? []) visit(childId);
-  };
-  visit(rootId);
-  return ids;
-}
-
 function formatCategories(categories: CategoryNode[]): string {
-  const byId = new Map(categories.map((c) => [c.id, c]));
-  const pathFor = (c: CategoryNode): string => {
-    const parent = c.parentId ? byId.get(c.parentId) : undefined;
-    return parent ? `${pathFor(parent)} > ${c.name}` : c.name;
-  };
-  return categories.map((c) => `${c.slug}: ${pathFor(c)}`).join("\n");
+  return categories
+    .map((c) => `${c.slug}: ${getCategoryPath(categories, c.id).map((n) => n.name).join(" > ")}`)
+    .join("\n");
 }
 
 function buildSystemPrompt(categories: CategoryNode[]): string {

@@ -8,6 +8,8 @@ import {
   mapProduct,
   PLACEHOLDER_IMAGE,
   buildCategoryTree,
+  collectCategorySubtreeIds,
+  getCategoryPath,
   type RawProductRow,
   type CategoryNode,
 } from "./catalog-utils";
@@ -134,5 +136,29 @@ describe("buildCategoryTree", () => {
 
   it("retorna lista vazia para entrada vazia", () => {
     expect(buildCategoryTree([])).toEqual([]);
+  });
+});
+
+describe("collectCategorySubtreeIds", () => {
+  it("devolve o próprio id e todos os descendentes, em profundidade", () => {
+    expect(collectCategorySubtreeIds(SAMPLE_CATEGORIES, "c1")).toEqual(["c1", "c2", "c3"]);
+  });
+
+  it("devolve só o próprio id quando não há filhos", () => {
+    expect(collectCategorySubtreeIds(SAMPLE_CATEGORIES, "c4")).toEqual(["c4"]);
+  });
+});
+
+describe("getCategoryPath", () => {
+  it("devolve o caminho da raiz até o nó, em ordem", () => {
+    expect(getCategoryPath(SAMPLE_CATEGORIES, "c3")).toEqual([
+      SAMPLE_CATEGORIES[0],
+      SAMPLE_CATEGORIES[1],
+      SAMPLE_CATEGORIES[2],
+    ]);
+  });
+
+  it("devolve array de 1 item para uma categoria de nível 1", () => {
+    expect(getCategoryPath(SAMPLE_CATEGORIES, "c1")).toEqual([SAMPLE_CATEGORIES[0]]);
   });
 });

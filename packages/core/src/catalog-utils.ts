@@ -115,3 +115,31 @@ export function buildCategoryTree(categories: CategoryNode[]): CategoryTreeNode[
   }
   return roots;
 }
+
+export function collectCategorySubtreeIds(categories: CategoryNode[], rootId: string): string[] {
+  const childrenByParent = new Map<string, string[]>();
+  for (const c of categories) {
+    if (!c.parentId) continue;
+    const siblings = childrenByParent.get(c.parentId) ?? [];
+    siblings.push(c.id);
+    childrenByParent.set(c.parentId, siblings);
+  }
+  const ids: string[] = [];
+  const visit = (id: string) => {
+    ids.push(id);
+    for (const childId of childrenByParent.get(id) ?? []) visit(childId);
+  };
+  visit(rootId);
+  return ids;
+}
+
+export function getCategoryPath(categories: CategoryNode[], nodeId: string): CategoryNode[] {
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const path: CategoryNode[] = [];
+  let current = byId.get(nodeId);
+  while (current) {
+    path.unshift(current);
+    current = current.parentId ? byId.get(current.parentId) : undefined;
+  }
+  return path;
+}
