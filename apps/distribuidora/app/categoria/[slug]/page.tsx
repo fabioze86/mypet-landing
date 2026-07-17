@@ -3,6 +3,7 @@ import { getCategories } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CategoryListing } from "@mypet/core/components/category-listing";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import type { Palette } from "@mypet/core/theme";
 import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
@@ -31,8 +32,6 @@ export default async function CategoriaPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const categories = await getCategories();
-  const { slug } = await params;
-  const { page } = await searchParams;
 
   return (
     <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
@@ -162,7 +161,12 @@ export default async function CategoriaPage({
 
         <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
           <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando categoria…</p>}>
-            <CategoryListing slug={slug} page={page} channel={clientConfig.catalogChannel} palette={PALETTE} />
+            <CategoryListingResolved
+              params={params}
+              searchParams={searchParams}
+              channel={clientConfig.catalogChannel}
+              palette={PALETTE}
+            />
           </Suspense>
         </main>
 
@@ -178,4 +182,20 @@ export default async function CategoriaPage({
       </LeadGateProvider>
     </div>
   );
+}
+
+async function CategoryListingResolved({
+  params,
+  searchParams,
+  channel,
+  palette,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
+  channel: string;
+  palette: Palette;
+}) {
+  const { slug } = await params;
+  const { page } = await searchParams;
+  return <CategoryListing slug={slug} page={page} channel={channel} palette={palette} />;
 }
