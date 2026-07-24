@@ -46,6 +46,7 @@ describe("getBanners", () => {
     expect(calls["from"]).toEqual(["banners"]);
     expect(calls["eq"]).toContainEqual(["channel", "mypetbrasil"]);
     expect(calls["eq"]).toContainEqual(["type", "principal"]);
+    expect((calls["eq"] as Array<unknown[]>).some((call) => call[0] === "category_id")).toBe(false);
     expect(result).toEqual([
       { id: "b1", type: "principal", imageUrl: "https://img/banner1", linkUrl: "/promo", title: "Promo", sortOrder: 0 },
     ]);
