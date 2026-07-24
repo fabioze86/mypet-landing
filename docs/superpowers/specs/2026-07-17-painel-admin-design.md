@@ -208,3 +208,7 @@ Além de `npm run lint` e `npm run build`:
 2. Plano de implementação (`writing-plans`), provavelmente em fatias: (a) fundação do
    `apps/admin` + auth, (b) módulo Clientes + migração do fluxo de leads, (c) módulo
    Categorias, (d) módulo Banners + integração Cloudflare Images + render no site.
+
+## Migrações aplicadas
+
+- **2026-07-17 — create_admin_users**: cria `public.admin_users` com RLS (select apenas do próprio registro).
