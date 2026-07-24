@@ -17,7 +17,7 @@
 - `role` em `admin_users` é armazenado mas não enforced nesta v1 — qualquer usuário autenticado presente em `admin_users` tem acesso completo aos três módulos.
 - Server Actions validam entrada com `zod` antes de tocar o Supabase.
 - Sem testes de componente React neste repositório (convenção existente) — só lógica pura é testada com Vitest. Fluxos de UI/rota são verificados manualmente com o servidor de dev, um passo explícito por task.
-- Toda mutação em `categories` e `banners` chama `revalidateTag("catalog")`/`revalidateTag("banners")` respectivamente, para refletir no site sem esperar `cacheLife("days")` expirar.
+- Toda mutação em `categories` e `banners` chama `updateTag("catalog")`/`updateTag("banners")` respectivamente (não `revalidateTag`, que nesta versão do Next exige um segundo argumento de "profile" e usa semântica stale-while-revalidate — errada para um admin que precisa ver a própria escrita imediatamente após redirecionar; `updateTag` expira o cache na hora e só funciona dentro de Server Actions, que é exatamente onde essas mutações rodam). Confirmado em `node_modules/next/dist/docs/01-app/01-getting-started/09-revalidating.md`.
 - Credenciais (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`) só em `.env.local` (não versionado), nunca prefixadas com `NEXT_PUBLIC_`.
 
 ---
@@ -1691,7 +1691,7 @@ git commit -m "docs: registra migracao categories_admin_write_policy"
 "use server";
 
 import { z } from "zod";
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import { slugify, canDeleteCategory, isDuplicateSlugError } from "@/lib/categories";
@@ -1746,7 +1746,7 @@ export async function createCategory(formData: FormData): Promise<void> {
     redirect("/categorias?error=falha_ao_salvar");
   }
 
-  revalidateTag("catalog");
+  updateTag("catalog");
   redirect("/categorias");
 }
 
@@ -1793,7 +1793,7 @@ export async function updateCategory(id: string, formData: FormData): Promise<vo
     redirect(`/categorias/${id}?error=falha_ao_salvar`);
   }
 
-  revalidateTag("catalog");
+  updateTag("catalog");
   redirect("/categorias");
 }
 
@@ -1825,7 +1825,7 @@ export async function deleteCategory(formData: FormData): Promise<void> {
     return;
   }
 
-  revalidateTag("catalog");
+  updateTag("catalog");
 }
 ```
 
@@ -2551,7 +2551,7 @@ Nenhum commit — configuração local sensível.
 "use server";
 
 import { z } from "zod";
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { requireAdminSession } from "@/lib/auth";
 import { findConflictingCategoryBanner, type ExistingBanner } from "@/lib/banners";
 import { uploadImageToCloudflare } from "@/lib/cloudflare-images";
@@ -2632,7 +2632,7 @@ export async function createBanner(_state: BannerFormState, formData: FormData):
     return { error: "Não foi possível salvar o banner." };
   }
 
-  revalidateTag("banners");
+  updateTag("banners");
   return undefined;
 }
 
@@ -2647,7 +2647,7 @@ export async function deleteBanner(formData: FormData): Promise<void> {
     return;
   }
 
-  revalidateTag("banners");
+  updateTag("banners");
 }
 
 export async function toggleBannerActive(formData: FormData): Promise<void> {
@@ -2666,7 +2666,7 @@ export async function toggleBannerActive(formData: FormData): Promise<void> {
     return;
   }
 
-  revalidateTag("banners");
+  updateTag("banners");
 }
 ```
 
@@ -3083,7 +3083,7 @@ Expected: o hero estático some, dá lugar à imagem do banner.
 - [ ] **Step 3: Desativar e confirmar fallback**
 
 No admin, clique "Desativar" no banner.
-Expected: recarregando a home do site, volta a mostrar o hero estático (o `revalidateTag("banners")` já invalidou o cache).
+Expected: recarregando a home do site, volta a mostrar o hero estático (o `updateTag("banners")` já invalidou o cache).
 
 - [ ] **Step 4: Cadastrar banner de categoria e checar conflito**
 
