@@ -18,13 +18,19 @@ describe("canDeleteCategory", () => {
   it("bloqueia quando há subcategoria filha", () => {
     const result = canDeleteCategory("c1", categories, new Map());
     expect(result.allowed).toBe(false);
-    expect(result.reason).toMatch(/subcategorias/);
+    expect(result.reason).toBe("Categoria tem subcategorias vinculadas.");
   });
 
   it("bloqueia quando há produtos vinculados", () => {
     const result = canDeleteCategory("c2", categories, new Map([["c2", 3]]));
     expect(result.allowed).toBe(false);
-    expect(result.reason).toMatch(/3 produto/);
+    expect(result.reason).toBe("Categoria tem 3 produto(s) vinculado(s).");
+  });
+
+  it("prioriza o bloqueio por subcategoria mesmo quando tambem ha produtos vinculados", () => {
+    const result = canDeleteCategory("c1", categories, new Map([["c1", 5]]));
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe("Categoria tem subcategorias vinculadas.");
   });
 
   it("permite quando não há filhos nem produtos", () => {
