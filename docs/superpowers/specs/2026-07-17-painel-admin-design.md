@@ -212,3 +212,4 @@ Além de `npm run lint` e `npm run build`:
 ## Migrações aplicadas
 
 - **2026-07-17 — create_admin_users**: cria `public.admin_users` com RLS (select apenas do próprio registro).
+- **2026-07-17 — create_leads**: cria `public.leads` (substitui o Google Sheets), com insert público e select/update restritos a `admin_users`.
