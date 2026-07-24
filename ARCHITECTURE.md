@@ -29,8 +29,7 @@ controlada pela tabela `product_channel_links` do Supabase `hub_catalogo`
 
 Variáveis de ambiente por app (`.env.local`, não versionado):
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_WHATSAPP_NUMBER`,
-`GOOGLE_CREDENTIALS`, `GOOGLE_SHEET_ID`, `AI_PROVIDER`, `AI_MODEL`,
-e as credenciais do provedor de IA escolhido:
+`AI_PROVIDER`, `AI_MODEL`, e as credenciais do provedor de IA escolhido:
 
 - `google`: `GOOGLE_GENERATIVE_AI_API_KEY`
 - `google-vertex`: `GOOGLE_APPLICATION_CREDENTIALS` (caminho para a service
@@ -82,8 +81,11 @@ do navegador.
 2. O formulário controla os valores em estado local.
 3. O cliente envia `nome`, `empresa`, `whatsapp` e `cnpj` para `/api/leads`.
 4. O Route Handler exige nome, empresa e WhatsApp.
-5. O servidor lê as credenciais do ambiente e cria um cliente Google.
-6. O lead é anexado a `Leads!A:E`.
+5. O servidor grava o lead na tabela `leads` do Supabase `hub_catalogo`, com o
+   canal (`mypetbrasil`/`distribuidora`) resolvido a partir do `client.config.ts`
+   do app, nunca enviado pelo navegador.
+6. O painel administrativo (`apps/admin`) é a fonte de verdade para acompanhar
+   e atualizar o status desses leads.
 7. A resposta bem-sucedida fecha o modal e altera `unlocked` para verdadeiro.
 
 ### 3.3 Falhas
@@ -221,6 +223,10 @@ Limitações a acompanhar:
 
 Quando esses limites forem relevantes, `service.ts` poderá passar a escrever em
 um CRM ou banco de dados, preservando o contrato consumido pela interface.
+
+> **Atualizado em 2026-07-17:** o fluxo de leads não usa mais o Google Sheets —
+> grava direto na tabela `leads` do Supabase `hub_catalogo`. Esta seção
+> permanece como referência histórica.
 
 ### Catálogo
 
