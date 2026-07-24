@@ -157,7 +157,7 @@ describe("buildAssistantTools", () => {
     const selectionState: { ids: string[] | null } = { ids: null };
     const tools = buildAssistantTools({
       channel: "mypetbrasil",
-      categories: [{ id: "cat-1", parentId: null, slug: "banho-tosa", name: "Banho & Tosa", level: 1 }],
+      categories: [{ id: "cat-1", parentId: null, slug: "banho-tosa", name: "Banho & Tosa", level: 1, sortOrder: 0 }],
       foundProducts,
       profileState,
       selectionState,
@@ -188,13 +188,14 @@ describe("buildAssistantTools", () => {
     const tools = buildAssistantTools({
       channel: "mypetbrasil",
       categories: [
-        { id: "cat-1", parentId: null, slug: "banho-tosa", name: "Banho & Tosa", level: 1 },
+        { id: "cat-1", parentId: null, slug: "banho-tosa", name: "Banho & Tosa", level: 1, sortOrder: 0 },
         {
           id: "cat-2",
           parentId: "cat-1",
           slug: "banho-tosa-shampoos-pro",
           name: "Shampoos Profissionais (PRO)",
           level: 2,
+          sortOrder: 0,
         },
         {
           id: "cat-3",
@@ -202,8 +203,9 @@ describe("buildAssistantTools", () => {
           slug: "banho-tosa-shampoos-pro-secos",
           name: "Shampoos a Seco (PRO)",
           level: 3,
+          sortOrder: 0,
         },
-        { id: "cat-4", parentId: null, slug: "caes", name: "Cães", level: 1 },
+        { id: "cat-4", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
       ],
       foundProducts: new Map(),
       profileState: { guess: null },
@@ -371,7 +373,7 @@ describe("POST /api/assistant", () => {
 
   it("agrega produtos encontrados e o perfil registrado pelas tools chamadas durante generateText", async () => {
     (getCategories as Mock).mockResolvedValue([
-      { id: "cat-1", parentId: null, slug: "banho-tosa", name: "Banho & Tosa", level: 1 },
+      { id: "cat-1", parentId: null, slug: "banho-tosa", name: "Banho & Tosa", level: 1, sortOrder: 0 },
     ]);
     (getCatalog as Mock).mockResolvedValue({
       items: [

@@ -24,6 +24,10 @@ export const requireAdminSession = cache(async (): Promise<AdminSession> => {
     .single();
 
   if (error || !profile) {
+    // Sessão válida no Supabase Auth mas sem registro em admin_users: encerra a
+    // sessão antes de redirecionar, senão o proxy devolve o usuário de /login
+    // para /clientes e cria um loop infinito de redirects.
+    await supabase.auth.signOut();
     redirect("/login");
   }
 

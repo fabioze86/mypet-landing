@@ -20,6 +20,7 @@ export type CategoryNode = {
   slug: string;
   name: string;
   level: number | null;
+  sortOrder: number;
 };
 
 export type CategoryTreeNode = CategoryNode & { children: CategoryTreeNode[] };

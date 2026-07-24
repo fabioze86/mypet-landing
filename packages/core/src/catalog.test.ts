@@ -57,8 +57,8 @@ vi.mock("./supabase", () => {
       builder.then = (resolve) => {
         resolve({
           data: [
-            { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1 },
-            { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2 },
+            { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1, sort_order: 0 },
+            { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sort_order: 1 },
           ],
           error: null,
         });
@@ -111,8 +111,8 @@ describe("getCategories", () => {
     const categories = await getCategories();
     expect(calls["from"]).toEqual(["categories"]);
     expect(categories).toEqual([
-      { id: "cat-1", parentId: null, slug: "caes", name: "Cães", level: 1 },
-      { id: "cat-2", parentId: "cat-1", slug: "caes-racao", name: "Ração", level: 2 },
+      { id: "cat-1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
+      { id: "cat-2", parentId: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sortOrder: 1 },
     ]);
   });
 });

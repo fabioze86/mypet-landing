@@ -109,10 +109,10 @@ describe("mapProduct", () => {
 });
 
 const SAMPLE_CATEGORIES: CategoryNode[] = [
-  { id: "c1", parentId: null, slug: "caes", name: "Cães", level: 1 },
-  { id: "c2", parentId: "c1", slug: "caes-racao", name: "Ração", level: 2 },
-  { id: "c3", parentId: "c2", slug: "caes-racao-seca", name: "Ração Seca", level: 3 },
-  { id: "c4", parentId: null, slug: "gatos", name: "Gatos", level: 1 },
+  { id: "c1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
+  { id: "c2", parentId: "c1", slug: "caes-racao", name: "Ração", level: 2, sortOrder: 0 },
+  { id: "c3", parentId: "c2", slug: "caes-racao-seca", name: "Ração Seca", level: 3, sortOrder: 0 },
+  { id: "c4", parentId: null, slug: "gatos", name: "Gatos", level: 1, sortOrder: 1 },
 ];
 
 describe("buildCategoryTree", () => {
@@ -120,17 +120,17 @@ describe("buildCategoryTree", () => {
     const tree = buildCategoryTree(SAMPLE_CATEGORIES);
     expect(tree).toEqual([
       {
-        id: "c1", parentId: null, slug: "caes", name: "Cães", level: 1,
+        id: "c1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0,
         children: [
           {
-            id: "c2", parentId: "c1", slug: "caes-racao", name: "Ração", level: 2,
+            id: "c2", parentId: "c1", slug: "caes-racao", name: "Ração", level: 2, sortOrder: 0,
             children: [
-              { id: "c3", parentId: "c2", slug: "caes-racao-seca", name: "Ração Seca", level: 3, children: [] },
+              { id: "c3", parentId: "c2", slug: "caes-racao-seca", name: "Ração Seca", level: 3, sortOrder: 0, children: [] },
             ],
           },
         ],
       },
-      { id: "c4", parentId: null, slug: "gatos", name: "Gatos", level: 1, children: [] },
+      { id: "c4", parentId: null, slug: "gatos", name: "Gatos", level: 1, sortOrder: 1, children: [] },
     ]);
   });
 

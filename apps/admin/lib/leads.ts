@@ -13,10 +13,17 @@ export type LeadRow = {
 };
 
 function csvField(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // Campos vêm de formulário público não confiável e o CSV é aberto no Excel:
+  // um valor começando com =, +, - ou @ executaria como fórmula. O apóstrofo
+  // inicial é a neutralização padrão (Excel o trata como marcador de texto).
+  let safe = value;
+  if (/^[=+\-@]/.test(safe)) {
+    safe = `'${safe}`;
   }
-  return value;
+  if (safe.includes(",") || safe.includes('"') || safe.includes("\n")) {
+    return `"${safe.replace(/"/g, '""')}"`;
+  }
+  return safe;
 }
 
 export function leadsToCsv(leads: LeadRow[]): string {

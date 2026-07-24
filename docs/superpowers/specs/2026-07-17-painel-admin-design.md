@@ -209,6 +209,16 @@ Além de `npm run lint` e `npm run build`:
    `apps/admin` + auth, (b) módulo Clientes + migração do fluxo de leads, (c) módulo
    Categorias, (d) módulo Banners + integração Cloudflare Images + render no site.
 
+## Limitações conhecidas (aceitas nesta v1)
+
+- **Propagação de cache entre apps:** `updateTag("catalog")`/`updateTag("banners")` invalidam
+  apenas o cache do próprio `apps/admin`. Os sites públicos (`apps/mypet`,
+  `apps/distribuidora`) são deploys Next.js separados, com caches próprios — mudanças de
+  categorias/banners feitas no painel podem levar até o `cacheLife("days")` (~1 dia) para
+  aparecer nos sites, ou exigir redeploy. Resolver exige um cache handler compartilhado ou
+  um webhook de revalidação do admin para cada site público — decidido conscientemente
+  ficar de fora desta v1 (2026-07-24, revisão final da branch).
+
 ## Migrações aplicadas
 
 - **2026-07-17 — create_admin_users**: cria `public.admin_users` com RLS (select apenas do próprio registro).

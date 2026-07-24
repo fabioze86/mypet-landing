@@ -42,8 +42,8 @@ describe("canDeleteCategory", () => {
 describe("flattenForSelect", () => {
   it("indenta filhos por nível na label", () => {
     const nodes: CategoryNode[] = [
-      { id: "c1", parentId: null, slug: "caes", name: "Cães", level: 1 },
-      { id: "c2", parentId: "c1", slug: "caes-racao", name: "Ração", level: 2 },
+      { id: "c1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
+      { id: "c2", parentId: "c1", slug: "caes-racao", name: "Ração", level: 2, sortOrder: 0 },
     ];
     const tree = buildCategoryTree(nodes);
     expect(flattenForSelect(tree)).toEqual([

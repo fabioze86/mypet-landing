@@ -147,7 +147,7 @@ export async function getCategories(): Promise<CategoryNode[]> {
   const supabase = getHubClient();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, parent_id, slug, name, level")
+    .select("id, parent_id, slug, name, level, sort_order")
     .order("level", { ascending: true })
     .order("sort_order", { ascending: true });
 
@@ -157,12 +157,13 @@ export async function getCategories(): Promise<CategoryNode[]> {
   }
 
   return (
-    (data as { id: string; parent_id: string | null; slug: string; name: string; level: number | null }[]) ?? []
+    (data as { id: string; parent_id: string | null; slug: string; name: string; level: number | null; sort_order: number }[]) ?? []
   ).map((row) => ({
     id: row.id,
     parentId: row.parent_id,
     slug: row.slug,
     name: row.name,
     level: row.level,
+    sortOrder: row.sort_order,
   }));
 }

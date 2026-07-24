@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCategories } from "@mypet/core/catalog";
-import { buildCategoryTree } from "@mypet/core/catalog-utils";
+import { buildCategoryTree, collectCategorySubtreeIds } from "@mypet/core/catalog-utils";
 import { requireAdminSession } from "@/lib/auth";
 import { flattenForSelect } from "@/lib/categories";
 import { updateCategory } from "../actions";
@@ -25,7 +25,10 @@ export default async function EditCategoriaPage({
   if (!node) notFound();
 
   const tree = buildCategoryTree(categories);
-  const options = flattenForSelect(tree).filter((o) => o.id !== id);
+  // Exclui a categoria E toda a sua subárvore das opções de pai: escolher um
+  // descendente como pai criaria um ciclo e o galho inteiro sumiria da árvore.
+  const excludedIds = new Set(collectCategorySubtreeIds(categories, id));
+  const options = flattenForSelect(tree).filter((o) => !excludedIds.has(o.id));
   const updateWithId = updateCategory.bind(null, id);
 
   return (
@@ -56,7 +59,7 @@ export default async function EditCategoriaPage({
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-500">Ordem</label>
-          <input name="sortOrder" type="number" defaultValue={0} className="w-24 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+          <input name="sortOrder" type="number" defaultValue={node.sortOrder} className="w-24 rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         </div>
         <button type="submit" className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white">
           Salvar

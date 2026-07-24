@@ -48,4 +48,21 @@ describe("leadsToCsv", () => {
   it("retorna só o cabeçalho para lista vazia", () => {
     expect(leadsToCsv([]).trim()).toBe("data,nome,empresa,whatsapp,cnpj,canal,status");
   });
+
+  it("neutraliza formula injection prefixando ' em campos que começam com =, +, - ou @", () => {
+    const csv = leadsToCsv([
+      {
+        id: "1",
+        nome: "=1+1",
+        empresa: "@empresa",
+        whatsapp: "11999999999",
+        cnpj: null,
+        channel: "mypetbrasil",
+        status: "novo",
+        created_at: "2026-07-17T10:00:00Z",
+      },
+    ]);
+    const lines = csv.trim().split("\n");
+    expect(lines[1]).toBe("2026-07-17T10:00:00Z,'=1+1,'@empresa,11999999999,,mypetbrasil,novo");
+  });
 });
