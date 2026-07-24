@@ -1,10 +1,13 @@
 import { Suspense } from "react";
 import type { Palette } from "@mypet/core/theme";
+import type { Channel } from "@mypet/core/channels";
 import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { getProductCount, getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { AssistantSearch } from "@mypet/core/components/assistant-search";
+import { HeroSection } from "@mypet/core/components/hero-section";
+import { MiniBannerStrip } from "@mypet/core/components/mini-banner-strip";
 import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
@@ -131,6 +134,8 @@ export default async function Home({
           overflow: hidden;
           transition: transform 0.2s, box-shadow 0.2s;
           cursor: pointer;
+          display: flex;
+          flex-direction: column;
         }
         .product-card:hover {
           transform: translateY(-4px);
@@ -244,7 +249,8 @@ export default async function Home({
         @media (max-width: 640px) {
           .hero-title { font-size: 32px !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .products-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px !important; }
+          .product-card-media { aspect-ratio: 1 / 1.08 !important; }
           .modal { padding: 28px 20px; }
         }
       `}</style>
@@ -255,58 +261,13 @@ export default async function Home({
         <SiteNav categories={categories} />
 
         {/* HERO */}
-        <section style={{
-          background: `linear-gradient(135deg, ${PALETTE.navyDark} 0%, ${PALETTE.navy} 60%, #1e4d8a 100%)`,
-          padding: "80px 24px 72px",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          {/* decorative circles */}
-          <div style={{ position: "absolute", top: -60, right: -60, width: 300, height: 300, borderRadius: "50%", background: PALETTE.pink, opacity: 0.08 }} />
-          <div style={{ position: "absolute", bottom: -80, left: "30%", width: 400, height: 400, borderRadius: "50%", background: PALETTE.cyan, opacity: 0.06 }} />
+        <Suspense fallback={<div style={{ minHeight: 480, background: PALETTE.navyDark }} />}>
+          <HeroSection channel={clientConfig.catalogChannel as Channel} palette={PALETTE} />
+        </Suspense>
 
-          <div style={{ maxWidth: 860, margin: "0 auto", textAlign: "center", position: "relative" }}>
-            <div className="fade-up" style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.2)",
-              borderRadius: 100, padding: "6px 16px", marginBottom: 28,
-            }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: PALETTE.cyan, display: "inline-block" }} />
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 600 }}>Atacado exclusivo para pet shops • Sem intermediários</span>
-            </div>
-
-            <h1 className="fade-up fade-up-1 hero-title" style={{
-              fontSize: 52, fontWeight: 900, color: PALETTE.white, lineHeight: 1.15,
-              marginBottom: 20, letterSpacing: "-0.02em",
-            }}>
-              Monte seu pedido em minutos.<br />
-              <span style={{ color: PALETTE.cyan }}>Sem precisar falar com ninguém.</span>
-            </h1>
-
-            <p className="fade-up fade-up-2" style={{ fontSize: 18, color: "rgba(255,255,255,0.75)", marginBottom: 36, maxWidth: 580, margin: "0 auto 36px", lineHeight: 1.6 }}>
-              Catálogo completo de ração, higiene, brinquedos e mais com preços sob consulta para lojistas.
-            </p>
-
-            <div className="fade-up fade-up-3" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 48 }}>
-              <UnlockButton className="cta-primary">
-                💬 Solicitar cotação
-              </UnlockButton>
-              <a href="#catalogo" className="cta-secondary" style={{ textDecoration: "none", display: "inline-block" }}>
-                Ver catálogo
-              </a>
-            </div>
-
-            {/* pills */}
-            <p className="fade-up" style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
-              {["✅ Cadastro em 10 segundos", "📦 Estoque em tempo real", "🚚 Entrega em 48h SP", "💬 Sem atendimento necessário", "🏷️ Preços sob consulta"].map((t) => (
-                <span key={t} style={{
-                  background: "rgba(255,255,255,0.10)", border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: 100, padding: "6px 14px", fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: 600,
-                }}>{t}</span>
-              ))}
-            </p>
-          </div>
-        </section>
+        <Suspense fallback={null}>
+          <MiniBannerStrip channel={clientConfig.catalogChannel as Channel} />
+        </Suspense>
 
         {/* ASSISTENTE DE BUSCA COM IA */}
         <div style={{ padding: "0 24px", marginTop: -32, position: "relative", zIndex: 1 }}>
