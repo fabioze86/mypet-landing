@@ -4,6 +4,8 @@ import { getCatalog, getCategories } from "../catalog";
 import { parsePage, collectCategorySubtreeIds, getCategoryPath } from "../catalog-utils";
 import { ProductCard } from "./product-card";
 import type { Palette } from "../theme";
+import { getBanners } from "../banners";
+import type { Channel } from "../channels";
 
 export async function CategoryListing({
   slug,
@@ -28,6 +30,7 @@ export async function CategoryListing({
   const children = categories.filter((c) => c.parentId === node.id);
   const subtreeIds = collectCategorySubtreeIds(categories, node.id);
   const catalog = await getCatalog({ categoryId: subtreeIds, page, channel });
+  const [categoryBanner] = await getBanners(channel as Channel, "categoria", node.id);
 
   return (
     <>
@@ -50,6 +53,20 @@ export async function CategoryListing({
       </nav>
 
       <h1 style={{ fontSize: 26, fontWeight: 900, color: palette.navy, marginBottom: 16 }}>{node.name}</h1>
+
+      {categoryBanner && (
+        <div style={{ marginBottom: 20 }}>
+          {categoryBanner.linkUrl ? (
+            <a href={categoryBanner.linkUrl}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={categoryBanner.imageUrl} alt={categoryBanner.title ?? node.name} style={{ width: "100%", borderRadius: 16, display: "block" }} />
+            </a>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={categoryBanner.imageUrl} alt={categoryBanner.title ?? node.name} style={{ width: "100%", borderRadius: 16, display: "block" }} />
+          )}
+        </div>
+      )}
 
       {children.length > 0 && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
