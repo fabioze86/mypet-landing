@@ -213,3 +213,4 @@ Além de `npm run lint` e `npm run build`:
 
 - **2026-07-17 — create_admin_users**: cria `public.admin_users` com RLS (select apenas do próprio registro).
 - **2026-07-17 — create_leads**: cria `public.leads` (substitui o Google Sheets), com insert público e select/update restritos a `admin_users`.
+- **2026-07-17 — categories_admin_write_policy**: permite insert/update/delete em `public.categories` para usuários em `admin_users` (select público pré-existente não foi alterado).
