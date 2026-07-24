@@ -16,6 +16,15 @@ const BannerSchema = z.object({
   active: z.boolean().default(true),
 });
 
+const DeleteBannerSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const ToggleBannerActiveSchema = z.object({
+  id: z.string().uuid(),
+  active: z.enum(["true", "false"]),
+});
+
 export type BannerFormState = { error?: string } | undefined;
 
 async function resolveImageUrl(formData: FormData, existingUrl?: string): Promise<{ url: string } | { error: string }> {
@@ -88,8 +97,9 @@ export async function createBanner(_state: BannerFormState, formData: FormData):
 
 export async function deleteBanner(formData: FormData): Promise<void> {
   const { supabase } = await requireAdminSession();
-  const id = String(formData.get("id") ?? "");
-  if (!id) return;
+  const parsed = DeleteBannerSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return;
+  const { id } = parsed.data;
 
   const { error } = await supabase.from("banners").delete().eq("id", id);
   if (error) {
@@ -102,9 +112,13 @@ export async function deleteBanner(formData: FormData): Promise<void> {
 
 export async function toggleBannerActive(formData: FormData): Promise<void> {
   const { supabase } = await requireAdminSession();
-  const id = String(formData.get("id") ?? "");
-  const active = formData.get("active") === "true";
-  if (!id) return;
+  const parsed = ToggleBannerActiveSchema.safeParse({
+    id: formData.get("id"),
+    active: formData.get("active"),
+  });
+  if (!parsed.success) return;
+  const { id } = parsed.data;
+  const active = parsed.data.active === "true";
 
   const { error } = await supabase
     .from("banners")
