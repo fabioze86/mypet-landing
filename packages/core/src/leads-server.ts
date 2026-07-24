@@ -1,30 +1,32 @@
-import { google } from "googleapis";
 import { NextRequest } from "next/server";
+import { getHubClient } from "./supabase";
+import type { Channel } from "./channels";
 
-export async function POST(req: NextRequest) {
-  const { nome, empresa, whatsapp, cnpj } = await req.json();
+export function createLeadsPostHandler(channel: Channel) {
+  return async function POST(req: NextRequest): Promise<Response> {
+    const { nome, empresa, whatsapp, cnpj } = await req.json();
 
-  if (!nome || !empresa || !whatsapp) {
-    return Response.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
-  }
+    if (!nome || !empresa || !whatsapp) {
+      return Response.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
+    }
 
-  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS!);
+    const supabase = getHubClient();
+    const { error } = await supabase.from("leads").insert({
+      nome,
+      empresa,
+      whatsapp,
+      cnpj: cnpj || null,
+      channel,
+    });
 
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
+    if (error) {
+      console.error("[leads] erro ao gravar lead:", error.message);
+      return Response.json(
+        { error: "Não foi possível salvar seu cadastro. Tente novamente em instantes." },
+        { status: 500 },
+      );
+    }
 
-  const sheets = google.sheets({ version: "v4", auth });
-
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: "Leads!A:E",
-    valueInputOption: "USER_ENTERED",
-    requestBody: {
-      values: [[new Date().toLocaleString("pt-BR"), nome, empresa, whatsapp, cnpj || ""]],
-    },
-  });
-
-  return Response.json({ ok: true });
+    return Response.json({ ok: true });
+  };
 }
