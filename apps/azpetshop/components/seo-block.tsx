@@ -23,9 +23,9 @@ const SEO_CONTENT: Record<string, { p1: string; p2: string }> = {
 export function SeoBlock() {
   return (
     <section style={{ maxWidth: 860, margin: "0 auto", padding: "64px 24px" }}>
-      <h1 style={{ fontSize: 30, fontWeight: 900, color: palette.purple, marginBottom: 16 }}>
+      <h2 style={{ fontSize: 30, fontWeight: 900, color: palette.purple, marginBottom: 16 }}>
         MAD PET: acessórios de fabricação própria para cachorros e gatos
-      </h1>
+      </h2>
       <p style={{ fontSize: 16, color: palette.gray800, lineHeight: 1.7, marginBottom: 40 }}>
         A MAD PET é a linha própria de acessórios do Grupo AZ, fabricada com foco em cor,
         conforto e preço-benefício. Bandanas, laços, peitorais e coleiras pensados pra cães e

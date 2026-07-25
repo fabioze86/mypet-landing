@@ -36,7 +36,7 @@ export function Faq() {
 
   return (
     <section style={{ maxWidth: 780, margin: "0 auto", padding: "64px 24px" }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <h2
         style={{
           fontFamily: "var(--font-fredoka)",

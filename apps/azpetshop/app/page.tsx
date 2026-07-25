@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <div>
       <HeaderNav whatsappLink={genericWhatsappLink} mainSiteUrl={clientConfig.mainSiteUrl} />
-      <Hero whatsappLink={genericWhatsappLink} />
+      <Hero />
       <BrandBlock />
       {PRODUCT_LINES.map((line, i) => (
         <LineSection

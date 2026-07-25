@@ -17,7 +17,13 @@ export async function LineSection({
   whatsappNumber: string;
   background: "green" | "purple";
 }) {
-  const catalog = await getCatalog({ categoryId: line.categoryId, brand, page: 1, channel });
+  let catalog: Awaited<ReturnType<typeof getCatalog>>;
+  try {
+    catalog = await getCatalog({ categoryId: line.categoryId, brand, page: 1, channel });
+  } catch (error) {
+    console.error(`[azpetshop] erro ao buscar catalogo da linha ${line.slug}:`, error);
+    catalog = { items: [], total: 0, page: 1, totalPages: 1 };
+  }
   const bg = background === "green" ? palette.green : palette.purple;
 
   return (
