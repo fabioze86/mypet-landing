@@ -35,3 +35,7 @@ export function buildQuoteMessage(items: CartItem[], customer: QuoteCustomer): s
 export function buildWhatsAppLink(phoneNumber: string, message: string): string {
   return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 }
+
+export function buildProductInterestMessage(productName: string): string {
+  return `Olá! Tenho interesse no produto: ${productName}`;
+}

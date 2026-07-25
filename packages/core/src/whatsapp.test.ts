@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildQuoteMessage, buildWhatsAppLink } from "./whatsapp";
+import { buildQuoteMessage, buildWhatsAppLink, buildProductInterestMessage } from "./whatsapp";
 import type { CartItem } from "./cart";
 
 const customer = { nome: "João", empresa: "Pet Shop X", whatsapp: "11999999999" };
@@ -50,5 +50,12 @@ describe("buildWhatsAppLink", () => {
     expect(link).toBe(
       "https://wa.me/5511999999999?text=Ol%C3%A1!%20Teste%20com%20acento%20%C3%A9%20%C3%A7%C3%A3o"
     );
+  });
+});
+
+describe("buildProductInterestMessage", () => {
+  it("monta a mensagem de interesse com o nome do produto", () => {
+    const message = buildProductInterestMessage("Bandana Xadrez Verde");
+    expect(message).toBe("Olá! Tenho interesse no produto: Bandana Xadrez Verde");
   });
 });
