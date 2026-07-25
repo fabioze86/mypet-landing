@@ -25,7 +25,7 @@ export function Hero({ whatsappLink }: { whatsappLink: string }) {
         }}
       >
         <div style={{ maxWidth: 520 }}>
-          <h1
+          <p
             style={{
               fontFamily: "var(--font-fredoka)",
               fontSize: 44,
@@ -37,7 +37,7 @@ export function Hero({ whatsappLink }: { whatsappLink: string }) {
             }}
           >
             Acessórios com aquele toque mad.
-          </h1>
+          </p>
           <p style={{ fontSize: 18, color: "rgba(255,255,255,0.9)", marginBottom: 28, lineHeight: 1.6 }}>
             Bandanas, laços, peitorais e coleiras de fabricação própria — cores vibrantes,
             materiais resistentes, preço-benefício sem enrolação.
