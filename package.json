@@ -6,6 +6,7 @@
     "dev:mypet": "pnpm --filter mypet dev",
     "dev:distribuidora": "pnpm --filter distribuidora dev",
     "dev:azpetshop": "pnpm --filter azpetshop dev",
+    "dev:admin": "pnpm --filter admin dev",
     "build": "pnpm -r build",
     "lint": "eslint",
     "test": "pnpm --filter @mypet/core test"
