@@ -6,7 +6,7 @@
 ## Contexto e problema
 
 O monorepo tem hoje 4 apps (`mypet`, `distribuidora`, `azpetshop`, `admin`), todos usando
-`next dev` sem porta fixa (todos sobem na 4100 por padrão) — rodar mais de um ao mesmo
+`next dev` sem porta fixa (todos sobem na 3000 por padrão, a porta default do Next.js) — rodar mais de um ao mesmo
 tempo já causa conflito de porta. Para trabalhar em qualquer site, o usuário precisa abrir
 um terminal por app e rodar `npm run dev`/`pnpm dev:<app>` manualmente, um de cada vez. Não
 existe hoje nenhuma página que liste os sites do monorepo; e o root `package.json` nem tem
