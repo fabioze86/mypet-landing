@@ -7,11 +7,14 @@
     "dev:distribuidora": "pnpm --filter distribuidora dev",
     "dev:azpetshop": "pnpm --filter azpetshop dev",
     "dev:admin": "pnpm --filter admin dev",
+    "dev:hub": "pnpm --filter hub dev",
+    "dev:all": "concurrently -n mypet,distribuidora,azpetshop,admin,hub -c blue,green,yellow,magenta,cyan \"pnpm dev:mypet\" \"pnpm dev:distribuidora\" \"pnpm dev:azpetshop\" \"pnpm dev:admin\" \"pnpm dev:hub\"",
     "build": "pnpm -r build",
     "lint": "eslint",
     "test": "pnpm --filter @mypet/core test"
   },
   "devDependencies": {
+    "concurrently": "^9",
     "eslint": "^9",
     "eslint-config-next": "16.2.6"
   }
