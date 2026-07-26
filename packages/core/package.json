@@ -12,10 +12,12 @@
     "./catalog-utils": "./src/catalog-utils.ts",
     "./cart": "./src/cart.ts",
     "./channels": "./src/channels.ts",
+    "./features": "./src/features.ts",
     "./leads": "./src/leads.ts",
     "./leads-server": "./src/leads-server.ts",
     "./whatsapp": "./src/whatsapp.ts",
     "./querystring": "./src/querystring.ts",
+    "./seo": "./src/seo.ts",
     "./supabase": "./src/supabase.ts",
     "./theme": "./src/theme.tsx",
     "./components/*": "./src/components/*.tsx"
