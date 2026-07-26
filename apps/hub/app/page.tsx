@@ -1,29 +1,29 @@
 type SiteLink = {
   name: string;
   description: string;
-  url: string;
+  port: number;
 };
 
 const SITES: SiteLink[] = [
   {
     name: "My Pet Brasil",
-    description: "Site público — atacado B2B (porta 4100)",
-    url: "http://localhost:4100",
+    description: "Site público — atacado B2B",
+    port: 4100,
   },
   {
     name: "Distribuidora Petshop",
-    description: "Site público — atacado B2B (porta 4101)",
-    url: "http://localhost:4101",
+    description: "Site público — atacado B2B",
+    port: 4101,
   },
   {
     name: "MAD PET (azpetshop)",
-    description: "Site público — acessórios (porta 4102)",
-    url: "http://localhost:4102",
+    description: "Site público — acessórios",
+    port: 4102,
   },
   {
     name: "Admin",
-    description: "Painel administrativo (porta 4103)",
-    url: "http://localhost:4103",
+    description: "Painel administrativo",
+    port: 4103,
   },
 ];
 
@@ -38,25 +38,32 @@ export default function HubPage() {
       </p>
 
       <div style={{ display: "grid", gap: 16 }}>
-        {SITES.map((site) => (
-          <a
-            key={site.url}
-            href={site.url}
-            style={{
-              display: "block",
-              padding: "20px 24px",
-              borderRadius: 12,
-              border: "1px solid #E0E0E0",
-              background: "#FFFFFF",
-              textDecoration: "none",
-              color: "inherit",
-            }}
-          >
-            <p style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{site.name}</p>
-            <p style={{ fontSize: 14, color: "#666" }}>{site.description}</p>
-            <p style={{ fontSize: 13, color: "#999", marginTop: 8 }}>{site.url}</p>
-          </a>
-        ))}
+        {SITES.map((site) => {
+          const url = `http://localhost:${site.port}`;
+          return (
+            <a
+              key={site.port}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "block",
+                padding: "20px 24px",
+                borderRadius: 12,
+                border: "1px solid #E0E0E0",
+                background: "#FFFFFF",
+                textDecoration: "none",
+                color: "inherit",
+              }}
+            >
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{site.name}</h2>
+              <p style={{ fontSize: 14, color: "#666" }}>
+                {site.description} (porta {site.port})
+              </p>
+              <p style={{ fontSize: 13, color: "#999", marginTop: 8 }}>{url}</p>
+            </a>
+          );
+        })}
       </div>
     </main>
   );

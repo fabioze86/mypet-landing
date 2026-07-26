@@ -8,7 +8,7 @@
     "dev:azpetshop": "pnpm --filter azpetshop dev",
     "dev:admin": "pnpm --filter admin dev",
     "dev:hub": "pnpm --filter hub dev",
-    "dev:all": "concurrently -n mypet,distribuidora,azpetshop,admin,hub -c blue,green,yellow,magenta,cyan \"pnpm dev:mypet\" \"pnpm dev:distribuidora\" \"pnpm dev:azpetshop\" \"pnpm dev:admin\" \"pnpm dev:hub\"",
+    "dev:all": "concurrently -n mypet,distribuidora,azpetshop,admin,hub -c blue,green,yellow,magenta,cyan \"pnpm --filter mypet dev\" \"pnpm --filter distribuidora dev\" \"pnpm --filter azpetshop dev\" \"pnpm --filter admin dev\" \"pnpm --filter hub dev\"",
     "build": "pnpm -r build",
     "lint": "eslint",
     "test": "pnpm --filter @mypet/core test"

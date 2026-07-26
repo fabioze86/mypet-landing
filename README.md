@@ -82,20 +82,52 @@ O endpoint adiciona uma linha no intervalo `Leads!A:E`:
 
 ## Executando localmente
 
+Este repositório é um monorepo pnpm com múltiplos apps. Para subir tudo de uma
+vez (mypet, distribuidora, azpetshop, admin e hub):
+
 ```bash
-npm run dev
+pnpm dev:all
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+O `hub` funciona como ponto de entrada visual, com links para todos os apps:
+acesse [http://localhost:4104](http://localhost:4104). Para subir só o hub:
+
+```bash
+pnpm dev:hub
+```
+
+Cada app roda numa porta fixa:
+
+| App | Porta |
+| --- | --- |
+| mypet | 4100 |
+| distribuidora | 4101 |
+| azpetshop | 4102 |
+| admin | 4103 |
+| hub | 4104 |
+
+Se quiser subir só um app específico, use o comando individual correspondente:
+
+```bash
+pnpm dev:mypet
+pnpm dev:distribuidora
+pnpm dev:azpetshop
+pnpm dev:admin
+pnpm dev:hub
+```
 
 ## Scripts
 
 | Comando | Finalidade |
 | --- | --- |
-| `npm run dev` | Inicia o servidor de desenvolvimento |
-| `npm run build` | Gera o build de produção |
-| `npm run start` | Executa o build de produção |
-| `npm run lint` | Executa a análise estática |
+| `pnpm dev:all` | Inicia os 5 apps em desenvolvimento simultaneamente |
+| `pnpm dev:mypet` | Inicia só o app mypet (porta 4100) |
+| `pnpm dev:distribuidora` | Inicia só o app distribuidora (porta 4101) |
+| `pnpm dev:azpetshop` | Inicia só o app azpetshop (porta 4102) |
+| `pnpm dev:admin` | Inicia só o app admin (porta 4103) |
+| `pnpm dev:hub` | Inicia só o hub (porta 4104) |
+| `pnpm build` | Gera o build de produção de todos os apps |
+| `pnpm lint` | Executa a análise estática |
 
 ## Fluxo de captação
 
