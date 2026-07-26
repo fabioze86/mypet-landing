@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
+import type { Features } from "./features";
 
 export type Palette = {
   pink: string;
@@ -30,6 +31,7 @@ export type ClientConfig = {
   catalogChannel: string;
   palette: Palette;
   logo: { emoji: string };
+  features: Features;
 };
 
 const ClientConfigContext = createContext<ClientConfig | null>(null);

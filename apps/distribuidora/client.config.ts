@@ -1,4 +1,5 @@
 import type { ClientConfig } from "@mypet/core/theme";
+import { SITES } from "@mypet/core/features";
 
 export const clientConfig: ClientConfig = {
   name: "Distribuidora Petshop",
@@ -26,4 +27,5 @@ export const clientConfig: ClientConfig = {
     gray800: "#1E293B",
   },
   logo: { emoji: "🐾" },
+  features: SITES.distribuidora.features,
 };

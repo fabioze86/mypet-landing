@@ -1,4 +1,5 @@
 import type { Channel } from "@mypet/core/channels";
+import { SITES } from "@mypet/core/features";
 
 export const clientConfig = {
   name: "MAD PET",
@@ -9,4 +10,5 @@ export const clientConfig = {
   mainSiteUrl: "https://www.mypetbrasil.com.br",
   distribuidoraUrl: "https://www.distribuidorapetshop.com.br",
   marketplaceUrl: "",
+  features: SITES.azpetshop.features,
 };
