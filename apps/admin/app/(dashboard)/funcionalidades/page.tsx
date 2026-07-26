@@ -1,7 +1,7 @@
 import { SITES, FEATURE_REGISTRY, type SiteId } from "@mypet/core/features";
 import { requireAdminSession } from "@/lib/auth";
 
-const SITE_ORDER: SiteId[] = ["mypet", "distribuidora", "azpetshop"];
+const SITE_ORDER = Object.keys(SITES) as SiteId[];
 
 export default async function FuncionalidadesPage() {
   await requireAdminSession();

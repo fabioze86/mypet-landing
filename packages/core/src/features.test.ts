@@ -28,8 +28,9 @@ describe("features registry", () => {
     }
   });
 
-  it("mypet e distribuidora começam em modo cotação", () => {
+  it("todos os sites começam em modo cotação", () => {
     expect(SITES.mypet.features.commerce).toBe("quote");
     expect(SITES.distribuidora.features.commerce).toBe("quote");
+    expect(SITES.azpetshop.features.commerce).toBe("quote");
   });
 });
