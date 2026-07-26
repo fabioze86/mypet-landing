@@ -6,7 +6,7 @@
 ## Contexto e problema
 
 O monorepo tem hoje 4 apps (`mypet`, `distribuidora`, `azpetshop`, `admin`), todos usando
-`next dev` sem porta fixa (todos sobem na 3000 por padrão) — rodar mais de um ao mesmo
+`next dev` sem porta fixa (todos sobem na 4100 por padrão) — rodar mais de um ao mesmo
 tempo já causa conflito de porta. Para trabalhar em qualquer site, o usuário precisa abrir
 um terminal por app e rodar `npm run dev`/`pnpm dev:<app>` manualmente, um de cada vez. Não
 existe hoje nenhuma página que liste os sites do monorepo; e o root `package.json` nem tem
@@ -32,14 +32,14 @@ rodar múltiplos apps ao mesmo tempo:
 
 | App | Porta |
 | --- | --- |
-| `mypet` | 3000 |
-| `distribuidora` | 3001 |
-| `azpetshop` | 3002 |
-| `admin` | 3003 |
-| `hub` (novo) | 4000 |
+| `mypet` | 4100 |
+| `distribuidora` | 4101 |
+| `azpetshop` | 4102 |
+| `admin` | 4103 |
+| `hub` (novo) | 4104 |
 
 ```json
-"dev": "next dev -p 3000"
+"dev": "next dev -p 4100"
 ```
 
 (a porta muda por app, conforme a tabela acima)
@@ -52,7 +52,7 @@ App Next.js mínimo (App Router), sem Supabase, sem autenticação, sem `client.
 arquivo — não reaproveita `SITES` de `packages/core/src/features.ts`, que é um registro de
 funcionalidades por site, não de URLs/portas; misturar as duas coisas acopla conceitos
 não relacionados) com 4 cards: nome, descrição curta, e link para a URL local de cada app
-(`http://localhost:3000`, `:3001`, `:3002`, `:3003`).
+(`http://localhost:4100`, `:4101`, `:4102`, `:4103`).
 
 Sem lógica de status ao vivo: cada card é um `<a>` simples. Se o app de destino ainda não
 subiu, o clique resulta no erro de conexão padrão do navegador — comportamento aceito
@@ -74,7 +74,7 @@ Este trabalho é infraestrutura de desenvolvimento local (scripts e uma página 
 sem lógica de negócio para testar com Vitest. A verificação é funcional:
 
 - Rodar `pnpm dev:all` e confirmar que os 5 processos sobem sem erro de porta ocupada.
-- Abrir `http://localhost:4000` e confirmar que os 4 cards apontam para as portas corretas.
+- Abrir `http://localhost:4104` e confirmar que os 4 cards apontam para as portas corretas.
 - Clicar em cada link e confirmar que abre o site/admin correspondente.
 - `pnpm build` (build de todos os apps) continua passando — a mudança de porta é só para
   `next dev`, não afeta `next build`/`next start`.

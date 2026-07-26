@@ -12,7 +12,7 @@
 
 - Nenhum status "online/offline" ao vivo no hub — só links fixos (`<a href>`), decisão explícita do usuário.
 - O hub não deve importar nada de `packages/core` relacionado a `SITES`/`features.ts` — esse registro é sobre funcionalidades ativas por site, não sobre URLs/portas de dev; a lista de links do hub fica hardcoded no próprio `apps/hub`.
-- Portas fixas: `mypet` 3000, `distribuidora` 3001, `azpetshop` 3002, `admin` 3003, `hub` 4000.
+- Portas fixas: `mypet` 4100, `distribuidora` 4101, `azpetshop` 4102, `admin` 4103, `hub` 4104.
 - A mudança de porta afeta só `next dev` (script `dev`); os scripts `build`/`start` de cada app não mudam.
 
 ---
@@ -37,7 +37,7 @@ servidor e confirmar que responde na porta esperada.
 Troque a linha `"dev": "next dev",` por:
 
 ```json
-    "dev": "next dev -p 3000",
+    "dev": "next dev -p 4100",
 ```
 
 - [ ] **Step 2: Definir porta fixa em `apps/distribuidora/package.json`**
@@ -45,7 +45,7 @@ Troque a linha `"dev": "next dev",` por:
 Troque a linha `"dev": "next dev",` por:
 
 ```json
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 4101",
 ```
 
 - [ ] **Step 3: Definir porta fixa em `apps/azpetshop/package.json`**
@@ -53,7 +53,7 @@ Troque a linha `"dev": "next dev",` por:
 Troque a linha `"dev": "next dev",` por:
 
 ```json
-    "dev": "next dev -p 3002",
+    "dev": "next dev -p 4102",
 ```
 
 - [ ] **Step 4: Definir porta fixa em `apps/admin/package.json`**
@@ -61,7 +61,7 @@ Troque a linha `"dev": "next dev",` por:
 Troque a linha `"dev": "next dev",` por:
 
 ```json
-    "dev": "next dev -p 3003",
+    "dev": "next dev -p 4103",
 ```
 
 - [ ] **Step 5: Adicionar `dev:admin` ao `package.json` da raiz**
@@ -89,38 +89,38 @@ HTTP retornado, e derrube o processo em seguida:
 ```bash
 pnpm --filter mypet dev &
 sleep 5
-curl -s -o /dev/null -w "mypet (3000): %{http_code}\n" http://localhost:3000
+curl -s -o /dev/null -w "mypet (4100): %{http_code}\n" http://localhost:4100
 kill %1 2>/dev/null || true
 ```
 
-Expected: `mypet (3000): 200`
+Expected: `mypet (4100): 200`
 
 ```bash
 pnpm --filter distribuidora dev &
 sleep 5
-curl -s -o /dev/null -w "distribuidora (3001): %{http_code}\n" http://localhost:3001
+curl -s -o /dev/null -w "distribuidora (4101): %{http_code}\n" http://localhost:4101
 kill %1 2>/dev/null || true
 ```
 
-Expected: `distribuidora (3001): 200`
+Expected: `distribuidora (4101): 200`
 
 ```bash
 pnpm --filter azpetshop dev &
 sleep 5
-curl -s -o /dev/null -w "azpetshop (3002): %{http_code}\n" http://localhost:3002
+curl -s -o /dev/null -w "azpetshop (4102): %{http_code}\n" http://localhost:4102
 kill %1 2>/dev/null || true
 ```
 
-Expected: `azpetshop (3002): 200`
+Expected: `azpetshop (4102): 200`
 
 ```bash
 pnpm --filter admin dev &
 sleep 5
-curl -s -o /dev/null -w "admin (3003): %{http_code}\n" http://localhost:3003
+curl -s -o /dev/null -w "admin (4103): %{http_code}\n" http://localhost:4103
 kill %1 2>/dev/null || true
 ```
 
-Expected: `admin (3003): 200` ou `307`/`302` (redirect para `/login` — o admin exige
+Expected: `admin (4103): 200` ou `307`/`302` (redirect para `/login` — o admin exige
 sessão; qualquer resposta HTTP válida confirma que o servidor subiu na porta certa).
 
 - [ ] **Step 7: Commit**
@@ -144,9 +144,9 @@ git commit -m "feat: porta fixa por app + script dev:admin no root"
 - Modify: `package.json` (raiz — adiciona `dev:hub` e `dev:all`, adiciona `concurrently` em `devDependencies`)
 
 **Interfaces:**
-- Consumes: as portas fixas definidas na Task 1 (3000/3001/3002/3003).
+- Consumes: as portas fixas definidas na Task 1 (4100/4101/4102/4103).
 - Produces: app `hub` rodável via `pnpm --filter hub dev` ou `pnpm dev:hub`, escutando em
-  `:4000`; script `pnpm dev:all` na raiz, que sobe os 5 apps de uma vez.
+  `:4104`; script `pnpm dev:all` na raiz, que sobe os 5 apps de uma vez.
 
 - [ ] **Step 1: Criar `apps/hub/package.json`**
 
@@ -156,7 +156,7 @@ git commit -m "feat: porta fixa por app + script dev:admin no root"
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 4000",
+    "dev": "next dev -p 4104",
     "build": "next build",
     "start": "next start"
   },
@@ -253,23 +253,23 @@ type SiteLink = {
 const SITES: SiteLink[] = [
   {
     name: "My Pet Brasil",
-    description: "Site público — atacado B2B (porta 3000)",
-    url: "http://localhost:3000",
+    description: "Site público — atacado B2B (porta 4100)",
+    url: "http://localhost:4100",
   },
   {
     name: "Distribuidora Petshop",
-    description: "Site público — atacado B2B (porta 3001)",
-    url: "http://localhost:3001",
+    description: "Site público — atacado B2B (porta 4101)",
+    url: "http://localhost:4101",
   },
   {
     name: "MAD PET (azpetshop)",
-    description: "Site público — acessórios (porta 3002)",
-    url: "http://localhost:3002",
+    description: "Site público — acessórios (porta 4102)",
+    url: "http://localhost:4102",
   },
   {
     name: "Admin",
-    description: "Painel administrativo (porta 3003)",
-    url: "http://localhost:3003",
+    description: "Painel administrativo (porta 4103)",
+    url: "http://localhost:4103",
   },
 ];
 
@@ -349,11 +349,11 @@ Expected: instala `concurrently` no root e cria o link do workspace `hub` (novo 
 ```bash
 pnpm --filter hub dev &
 sleep 5
-curl -s http://localhost:4000 | grep -o 'http://localhost:300[0-3]' | sort -u
+curl -s http://localhost:4104 | grep -o 'http://localhost:410[0-3]' | sort -u
 kill %1 2>/dev/null || true
 ```
 
-Expected: a saída lista as 4 URLs (`http://localhost:3000`, `:3001`, `:3002`, `:3003`),
+Expected: a saída lista as 4 URLs (`http://localhost:4100`, `:4101`, `:4102`, `:4103`),
 uma por linha — confirma que os 4 cards estão presentes na página renderizada.
 
 - [ ] **Step 10: Rodar `pnpm dev:all` e verificar que os 5 processos sobem juntos**
@@ -361,7 +361,7 @@ uma por linha — confirma que os 4 cards estão presentes na página renderizad
 ```bash
 pnpm dev:all &
 sleep 8
-for port in 3000 3001 3002 3003 4000; do
+for port in 4100 4101 4102 4103 4104; do
   curl -s -o /dev/null -w "porta $port: %{http_code}\n" "http://localhost:$port"
 done
 kill %1 2>/dev/null || true
@@ -395,7 +395,7 @@ git commit -m "feat: app hub de desenvolvimento local + comando dev:all"
   apps existentes (só o script `dev` foi tocado em cada um) ✅.
 - **Placeholders:** nenhum "TBD"/"similar to" — cada step tem o conteúdo completo do
   arquivo ou comando.
-- **Consistência:** as portas usadas no `apps/hub/app/page.tsx` (3000/3001/3002/3003)
+- **Consistência:** as portas usadas no `apps/hub/app/page.tsx` (4100/4101/4102/4103)
   batem exatamente com as definidas na Task 1; os nomes dos scripts (`dev:mypet`,
   `dev:distribuidora`, `dev:azpetshop`, `dev:admin`, `dev:hub`) usados em `dev:all` (Task
   2, Step 7) batem com os scripts criados nas Tasks 1 e 2.
