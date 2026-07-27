@@ -165,6 +165,20 @@ catálogo real do canal `mypet`.
   mesmo padrão sem precisar de spec novo, a menos que envolvam decisão de design não
   trivial.
 
+## Addendum (verificado ao escrever o plano de implementação, 2026-07-27)
+
+Consulta direta ao Supabase `hub_catalogo` mostrou que **hoje não existe nenhum produto
+com variantes reais** (`product_role = "parent"`: 0 registros ativos — só `simple`) nem
+nenhum badge `novidade` ativo. Ou seja, além do preço (já coberto acima), a variação
+(PP/P/G) e o badge "NOVO" também não têm exemplo real no catálogo pra puxar.
+
+Decisão: mesmo tratamento do preço — o slot "card-produto-listagem" usa um produto
+real (nome/imagem/SKU reais, ex. um produto `simple` existente do canal `mypet`) com
+**variantes e badge fictícios sobrepostos só para a Opção B**, com a mesma etiqueta
+visual "exemplo" usada no preço. Isso mantém a Opção B demonstrável sem depender de
+dado que ainda não existe no catálogo, e sem quebrar o princípio de "dados reais" pro
+resto do produto (imagem, nome, SKU, id continuam reais).
+
 ## Decisões e trade-offs
 
 | Decisão | Motivo |
