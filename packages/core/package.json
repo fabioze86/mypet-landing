@@ -17,6 +17,7 @@
     "./leads-server": "./src/leads-server.ts",
     "./whatsapp": "./src/whatsapp.ts",
     "./querystring": "./src/querystring.ts",
+    "./seo": "./src/seo.ts",
     "./supabase": "./src/supabase.ts",
     "./theme": "./src/theme.tsx",
     "./components/*": "./src/components/*.tsx"

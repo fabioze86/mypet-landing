@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { badgeStyle } from "@mypet/core/theme";
 import { getProductById, getCategories } from "@mypet/core/catalog";
-import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
+import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
-import { AddToCartControl } from "@mypet/core/components/add-to-cart-control";
+import { ProductVariantPanel } from "@mypet/core/components/product-variant-panel";
+import { productGroupJsonLd } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
@@ -198,43 +198,18 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
-  const styleBadge = product.badge ? badgeStyle(product.badge.code, PALETTE) : null;
+  const jsonLd = productGroupJsonLd(product, clientConfig.domain);
 
   return (
     <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
-      {/* COLUNA ESQUERDA - IMAGEM */}
-            <div style={{
-              background: PALETTE.white,
-              border: `1px solid ${PALETTE.gray200}`,
-              borderRadius: 20,
-              padding: 24,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              overflow: "hidden",
-              boxShadow: "0 4px 20px rgba(26,52,114,0.04)"
-            }}>
-              <div className="img-container" style={{ width: "100%", height: 450, position: "relative" }}>
-                <img
-                  src={product.img}
-                  alt={product.name}
-                  style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                />
-              </div>
-
-              {product.badge && styleBadge && (
-                <span style={{ position: "absolute", top: 20, left: 20, background: styleBadge.bg, color: styleBadge.color, fontSize: 12, fontWeight: 800, padding: "6px 14px", borderRadius: 100, letterSpacing: "0.02em", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-                  {product.badge.label}
-                </span>
-              )}
-
-              {product.brand && (
-                <span style={{ position: "absolute", top: 20, right: 20, background: PALETTE.navyLight, color: PALETTE.navy, fontSize: 11, fontWeight: 700, padding: "5px 12px", borderRadius: 100, letterSpacing: "0.04em" }}>
-                  {product.brand.toUpperCase()}
-                </span>
-              )}
-            </div>
+      {jsonLd && (
+        // eslint-disable-next-line react/no-danger
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      )}
+      {/* COLUNA ESQUERDA - IMAGEM + VARIANTES + CTA */}
+      <div>
+        <ProductVariantPanel product={product} />
+      </div>
 
             {/* COLUNA DIREITA - INFORMAÇÕES */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -247,43 +222,6 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
                 <h1 style={{ fontSize: 32, fontWeight: 900, color: PALETTE.navy, lineHeight: 1.25, marginBottom: 12 }}>
                   {product.name}
                 </h1>
-                
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                  {product.sku && (
-                    <span style={{ fontSize: 13, color: PALETTE.gray600, background: PALETTE.gray100, padding: "4px 10px", borderRadius: 6, fontWeight: 600 }}>
-                      SKU/Ref: {product.sku}
-                    </span>
-                  )}
-                  {product.barcode && (
-                    <span style={{ fontSize: 13, color: PALETTE.gray600, background: PALETTE.gray100, padding: "4px 10px", borderRadius: 6, fontWeight: 600 }}>
-                      EAN/EAC: {product.barcode}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* CARD DE PREÇO / COTAÇÃO */}
-              <div style={{
-                background: PALETTE.white,
-                border: `1px solid ${PALETTE.gray200}`,
-                borderRadius: 16,
-                padding: 24,
-                boxShadow: "0 4px 20px rgba(26,52,114,0.04)"
-              }}>
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, color: PALETTE.gray600, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Atacado B2B</div>
-                  <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>Preço sob consulta</div>
-                  <p style={{ fontSize: 13, color: PALETTE.gray600, marginTop: 4 }}>
-                    Venda exclusiva para CNPJ de pet shops e revendedores.
-                  </p>
-                </div>
-
-                <UnlockButton className="unlock-btn">
-                  <span>💬</span> Solicitar cotação deste produto
-                </UnlockButton>
-                <AddToCartControl
-                  product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img }}
-                />
               </div>
 
               {/* DESCRIÇÃO */}

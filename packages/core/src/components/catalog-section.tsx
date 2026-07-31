@@ -60,7 +60,7 @@ export async function CatalogSection({
           Nenhum produto encontrado. Tente outra busca ou marca.
         </p>
       ) : (
-        <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 20 }}>
+        <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 22 }}>
           {catalog.items.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

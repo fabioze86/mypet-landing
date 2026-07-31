@@ -10,6 +10,7 @@ const calls: Record<string, unknown> = {};
 type QueryBuilder = {
   select: (...args: unknown[]) => QueryBuilder;
   eq: (...args: unknown[]) => QueryBuilder;
+  neq: (...args: unknown[]) => QueryBuilder;
   ilike: (...args: unknown[]) => QueryBuilder;
   in: (...args: unknown[]) => QueryBuilder;
   order: (...args: unknown[]) => QueryBuilder;
@@ -31,6 +32,7 @@ vi.mock("./supabase", () => {
         calls["eq"] = [...((calls["eq"] as unknown[][] | undefined) ?? []), args];
         return builder;
       };
+      builder.neq = chain("neq");
       builder.ilike = chain("ilike");
       builder.in = chain("in");
       builder.order = chain("order");
@@ -79,6 +81,7 @@ describe("queryCatalog", () => {
     const result = await queryCatalog({ q: "ração", brand: "NAPI", page: 2, channel: "mypetbrasil" });
     expect(calls["ilike"]).toEqual(["name", "%ração%"]);
     expect(calls["eq"]).toContainEqual(["status", "active"]);
+    expect(calls["neq"]).toEqual(["product_role", "variant"]);
     expect(calls["eq"]).toContainEqual(["brand", "NAPI"]);
     expect(calls["eq"]).toContainEqual(["product_channel_links.channel", "mypetbrasil"]);
     expect((calls["select"] as unknown[])[0]).toContain("product_channel_links");

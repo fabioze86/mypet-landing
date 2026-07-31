@@ -12,8 +12,27 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
   return (
     <div className="product-card">
       <Link href={`/produtos/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-        <div style={{ position: "relative" }}>
-          <img src={product.img} alt={product.name} style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+        <div
+          className="product-card-media"
+          style={{
+            position: "relative",
+            aspectRatio: "1 / 1.22",
+            width: "100%",
+            background: palette.white,
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src={product.img}
+            alt={product.name}
+            loading="lazy"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              display: "block",
+            }}
+          />
           {product.badge && style && (
             <span style={{ position: "absolute", top: 10, left: 10, background: style.bg, color: style.color, fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 100, letterSpacing: "0.02em" }}>
               {product.badge.label}
@@ -25,18 +44,30 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             </span>
           )}
         </div>
-        <div style={{ padding: "14px 14px 0" }}>
+        <div style={{ padding: "10px 12px 0" }}>
           {product.sku && (
-            <p style={{ fontSize: 10, color: palette.gray400, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 6, textTransform: "uppercase" }}>
+            <p style={{ fontSize: 9, color: palette.gray400, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 4, textTransform: "uppercase" }}>
               SKU: {product.sku}
             </p>
           )}
-          <h3 style={{ fontSize: 14, fontWeight: 800, color: palette.navy, lineHeight: 1.35, marginBottom: 14, minHeight: 38 }}>
+          <h3
+            style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: palette.navy,
+              lineHeight: 1.28,
+              marginBottom: 10,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
             {product.name}
           </h3>
         </div>
       </Link>
-      <div style={{ padding: "0 14px 16px" }}>
+      <div style={{ padding: "0 12px 12px" }}>
         <PriceLockSlot />
         <UnlockButton className="unlock-btn">
           <><span>💬</span> Solicitar cotação</>

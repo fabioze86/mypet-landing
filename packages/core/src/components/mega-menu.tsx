@@ -114,6 +114,7 @@ export function MegaMenu({ tree }: { tree: CategoryTreeNode[] }) {
         }
         .mega-menu-viewport {
           width: 100%;
+          height: var(--radix-navigation-menu-viewport-height);
           background: ${palette.white};
           border: 1px solid ${palette.gray200};
           border-top: none;

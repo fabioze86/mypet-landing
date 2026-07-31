@@ -53,6 +53,38 @@ export type CatalogResult = {
   totalPages: number;
 };
 
+export type VariantAxisEntry = { eixo: string; valor: string; ordem?: number };
+
+export type ProductVariant = {
+  id: string;
+  name: string;
+  sku: string;
+  barcode: string | null;
+  img: string;
+  axis: VariantAxisEntry[];
+};
+
+export type RawVariantRow = {
+  id: string;
+  name: string;
+  reference: string | null;
+  barcode: string | null;
+  variant_axis: VariantAxisEntry[] | null;
+  product_assets: { url: string; type: string }[] | null;
+};
+
+export function mapVariant(row: RawVariantRow): ProductVariant {
+  const axis = (row.variant_axis ?? []).slice().sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+  return {
+    id: row.id,
+    name: row.name,
+    sku: row.reference ?? "",
+    barcode: row.barcode,
+    img: mainImage(row.product_assets),
+    axis,
+  };
+}
+
 export function parsePage(raw: string | undefined): number {
   const n = Number(raw);
   return Number.isInteger(n) && n >= 1 ? n : 1;

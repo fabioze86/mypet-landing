@@ -2,12 +2,16 @@ import { cacheLife, cacheTag } from "next/cache";
 import { getHubClient } from "./supabase";
 import {
   mapProduct,
+  mapVariant,
   pageRange,
   totalPages,
   mainImage,
   pickActiveBadge,
   type CatalogResult,
   type RawProductRow,
+  type RawVariantRow,
+  type ProductVariant,
+  type VariantAxisEntry,
   type CategoryNode,
 } from "./catalog-utils";
 
@@ -29,6 +33,7 @@ export async function queryCatalog(params: {
     .from("products")
     .select(`${CATALOG_SELECT}, product_channel_links!inner(channel)`, { count: "exact" })
     .eq("status", "active")
+    .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
     .order("name", { ascending: true });
 
@@ -74,6 +79,7 @@ export async function getBrands(channel: string): Promise<string[]> {
     .from("products")
     .select("brand, product_channel_links!inner(channel)")
     .eq("status", "active")
+    .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
     .not("brand", "is", null);
   if (error) {
@@ -96,6 +102,7 @@ export async function getProductCount(channel: string): Promise<number> {
     .from("products")
     .select("id, product_channel_links!inner(channel)", { count: "exact", head: true })
     .eq("status", "active")
+    .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel);
   if (error) {
     console.error("[catalog] erro ao contar produtos:", error.message);
@@ -110,9 +117,9 @@ export async function getProductById(id: string, channel: string) {
   cacheTag("catalog");
   const supabase = getHubClient();
   const { data, error } = await supabase
-    .from("products")
+    .from("v_produtos_resolvidos")
     .select(
-      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_links!inner(channel)"
+      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_role, parent_product_id, variant_axis, product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_links!inner(channel)"
     )
     .eq("id", id)
     .eq("status", "active")
@@ -123,6 +130,8 @@ export async function getProductById(id: string, channel: string) {
     console.error("[catalog] erro ao buscar produto por id:", error?.message);
     return null;
   }
+
+  const variants = data.product_role === "parent" ? await getVariantsByParentId(id, channel) : [];
 
   return {
     id: data.id,
@@ -137,7 +146,65 @@ export async function getProductById(id: string, channel: string) {
     length_cm: data.length_cm,
     img: mainImage(data.product_assets),
     badge: pickActiveBadge(data.product_badges),
+    productRole: data.product_role as "simple" | "parent" | "variant",
+    parentProductId: data.parent_product_id,
+    variantAxis: (data.variant_axis as VariantAxisEntry[] | null) ?? [],
+    variants,
   };
+}
+
+async function getVariantsByParentId(parentId: string, channel: string): Promise<ProductVariant[]> {
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, name, reference, barcode, variant_axis, product_assets(url, type), product_channel_links!inner(channel)"
+    )
+    .eq("parent_product_id", parentId)
+    .eq("status", "active")
+    .eq("product_channel_links.channel", channel)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("[catalog] erro ao buscar variantes:", error.message);
+    return [];
+  }
+
+  return ((data as unknown as RawVariantRow[]) ?? []).map(mapVariant);
+}
+
+export async function getSitemapProducts(
+  channel: string,
+): Promise<{ id: string; updatedAt: string }[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("catalog");
+  const supabase = getHubClient();
+  const pageSize = 1000;
+  const all: { id: string; updatedAt: string }[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, updated_at, product_channel_links!inner(channel)")
+      .eq("status", "active")
+      .neq("product_role", "variant")
+      .eq("product_channel_links.channel", channel)
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      console.error("[catalog] erro ao consultar produtos para sitemap:", error.message);
+      break;
+    }
+
+    const rows = (data as { id: string; updated_at: string }[]) ?? [];
+    all.push(...rows.map((r) => ({ id: r.id, updatedAt: r.updated_at })));
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return all;
 }
 
 export async function getCategories(): Promise<CategoryNode[]> {

@@ -23,7 +23,21 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [profileOptions, setProfileOptions] = useState<AssistantProfileOption[]>([]);
   const [usedProvider, setUsedProvider] = useState<string | null>(null);
-  const [adminKey, setAdminKey] = useState<string | null>(null);
+  const [adminKey] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+
+    const publicKey = process.env.NEXT_PUBLIC_ASSISTANT_ADMIN_KEY;
+    if (!publicKey) return null;
+
+    const fromUrl = new URLSearchParams(window.location.search).get("assistantAdmin");
+    if (fromUrl && fromUrl === publicKey) {
+      window.localStorage.setItem(ADMIN_KEY_STORAGE, fromUrl);
+      return fromUrl;
+    }
+
+    const stored = window.localStorage.getItem(ADMIN_KEY_STORAGE);
+    return stored === publicKey ? stored : null;
+  });
   const [adminProvider, setAdminProvider] = useState<AssistantProvider>("openai");
   const [adminModel, setAdminModel] = useState(SELECTABLE_MODELS.openai[0]);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -32,23 +46,6 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, loading]);
-
-  useEffect(() => {
-    const publicKey = process.env.NEXT_PUBLIC_ASSISTANT_ADMIN_KEY;
-    if (!publicKey) return;
-
-    const fromUrl = new URLSearchParams(window.location.search).get("assistantAdmin");
-    if (fromUrl && fromUrl === publicKey) {
-      window.localStorage.setItem(ADMIN_KEY_STORAGE, fromUrl);
-      setAdminKey(fromUrl);
-      return;
-    }
-
-    const stored = window.localStorage.getItem(ADMIN_KEY_STORAGE);
-    if (stored === publicKey) {
-      setAdminKey(stored);
-    }
-  }, []);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -237,7 +234,7 @@ export function AssistantSearch({ channel, palette }: { channel: string; palette
           className="products-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
             gap: 16,
             marginTop: 24,
           }}
