@@ -57,9 +57,17 @@ export default function InstallPrompt() {
 
   async function handleInstall() {
     if (!deferredEvent) return;
-    await deferredEvent.prompt();
-    await deferredEvent.userChoice;
-    setDeferredEvent(null);
+    try {
+      await deferredEvent.prompt();
+      const { outcome } = await deferredEvent.userChoice;
+      if (outcome === "dismissed") {
+        markDismissed();
+      }
+    } catch {
+      // Falha relacionada a PWA deve ser sempre silenciosa e nunca travar a UI.
+    } finally {
+      setDeferredEvent(null);
+    }
   }
 
   function handleDismiss() {
