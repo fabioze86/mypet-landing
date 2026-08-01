@@ -4,6 +4,7 @@ import { logout } from "../login/actions";
 
 const NAV = [
   { href: "/clientes", label: "Clientes" },
+  { href: "/pedidos", label: "Pedidos" },
   { href: "/categorias", label: "Categorias" },
   { href: "/funcionalidades", label: "Funcionalidades" },
 ];
