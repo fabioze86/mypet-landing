@@ -103,6 +103,9 @@ importers:
       '@mypet/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@supabase/ssr':
+        specifier: ^0.8.0
+        version: 0.8.0(@supabase/supabase-js@2.110.2)
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -162,6 +165,9 @@ importers:
       '@mypet/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@supabase/ssr':
+        specifier: ^0.8.0
+        version: 0.8.0(@supabase/supabase-js@2.110.2)
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
