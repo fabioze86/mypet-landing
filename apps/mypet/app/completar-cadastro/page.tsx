@@ -6,6 +6,7 @@ import { CompleteSignupForm } from "@mypet/core/components/complete-signup-form"
 import { getCategories } from "@mypet/core/catalog";
 import { createServerSupabaseClient } from "@mypet/core/supabase-server";
 import { getBuyerById } from "@mypet/core/buyers-server";
+import { safeNextPath } from "@mypet/core/auth-server";
 import { clientConfig } from "@/client.config";
 import { completeSignup } from "./actions";
 
@@ -17,7 +18,7 @@ async function CompleteSignupFormSection({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const target = next ?? "/cotacao";
+  const target = safeNextPath(next);
 
   const supabase = await createServerSupabaseClient();
   const {

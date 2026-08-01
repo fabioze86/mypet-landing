@@ -15,7 +15,7 @@ vi.mock("./supabase-server", () => ({
   })),
 }));
 
-import { createAuthCallbackHandler } from "./auth-server";
+import { createAuthCallbackHandler, safeNextPath } from "./auth-server";
 
 function fakeRequest(url: string): NextRequest {
   return { nextUrl: new URL(url) } as unknown as NextRequest;
@@ -63,5 +63,31 @@ describe("createAuthCallbackHandler", () => {
     const GET = createAuthCallbackHandler();
     const res = await GET(fakeRequest("https://app.test/entrar/callback?code=abc"));
     expect(res.headers.get("location")).toBe("https://app.test/cotacao");
+  });
+
+  it("ignora next protocolo-relativo (open redirect)", async () => {
+    exchangeCodeForSession.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
+    buyerSingleMock.mockResolvedValue({ data: { id: "u1" }, error: null });
+    const GET = createAuthCallbackHandler();
+    const res = await GET(fakeRequest("https://app.test/entrar/callback?code=abc&next=%2F%2Fevil.com"));
+    expect(res.headers.get("location")).toBe("https://app.test/cotacao");
+  });
+});
+
+describe("safeNextPath", () => {
+  it("aceita caminhos relativos válidos", () => {
+    expect(safeNextPath("/cotacao/123")).toBe("/cotacao/123");
+  });
+
+  it("rejeita caminhos protocolo-relativos (//evil.com)", () => {
+    expect(safeNextPath("//evil.com")).toBe("/cotacao");
+  });
+
+  it("rejeita valores sem barra inicial", () => {
+    expect(safeNextPath("evil.com")).toBe("/cotacao");
+  });
+
+  it("usa fallback customizado quando informado", () => {
+    expect(safeNextPath(null, "/inicio")).toBe("/inicio");
   });
 });

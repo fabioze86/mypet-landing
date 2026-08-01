@@ -1,11 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerSupabaseClient } from "./supabase-server";
 
+export function safeNextPath(raw: string | null | undefined, fallback = "/cotacao"): string {
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : fallback;
+}
+
 export function createAuthCallbackHandler() {
   return async function GET(request: NextRequest): Promise<Response> {
     const code = request.nextUrl.searchParams.get("code");
     const rawNext = request.nextUrl.searchParams.get("next");
-    const next = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/cotacao";
+    const next = safeNextPath(rawNext);
     const origin = request.nextUrl.origin;
 
     if (!code) {

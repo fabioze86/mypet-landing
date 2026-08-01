@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@mypet/core/supabase-server";
 import { createBuyer } from "@mypet/core/buyers-server";
+import { safeNextPath } from "@mypet/core/auth-server";
 
 export async function completeSignup(next: string, formData: FormData): Promise<{ error: string | null }> {
   const supabase = await createServerSupabaseClient();
@@ -34,6 +35,5 @@ export async function completeSignup(next: string, formData: FormData): Promise<
 
   if (error) return { error };
 
-  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/cotacao";
-  redirect(safeNext);
+  redirect(safeNextPath(next));
 }
