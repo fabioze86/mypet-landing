@@ -8,6 +8,7 @@
     "./assistant-client": "./src/assistant-client.ts",
     "./assistant-server": "./src/assistant-server.ts",
     "./banners": "./src/banners.ts",
+    "./buyers-server": "./src/buyers-server.ts",
     "./catalog": "./src/catalog.ts",
     "./catalog-utils": "./src/catalog-utils.ts",
     "./cart": "./src/cart.ts",
