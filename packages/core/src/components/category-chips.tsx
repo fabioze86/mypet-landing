@@ -4,6 +4,8 @@ import { topLevelCategories, type CategoryNode } from "../catalog-utils";
 export function CategoryChips({ categories }: { categories: CategoryNode[] }) {
   const topLevel = topLevelCategories(categories);
 
+  if (topLevel.length === 0) return null;
+
   return (
     <div className="chip-row">
       <Link href="/" className="cat-btn active" style={{ textDecoration: "none" }}>

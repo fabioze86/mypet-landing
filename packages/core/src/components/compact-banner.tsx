@@ -17,7 +17,7 @@ export async function CompactBanner({ channel, palette }: { channel: Channel; pa
           <img
             src={b.imageUrl}
             alt={b.title ?? ""}
-            style={{ height: 150, borderRadius: 14, objectFit: "cover", display: "block" }}
+            style={{ width: 320, height: 150, borderRadius: 14, objectFit: "cover", display: "block" }}
           />
         );
         return (
