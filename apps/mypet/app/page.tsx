@@ -6,38 +6,37 @@ import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { getProductCount, getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { AssistantSearch } from "@mypet/core/components/assistant-search";
-import { HeroSection } from "@mypet/core/components/hero-section";
+import { CategoryChips } from "@mypet/core/components/category-chips";
+import { CompactBanner } from "@mypet/core/components/compact-banner";
+import { QuickNavIcons } from "@mypet/core/components/quick-nav-icons";
 import { MiniBannerStrip } from "@mypet/core/components/mini-banner-strip";
 import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
 
 const STATS_STATIC = [
-  { value: "10.000+", label: "Pet shops ativos" },
-  { value: "…", label: "SKUs no catálogo" },
-  { value: "48h", label: "Entrega média SP" },
-  { value: "R$0", label: "Taxa de cadastro" },
+  { icon: "🏪", value: "10.000+", label: "Pet shops ativos" },
+  { icon: "📦", value: "…", label: "SKUs no catálogo" },
+  { icon: "🚚", value: "48h", label: "Entrega média SP" },
+  { icon: "✅", value: "R$0", label: "Taxa de cadastro" },
 ];
 
 async function StatsCount({ channel }: { channel: string }) {
   const total = await getProductCount(channel);
   const totalLabel = `${total.toLocaleString("pt-BR")}+`;
   const STATS = [
-    { value: "10.000+", label: "Pet shops ativos" },
-    { value: totalLabel, label: "SKUs no catálogo" },
-    { value: "48h", label: "Entrega média SP" },
-    { value: "R$0", label: "Taxa de cadastro" },
+    { icon: "🏪", value: "10.000+", label: "Pet shops ativos" },
+    { icon: "📦", value: totalLabel, label: "SKUs no catálogo" },
+    { icon: "🚚", value: "48h", label: "Entrega média SP" },
+    { icon: "✅", value: "R$0", label: "Taxa de cadastro" },
   ];
   return (
     <>
-      {STATS.map((s, i) => (
-        <div key={s.label} style={{
-          padding: "28px 24px",
-          borderRight: i < 3 ? `1px solid ${PALETTE.gray200}` : "none",
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: 30, fontWeight: 900, color: PALETTE.pink, marginBottom: 4 }}>{s.value}</div>
-          <div style={{ fontSize: 14, color: PALETTE.gray600, fontWeight: 600 }}>{s.label}</div>
+      {STATS.map((s) => (
+        <div key={s.label} style={{ padding: "16px 12px", textAlign: "center" }}>
+          <div style={{ fontSize: 18, marginBottom: 4 }}>{s.icon}</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: PALETTE.pink, marginBottom: 2 }}>{s.value}</div>
+          <div style={{ fontSize: 12, color: PALETTE.gray600, fontWeight: 600 }}>{s.label}</div>
         </div>
       ))}
     </>
@@ -80,7 +79,7 @@ async function DynamicCatalog({
 }) {
   const sp = await searchParams;
   return (
-    <section id="catalogo" style={{ maxWidth: 1200, margin: "0 auto", padding: "52px 24px 80px" }}>
+    <section id="catalogo" style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 80px" }}>
       <div style={{ marginBottom: 28 }}>
         <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
       </div>
@@ -126,6 +125,29 @@ export default async function Home({
           border-color: ${PALETTE.pink};
           color: ${PALETTE.white};
         }
+
+        .chip-row {
+          display: flex;
+          gap: 8px;
+          overflow-x: auto;
+          padding: 10px 16px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .chip-row::-webkit-scrollbar { display: none; }
+
+        .banner-row {
+          display: flex;
+          gap: 10px;
+          overflow-x: auto;
+          padding: 0 16px;
+          scroll-snap-type: x mandatory;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+        }
+        .banner-row::-webkit-scrollbar { display: none; }
+        .banner-row-item { scroll-snap-align: start; flex: 0 0 auto; }
+        .banner-row-item img { min-width: 280px; }
 
         .product-card {
           background: ${PALETTE.white};
@@ -237,21 +259,22 @@ export default async function Home({
         }
         .form-submit:hover { background: ${PALETTE.pinkDark}; }
 
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+        .footer-row {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 16px;
         }
-        .fade-up { animation: fadeUp 0.6s ease both; }
-        .fade-up-1 { animation-delay: 0.1s; }
-        .fade-up-2 { animation-delay: 0.2s; }
-        .fade-up-3 { animation-delay: 0.3s; }
 
         @media (max-width: 640px) {
-          .hero-title { font-size: 32px !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px !important; }
           .product-card-media { aspect-ratio: 1 / 1.08 !important; }
           .modal { padding: 28px 20px; }
+          .footer-row { flex-direction: column; align-items: flex-start; }
         }
       `}</style>
 
@@ -260,34 +283,50 @@ export default async function Home({
         {/* NAV */}
         <SiteNav categories={categories} />
 
-        {/* HERO */}
-        <Suspense fallback={<div style={{ minHeight: 480, background: PALETTE.navyDark }} />}>
-          <HeroSection channel={clientConfig.catalogChannel as Channel} palette={PALETTE} />
+        {/* CATEGORY CHIPS */}
+        <CategoryChips categories={categories} />
+
+        {/* COMPACT BANNER */}
+        <Suspense fallback={<div style={{ height: 150, margin: "0 16px" }} />}>
+          <CompactBanner channel={clientConfig.catalogChannel as Channel} palette={PALETTE} />
         </Suspense>
 
+        {/* QUICK NAV ICONS */}
+        <QuickNavIcons palette={PALETTE} />
+
+        {/* MINI BANNER STRIP */}
         <Suspense fallback={null}>
           <MiniBannerStrip channel={clientConfig.catalogChannel as Channel} />
         </Suspense>
 
+        {/* CATALOG */}
+        <Suspense fallback={
+          <section style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 80px" }}>
+            <div style={{ marginBottom: 28 }}>
+              <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
+            </div>
+            <p style={{ color: PALETTE.gray600 }}>Carregando catálogo…</p>
+          </section>
+        }>
+          <DynamicCatalog searchParams={searchParams} channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
+        </Suspense>
+
         {/* ASSISTENTE DE BUSCA COM IA */}
-        <div style={{ padding: "0 24px", marginTop: -32, position: "relative", zIndex: 1 }}>
+        <div style={{ padding: "0 24px", marginTop: 8 }}>
           <AssistantSearch channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
         </div>
 
         {/* STATS */}
-        <section style={{ background: PALETTE.white, borderBottom: `1px solid ${PALETTE.gray200}` }}>
+        <section style={{ background: PALETTE.white, borderBottom: `1px solid ${PALETTE.gray200}`, marginTop: 32 }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
             <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
               <Suspense fallback={
                 <>
-                  {STATS_STATIC.map((s, i) => (
-                    <div key={s.label} style={{
-                      padding: "28px 24px",
-                      borderRight: i < 3 ? `1px solid ${PALETTE.gray200}` : "none",
-                      textAlign: "center",
-                    }}>
-                      <div style={{ fontSize: 30, fontWeight: 900, color: PALETTE.pink, marginBottom: 4 }}>{s.value}</div>
-                      <div style={{ fontSize: 14, color: PALETTE.gray600, fontWeight: 600 }}>{s.label}</div>
+                  {STATS_STATIC.map((s) => (
+                    <div key={s.label} style={{ padding: "16px 12px", textAlign: "center" }}>
+                      <div style={{ fontSize: 18, marginBottom: 4 }}>{s.icon}</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: PALETTE.pink, marginBottom: 2 }}>{s.value}</div>
+                      <div style={{ fontSize: 12, color: PALETTE.gray600, fontWeight: 600 }}>{s.label}</div>
                     </div>
                   ))}
                 </>
@@ -298,29 +337,22 @@ export default async function Home({
           </div>
         </section>
 
-        {/* CATALOG */}
-        <Suspense fallback={
-          <section style={{ maxWidth: 1200, margin: "0 auto", padding: "52px 24px 80px" }}>
-            <div style={{ marginBottom: 28 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
-            </div>
-            <p style={{ color: PALETTE.gray600 }}>Carregando catálogo…</p>
-          </section>
-        }>
-          <DynamicCatalog searchParams={searchParams} channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
-        </Suspense>
-
         {/* CTA BANNER */}
         <section style={{
           background: `linear-gradient(135deg, ${PALETTE.pink} 0%, ${PALETTE.pinkDark} 100%)`,
-          padding: "64px 24px",
+          padding: "44px 24px",
         }}>
           <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>🐾</div>
-            <h2 style={{ fontSize: 32, fontWeight: 900, color: PALETTE.white, marginBottom: 12 }}>
+            <div style={{
+              width: 56, height: 56, borderRadius: "50%",
+              background: "rgba(255,255,255,0.15)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 26, margin: "0 auto 16px",
+            }}>🐾</div>
+            <h2 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.white, marginBottom: 12 }}>
               Pronto para comprar no atacado?
             </h2>
-            <p style={{ fontSize: 16, color: "rgba(255,255,255,0.82)", marginBottom: 32, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.82)", marginBottom: 28, lineHeight: 1.6 }}>
               Mais de 10.000 pet shops já compram pela My Pet Brasil. Cadastro gratuito, sem burocracia e cotações sob consulta.
             </p>
             <UnlockButton className="cta-secondary" style={{ fontSize: 16 }}>
@@ -330,8 +362,8 @@ export default async function Home({
         </section>
 
         {/* FOOTER */}
-        <footer style={{ background: PALETTE.navyDark, padding: "32px 24px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+        <footer style={{ background: PALETTE.navyDark, padding: "24px 24px calc(24px + env(safe-area-inset-bottom))" }}>
+          <div className="footer-row">
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
               <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
