@@ -1,8 +1,11 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { CompleteSignupForm } from "@mypet/core/components/complete-signup-form";
 import { getCategories } from "@mypet/core/catalog";
+import { createServerSupabaseClient } from "@mypet/core/supabase-server";
+import { getBuyerById } from "@mypet/core/buyers-server";
 import { clientConfig } from "@/client.config";
 import { completeSignup } from "./actions";
 
@@ -15,6 +18,18 @@ async function CompleteSignupFormSection({
 }) {
   const { next } = await searchParams;
   const target = next ?? "/cotacao";
+
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const buyer = await getBuyerById(supabase, user.id);
+    if (buyer) {
+      redirect(target);
+    }
+  }
 
   return <CompleteSignupForm action={completeSignup.bind(null, target)} />;
 }

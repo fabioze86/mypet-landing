@@ -4,7 +4,8 @@ import { createServerSupabaseClient } from "./supabase-server";
 export function createAuthCallbackHandler() {
   return async function GET(request: NextRequest): Promise<Response> {
     const code = request.nextUrl.searchParams.get("code");
-    const next = request.nextUrl.searchParams.get("next") ?? "/cotacao";
+    const rawNext = request.nextUrl.searchParams.get("next");
+    const next = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/cotacao";
     const origin = request.nextUrl.origin;
 
     if (!code) {

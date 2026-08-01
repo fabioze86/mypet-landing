@@ -67,6 +67,10 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     const result = await finalizeQuote(cart.items);
 
     if (!result.ok) {
+      if (result.needsProfile) {
+        router.push(`/completar-cadastro?next=${encodeURIComponent("/cotacao")}`);
+        return;
+      }
       if (result.needsAuth) {
         router.push(`/entrar?next=${encodeURIComponent("/cotacao")}`);
         return;

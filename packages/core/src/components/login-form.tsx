@@ -9,12 +9,10 @@ export function LoginForm({ next }: { next?: string }) {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError("");
 
     const supabase = createBrowserSupabaseClient();
     const callbackUrl = new URL("/entrar/callback", window.location.origin);
@@ -56,9 +54,6 @@ export function LoginForm({ next }: { next?: string }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      {error && (
-        <p style={{ color: palette.orange, fontSize: 13, marginBottom: 8, textAlign: "center" }}>{error}</p>
-      )}
       <button type="submit" className="form-submit" disabled={submitting}>
         {submitting ? "Enviando..." : "Receber link de acesso →"}
       </button>

@@ -34,5 +34,6 @@ export async function completeSignup(next: string, formData: FormData): Promise<
 
   if (error) return { error };
 
-  redirect(next);
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/cotacao";
+  redirect(safeNext);
 }

@@ -28,8 +28,13 @@ controlada pela tabela `product_channel_links` do Supabase `hub_catalogo`
 (campo `channel`), populada fora deste repositório.
 
 Variáveis de ambiente por app (`.env.local`, não versionado):
-`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_WHATSAPP_NUMBER`,
+`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_WHATSAPP_NUMBER`,
 `AI_PROVIDER`, `AI_MODEL`, e as credenciais do provedor de IA escolhido:
+
+`NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` espelham
+`SUPABASE_URL`/`SUPABASE_ANON_KEY` (mesmos valores), mas precisam do prefixo
+`NEXT_PUBLIC_` para ficarem disponíveis ao client Supabase do navegador.
 
 - `google`: `GOOGLE_GENERATIVE_AI_API_KEY`
 - `google-vertex`: `GOOGLE_APPLICATION_CREDENTIALS` (caminho para a service

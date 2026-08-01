@@ -9,7 +9,7 @@ import type { Channel } from "@mypet/core/channels";
 
 export type FinalizeQuoteResult =
   | { ok: true; buyer: { nome: string; empresa: string; whatsapp: string; cnpj: string | null } }
-  | { ok: false; error: string; needsAuth?: boolean };
+  | { ok: false; error: string; needsAuth?: boolean; needsProfile?: boolean };
 
 export async function finalizeQuote(items: CartItem[]): Promise<FinalizeQuoteResult> {
   const supabase = await createServerSupabaseClient();
@@ -23,7 +23,7 @@ export async function finalizeQuote(items: CartItem[]): Promise<FinalizeQuoteRes
 
   const buyer = await getBuyerById(supabase, user.id);
   if (!buyer) {
-    return { ok: false, error: "Cadastro incompleto. Complete seu cadastro para continuar.", needsAuth: true };
+    return { ok: false, error: "Cadastro incompleto. Complete seu cadastro para continuar.", needsProfile: true };
   }
 
   const { error } = await createOrder(supabase, {

@@ -25,7 +25,7 @@ async function PedidosContent({
   if (channel) query = query.eq("channel", channel);
   if (status) query = query.eq("status", status);
 
-  const { data } = await query;
+  const { data, error } = await query;
   const orders = (data ?? []) as unknown as OrderRow[];
 
   return (
@@ -50,6 +50,8 @@ async function PedidosContent({
           Filtrar
         </button>
       </form>
+
+      {error && <p className="text-sm text-red-600">Erro ao carregar pedidos: {error.message}</p>}
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <table className="w-full text-sm">
@@ -83,6 +85,13 @@ async function PedidosContent({
                 </td>
               </tr>
             ))}
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                  Nenhum pedido encontrado.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
