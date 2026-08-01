@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { getCategories } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
@@ -7,13 +8,30 @@ import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
 
+async function EntrarFormSection({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string; erro?: string }>;
+}) {
+  const { next, erro } = await searchParams;
+  return (
+    <>
+      {erro === "link-invalido" && (
+        <p style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 16, textAlign: "center" }}>
+          O link usado expirou ou já foi usado. Peça um novo abaixo.
+        </p>
+      )}
+      <LoginForm next={next} />
+    </>
+  );
+}
+
 export default async function EntrarPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string; erro?: string }>;
 }) {
   const categories = await getCategories();
-  const { next, erro } = await searchParams;
 
   return (
     <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
@@ -57,12 +75,9 @@ export default async function EntrarPage({
           <p style={{ fontSize: 14, color: PALETTE.gray600, textAlign: "center", marginBottom: 24 }}>
             Informe seu e-mail para receber um link de acesso — sem senha.
           </p>
-          {erro === "link-invalido" && (
-            <p style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 16, textAlign: "center" }}>
-              O link usado expirou ou já foi usado. Peça um novo abaixo.
-            </p>
-          )}
-          <LoginForm next={next} />
+          <Suspense fallback={null}>
+            <EntrarFormSection searchParams={searchParams} />
+          </Suspense>
           <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 20, fontSize: 13, color: PALETTE.gray400 }}>
             ← Voltar ao catálogo
           </Link>
