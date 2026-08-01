@@ -1,17 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getBuyerById, createBuyer } from "./buyers-server";
-
-function fakeSupabase(overrides: Record<string, unknown> = {}) {
-  return {
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: null, error: null }),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-      ...overrides,
-    })),
-  } as any;
-}
 
 describe("getBuyerById", () => {
   it("retorna o buyer quando encontrado", async () => {
@@ -21,7 +10,7 @@ describe("getBuyerById", () => {
     });
     const supabase = {
       from: vi.fn(() => ({ select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single })),
-    } as any;
+    } as unknown as SupabaseClient;
 
     const buyer = await getBuyerById(supabase, "u1");
 
@@ -33,7 +22,7 @@ describe("getBuyerById", () => {
     const single = vi.fn().mockResolvedValue({ data: null, error: { message: "not found" } });
     const supabase = {
       from: vi.fn(() => ({ select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single })),
-    } as any;
+    } as unknown as SupabaseClient;
 
     const buyer = await getBuyerById(supabase, "u1");
     expect(buyer).toBeNull();
@@ -43,7 +32,7 @@ describe("getBuyerById", () => {
 describe("createBuyer", () => {
   it("grava o buyer com cnpj vazio virando null", async () => {
     const insert = vi.fn().mockResolvedValue({ error: null });
-    const supabase = { from: vi.fn(() => ({ insert })) } as any;
+    const supabase = { from: vi.fn(() => ({ insert })) } as unknown as SupabaseClient;
 
     const result = await createBuyer(supabase, {
       id: "u1",
@@ -67,7 +56,7 @@ describe("createBuyer", () => {
 
   it("retorna erro genérico quando o Supabase falha", async () => {
     const insert = vi.fn().mockResolvedValue({ error: { message: "conexão recusada" } });
-    const supabase = { from: vi.fn(() => ({ insert })) } as any;
+    const supabase = { from: vi.fn(() => ({ insert })) } as unknown as SupabaseClient;
 
     const result = await createBuyer(supabase, {
       id: "u1",

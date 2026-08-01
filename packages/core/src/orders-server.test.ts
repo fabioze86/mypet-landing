@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createOrder, getOrdersByBuyer } from "./orders-server";
 import type { CartItem } from "./cart";
 
@@ -8,7 +9,7 @@ const items: CartItem[] = [
 
 describe("createOrder", () => {
   it("retorna erro quando o carrinho está vazio", async () => {
-    const supabase = { from: vi.fn() } as any;
+    const supabase = { from: vi.fn() } as unknown as SupabaseClient;
     const result = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items: [] });
     expect(result).toEqual({ orderId: null, error: "O carrinho está vazio." });
     expect(supabase.from).not.toHaveBeenCalled();
@@ -26,7 +27,7 @@ describe("createOrder", () => {
         }
         return { insert: orderItemsInsert };
       }),
-    } as any;
+    } as unknown as SupabaseClient;
 
     const result = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items });
 
@@ -45,7 +46,7 @@ describe("createOrder", () => {
         select: vi.fn().mockReturnThis(),
         single: vi.fn().mockResolvedValue({ data: null, error: { message: "conexão recusada" } }),
       })),
-    } as any;
+    } as unknown as SupabaseClient;
 
     const result = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items });
     expect(result.orderId).toBeNull();
@@ -71,7 +72,7 @@ describe("getOrdersByBuyer", () => {
           error: null,
         }),
       })),
-    } as any;
+    } as unknown as SupabaseClient;
 
     const orders = await getOrdersByBuyer(supabase, "b1");
 
@@ -92,7 +93,7 @@ describe("getOrdersByBuyer", () => {
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockResolvedValue({ data: null, error: { message: "erro" } }),
       })),
-    } as any;
+    } as unknown as SupabaseClient;
 
     const orders = await getOrdersByBuyer(supabase, "b1");
     expect(orders).toEqual([]);
