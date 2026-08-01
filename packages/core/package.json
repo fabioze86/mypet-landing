@@ -16,6 +16,7 @@
     "./features": "./src/features.ts",
     "./leads": "./src/leads.ts",
     "./leads-server": "./src/leads-server.ts",
+    "./orders-server": "./src/orders-server.ts",
     "./querystring": "./src/querystring.ts",
     "./seo": "./src/seo.ts",
     "./supabase": "./src/supabase.ts",
