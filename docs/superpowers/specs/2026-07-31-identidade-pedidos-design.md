@@ -28,7 +28,13 @@ verificação de identidade usa e-mail (novo canal, via Resend), não WhatsApp.
   finalização de cotação, em `mypet` e `distribuidora` (os dois apps que
   compartilham esse fluxo via `packages/core`). `azpetshop` não tem fluxo de
   cotação/carrinho hoje e fica fora de escopo.
-- **Provedor de e-mail**: Resend.
+- **Mecanismo de magic link: Supabase Auth**, reaproveitando o padrão já usado
+  em `apps/admin` (`@supabase/ssr`, `supabase.auth.signInWithOtp`). Buyers
+  viram usuários do Supabase Auth (`auth.users`); nenhuma tabela própria de
+  token/hash/expiração é criada — o Supabase Auth já cobre geração, expiração
+  e uso único do link. Envio do e-mail continua saindo pelo Resend, configurado
+  como SMTP customizado do projeto Supabase (painel do Supabase, fora deste
+  repositório).
 - **`leads` continua existindo** sem alteração de schema — permanece o canal de
   captura de interesse genérico (ex.: quem preenche o modal de cotação rápida
   de 1 produto via `LeadGateProvider`, que não muda nesta spec). `buyers` é uma
@@ -49,22 +55,15 @@ verificação de identidade usa e-mail (novo canal, via Resend), não WhatsApp.
 ### Modelo de dados (Supabase `hub_catalogo`, gerenciado fora do repo)
 
 ```sql
+-- Perfil do comprador, 1:1 com um usuário do Supabase Auth (auth.users).
+-- Mesmo padrão de admin_users vinculado a auth.users em apps/admin.
 buyers (
-  id            uuid primary key default gen_random_uuid(),
+  id            uuid primary key references auth.users(id),
   email         text not null unique,
   nome          text not null,
   empresa       text not null,
   whatsapp      text not null,
   cnpj          text,
-  created_at    timestamptz not null default now()
-)
-
-auth_tokens (
-  id            uuid primary key default gen_random_uuid(),
-  buyer_id      uuid not null references buyers(id),
-  token_hash    text not null,        -- hash do token, nunca o valor puro
-  expires_at    timestamptz not null, -- created_at + 15 minutos
-  used_at       timestamptz,
   created_at    timestamptz not null default now()
 )
 
@@ -89,34 +88,40 @@ order_items (
 `product_name_snapshot` garante que o histórico continue legível mesmo se o
 produto for renomeado ou removido do catálogo depois.
 
-O token em `auth_tokens` é gerado com alta entropia (ex.: 32 bytes aleatórios,
-`crypto.randomBytes`) e só o hash (SHA-256) é armazenado — o valor puro vai
-apenas no link do e-mail, igual a um reset de senha tradicional.
+`buyers.id` é o mesmo `id` do usuário em `auth.users` — não um novo UUID
+próprio. Um trigger (gerenciado fora do repo, no painel do Supabase, igual ao
+resto do schema) ou o próprio código de callback de login (Task 4) cria a
+linha em `buyers` no primeiro acesso, mesmo padrão do relacionamento
+`admin_users` ↔ `auth.users` já usado no admin.
 
-### Fluxo de autenticação (magic link)
+### Fluxo de autenticação (magic link via Supabase Auth)
 
 1. Lojista aciona login (explicitamente, ou implicitamente ao finalizar
    cotação sem sessão ativa) e informa e-mail num formulário mínimo.
-2. `POST /api/auth/request-link`:
-   - Busca `buyers` por e-mail. Se não existe, **não cria ainda** — cadastro
-     completo (nome/empresa/whatsapp/cnpj) só é pedido depois de confirmar o
-     e-mail, para não gravar registros de e-mails digitados errado.
-   - Gera token, grava `auth_tokens` (hash), envia e-mail via Resend com link
-     `https://<app>/entrar/<token>`.
-   - Resposta sempre genérica de sucesso ("Se o e-mail for válido, você
-     receberá um link"), independentemente de existir conta — evita
-     enumeração de e-mails cadastrados.
-   - Rate limit por e-mail e por IP (ex.: 3 pedidos / 10 min) para não virar
-     vetor de spam de caixa de entrada de terceiros.
-3. Lojista abre o e-mail e clica no link. `GET /entrar/[token]`:
-   - Valida hash, não expirado, não usado.
-   - Se `buyers` já existe para aquele token → cria sessão (cookie) e
-     redireciona para `/cotacao` (ou para onde a jornada começou).
-   - Se é o primeiro acesso daquele e-mail → mostra formulário curto
-     (nome/empresa/whatsapp/cnpj, mesmos campos do formulário de cotação
-     atual) para completar o cadastro antes de criar a sessão.
-   - Marca `used_at` no token (uso único).
-4. Token inválido/expirado/já usado → página de erro com botão "Pedir novo
+2. Client component chama `supabase.auth.signInWithOtp({ email, options: {
+   emailRedirectTo: "https://<app>/entrar/callback" } })` — usando um
+   `createBrowserSupabaseClient` novo em `packages/core` (mesmo par
+   url/anonKey de `getHubClient`, mas com `@supabase/ssr` para
+   compartilhar sessão via cookie, como o admin já faz no servidor).
+   O Supabase Auth cuida de gerar o link, expiração e uso único; não há
+   tabela ou lógica de token própria neste projeto.
+   Resposta da UI é sempre a mesma mensagem de sucesso
+   ("Verifique seu e-mail"), com ou sem erro do Supabase, para não expor se o
+   e-mail existe.
+3. Lojista abre o e-mail (enviado pelo Supabase Auth, via SMTP customizado do
+   Resend configurado no projeto Supabase — configuração de painel, fora
+   deste repositório) e clica no link, que aponta para `/entrar/callback`.
+4. `/entrar/callback` (route handler) troca o código pela sessão via
+   `supabase.auth.exchangeCodeForSession`, o que já grava os cookies de
+   sessão através do `createServerSupabaseClient` (Task 3). Depois:
+   - Verifica se já existe linha em `buyers` para aquele `user.id`. Se não
+     existe (primeiro acesso), redireciona para `/completar-cadastro`, que
+     pede nome/empresa/whatsapp/cnpj (mesmos campos do formulário de cotação
+     atual) e grava a linha em `buyers` antes de liberar o resto do site.
+   - Se já existe, redireciona direto para `/cotacao` (ou para onde a
+     jornada começou).
+5. Link inválido/expirado/já usado → o próprio Supabase Auth retorna erro na
+   troca de código; a página de callback mostra erro com botão "Pedir novo
    link" (reabre o passo 1).
 
 O carrinho em `localStorage` não é afetado por esse fluxo: como o magic link é
@@ -164,11 +169,11 @@ por comprador.
 
 | Caso | Comportamento |
 | --- | --- |
-| Resend fora do ar / e-mail não envia | Erro genérico no formulário (mesmo padrão de `GENERIC_SERVER_ERROR` em `leads.ts`), sem expor detalhe técnico |
-| Token expirado (>15 min) | Página de erro com CTA "Pedir novo link" |
-| Token já usado (reuso de link antigo) | Mesma página de erro que expirado |
-| E-mail digitado não bate com nenhuma conta | Resposta idêntica à de sucesso (anti-enumeração); ao clicar no link (que nunca chega, pois o e-mail é inválido), nada acontece — comportamento esperado |
-| Pedido de magic link em excesso | Rate limit por e-mail/IP retorna erro de "tente novamente mais tarde" |
+| Resend/Supabase Auth fora do ar / e-mail não envia | Erro genérico no formulário (mesmo padrão de `GENERIC_SERVER_ERROR` em `leads.ts`), sem expor detalhe técnico |
+| Link expirado (padrão Supabase Auth) | Callback recebe erro do Supabase; página mostra CTA "Pedir novo link" |
+| Link já usado (reuso de link antigo) | Mesmo comportamento — erro do Supabase na troca de código, mesma página de erro |
+| E-mail digitado não bate com nenhuma conta | `signInWithOtp` cria a conta no primeiro envio (comportamento padrão do Supabase Auth) — não há distinção de "e-mail inexistente"; a UI sempre mostra a mesma mensagem de sucesso |
+| Pedido de magic link em excesso | Rate limit já é aplicado pelo Supabase Auth por padrão; sem lógica própria neste projeto |
 | Produto do pedido removido do catálogo depois | Histórico usa `product_name_snapshot`, continua exibível; sem link ativo para a PDP |
 | Sessão expira em produção | Tratado como "sem sessão": checkout ou `/pedidos` disparam novo magic link |
 
@@ -177,10 +182,10 @@ por comprador.
 Seguindo o padrão já estabelecido (`*.test.ts` ao lado do código, funções
 puras testadas isoladamente):
 
-- `auth.test.ts` — geração/validação de token (válido, expirado, usado,
-  inexistente); hash nunca compara o valor puro.
-- `buyers.test.ts` — criação no primeiro acesso vs. reconhecimento por e-mail
-  em acessos seguintes.
+- `buyers-server.test.ts` — criação da linha em `buyers` no primeiro acesso
+  (callback de login) vs. reconhecimento em acessos seguintes pelo mesmo
+  `user.id`, com o client do Supabase mockado (mesmo padrão de
+  `leads-server.test.ts`).
 - `orders.test.ts` — criação de `order` + `order_items` com snapshot correto
   a partir do carrinho.
 - Fluxo ponta a ponta (manual via `/run`): checkout sem sessão → pedir link →
