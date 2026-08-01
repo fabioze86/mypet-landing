@@ -10,6 +10,7 @@ import {
   buildCategoryTree,
   collectCategorySubtreeIds,
   getCategoryPath,
+  topLevelCategories,
   type RawProductRow,
   type CategoryNode,
 } from "./catalog-utils";
@@ -160,5 +161,21 @@ describe("getCategoryPath", () => {
 
   it("devolve array de 1 item para uma categoria de nível 1", () => {
     expect(getCategoryPath(SAMPLE_CATEGORIES, "c1")).toEqual([SAMPLE_CATEGORIES[0]]);
+  });
+});
+
+describe("topLevelCategories", () => {
+  it("retorna só as categorias de nível raiz (parentId null), preservando a ordem", () => {
+    expect(topLevelCategories(SAMPLE_CATEGORIES)).toEqual([
+      SAMPLE_CATEGORIES[0],
+      SAMPLE_CATEGORIES[3],
+    ]);
+  });
+
+  it("retorna lista vazia quando não há categorias de raiz", () => {
+    const onlyChildren: CategoryNode[] = [
+      { id: "x1", parentId: "root", slug: "x1", name: "X1", level: 2, sortOrder: 0 },
+    ];
+    expect(topLevelCategories(onlyChildren)).toEqual([]);
   });
 });

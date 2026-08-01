@@ -149,6 +149,10 @@ export function buildCategoryTree(categories: CategoryNode[]): CategoryTreeNode[
   return roots;
 }
 
+export function topLevelCategories(categories: CategoryNode[]): CategoryNode[] {
+  return categories.filter((c) => c.parentId === null);
+}
+
 export function collectCategorySubtreeIds(categories: CategoryNode[], rootId: string): string[] {
   const childrenByParent = new Map<string, string[]>();
   for (const c of categories) {
