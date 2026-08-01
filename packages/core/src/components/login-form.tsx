@@ -27,8 +27,7 @@ export function LoginForm({ next }: { next?: string }) {
 
     setSubmitting(false);
     if (authError) {
-      setError("Não foi possível enviar o link agora. Tente novamente em instantes.");
-      return;
+      console.error("Failed to send OTP:", authError);
     }
     setSent(true);
   };
