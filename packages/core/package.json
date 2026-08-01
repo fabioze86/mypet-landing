@@ -7,7 +7,9 @@
     "./ai-provider": "./src/ai-provider.ts",
     "./assistant-client": "./src/assistant-client.ts",
     "./assistant-server": "./src/assistant-server.ts",
+    "./auth-server": "./src/auth-server.ts",
     "./banners": "./src/banners.ts",
+    "./buyers-server": "./src/buyers-server.ts",
     "./catalog": "./src/catalog.ts",
     "./catalog-utils": "./src/catalog-utils.ts",
     "./cart": "./src/cart.ts",
@@ -15,11 +17,14 @@
     "./features": "./src/features.ts",
     "./leads": "./src/leads.ts",
     "./leads-server": "./src/leads-server.ts",
-    "./whatsapp": "./src/whatsapp.ts",
+    "./orders-server": "./src/orders-server.ts",
     "./querystring": "./src/querystring.ts",
     "./seo": "./src/seo.ts",
     "./supabase": "./src/supabase.ts",
+    "./supabase-browser": "./src/supabase-browser.ts",
+    "./supabase-server": "./src/supabase-server.ts",
     "./theme": "./src/theme.tsx",
+    "./whatsapp": "./src/whatsapp.ts",
     "./components/*": "./src/components/*.tsx"
   },
   "scripts": {
@@ -33,6 +38,7 @@
     "@radix-ui/react-accordion": "^1.2.16",
     "@radix-ui/react-dialog": "^1.1.19",
     "@radix-ui/react-navigation-menu": "^1.2.18",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.108.2",
     "ai": "^7.0.19",
     "zod": "^4.4.3"

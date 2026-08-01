@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@mypet/core/components/cart-provider";
-import { submitLead } from "@mypet/core/leads";
 import { buildQuoteMessage, buildWhatsAppLink } from "@mypet/core/whatsapp";
 import type { Palette } from "@mypet/core/theme";
+import { finalizeQuote } from "./actions";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 
 export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   const { cart, removeItem, updateQty, clear } = useCart();
-  const [form, setForm] = useState({ nome: "", empresa: "", whatsapp: "", cnpj: "" });
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -26,9 +27,14 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
         <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
           Abrimos o WhatsApp com os itens da sua cotação. Nossa equipe vai te responder por lá.
         </p>
-        <Link href="/" className="cta-primary" style={{ textDecoration: "none", display: "inline-block" }}>
-          Voltar ao catálogo
-        </Link>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <Link href="/" className="cta-primary" style={{ textDecoration: "none", display: "inline-block" }}>
+            Voltar ao catálogo
+          </Link>
+          <Link href="/pedidos" className="back-link" style={{ display: "inline-flex", alignItems: "center" }}>
+            Ver meus pedidos →
+          </Link>
+        </div>
       </div>
     );
   }
@@ -50,22 +56,31 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!WHATSAPP_NUMBER) {
       setSubmitError("Não foi possível abrir o WhatsApp agora. Tente novamente mais tarde.");
       return;
     }
     setSubmitting(true);
     setSubmitError("");
-    const error = await submitLead(form);
-    if (error) {
-      setSubmitError(error);
+
+    const result = await finalizeQuote(cart.items);
+
+    if (!result.ok) {
+      if (result.needsProfile) {
+        router.push(`/completar-cadastro?next=${encodeURIComponent("/cotacao")}`);
+        return;
+      }
+      if (result.needsAuth) {
+        router.push(`/entrar?next=${encodeURIComponent("/cotacao")}`);
+        return;
+      }
+      setSubmitError(result.error);
       setSubmitting(false);
       return;
     }
 
-    const message = buildQuoteMessage(cart.items, form);
+    const message = buildQuoteMessage(cart.items, { ...result.buyer, cnpj: result.buyer.cnpj ?? undefined });
     window.open(buildWhatsAppLink(WHATSAPP_NUMBER, message), "_blank");
 
     clear();
@@ -129,21 +144,12 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       </div>
 
       <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: PALETTE.navy, marginBottom: 16 }}>
-          Seus dados para a cotação
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <input className="form-input" placeholder="Seu nome" required value={form.nome} onChange={(e) => setForm((prev) => ({ ...prev, nome: e.target.value }))} />
-          <input className="form-input" placeholder="Nome do pet shop / empresa" required value={form.empresa} onChange={(e) => setForm((prev) => ({ ...prev, empresa: e.target.value }))} />
-          <input className="form-input" placeholder="WhatsApp com DDD" required value={form.whatsapp} onChange={(e) => setForm((prev) => ({ ...prev, whatsapp: e.target.value }))} />
-          <input className="form-input" placeholder="CNPJ (opcional)" value={form.cnpj} onChange={(e) => setForm((prev) => ({ ...prev, cnpj: e.target.value }))} />
-          {submitError && (
-            <p style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 8, textAlign: "center" }}>{submitError}</p>
-          )}
-          <button type="submit" className="form-submit" disabled={submitting}>
-            {submitting ? "Enviando..." : "Finalizar cotação →"}
-          </button>
-        </form>
+        {submitError && (
+          <p style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 12, textAlign: "center" }}>{submitError}</p>
+        )}
+        <button type="button" className="form-submit" disabled={submitting} onClick={handleSubmit}>
+          {submitting ? "Enviando..." : "Finalizar cotação →"}
+        </button>
       </div>
     </>
   );
