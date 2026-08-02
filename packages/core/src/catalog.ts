@@ -119,7 +119,7 @@ export async function getProductById(id: string, channel: string) {
   const { data, error } = await supabase
     .from("v_produtos_resolvidos")
     .select(
-      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_role, parent_product_id, variant_axis, product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_links!inner(channel)"
+      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_role, parent_product_id, variant_axis, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_links!inner(channel)"
     )
     .eq("id", id)
     .eq("status", "active")
@@ -148,6 +148,8 @@ export async function getProductById(id: string, channel: string) {
     badge: pickActiveBadge(data.product_badges),
     productRole: data.product_role as "simple" | "parent" | "variant",
     parentProductId: data.parent_product_id,
+    categoryId: data.category_id as string | null,
+    category: (data.categories as unknown as { id: string; name: string; slug: string } | null) ?? null,
     variantAxis: (data.variant_axis as VariantAxisEntry[] | null) ?? [],
     variants,
   };

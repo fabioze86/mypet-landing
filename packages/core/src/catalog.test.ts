@@ -16,6 +16,7 @@ type QueryBuilder = {
   order: (...args: unknown[]) => QueryBuilder;
   not: (...args: unknown[]) => QueryBuilder;
   range: (...args: unknown[]) => Promise<{ data: unknown[]; count: number; error: null }>;
+  single: () => Promise<{ data: unknown; error: null }>;
   then: (resolve: (value: { data: unknown[]; error: null }) => void) => void;
 };
 
@@ -56,6 +57,28 @@ vi.mock("./supabase", () => {
           error: null,
         });
       };
+      builder.single = () => Promise.resolve({
+        data: {
+          id: "p1",
+          name: "Ração X",
+          reference: "100",
+          brand: "NAPI",
+          description: "Descrição",
+          barcode: null,
+          weight_kg: null,
+          width_cm: null,
+          height_cm: null,
+          length_cm: null,
+          product_role: "simple",
+          parent_product_id: null,
+          variant_axis: null,
+          category_id: "cat-1",
+          categories: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
+          product_assets: [{ url: "https://img/1", type: "main_image" }],
+          product_badges: null,
+        },
+        error: null,
+      });
       builder.then = (resolve) => {
         resolve({
           data: [
@@ -70,7 +93,7 @@ vi.mock("./supabase", () => {
   };
 });
 
-import { queryCatalog, getCategories } from "./catalog";
+import { queryCatalog, getCategories, getProductById } from "./catalog";
 
 beforeEach(() => {
   for (const k of Object.keys(calls)) delete calls[k];
@@ -106,6 +129,18 @@ describe("queryCatalog com filtro de categoria", () => {
   it("filtra por uma lista de categoryIds (subárvore) quando informado um array", async () => {
     await queryCatalog({ page: 1, channel: "mypetbrasil", categoryId: ["cat-9", "cat-10", "cat-11"] });
     expect(calls["in"]).toEqual(["category_id", ["cat-9", "cat-10", "cat-11"]]);
+  });
+});
+
+describe("getProductById", () => {
+  it("inclui category_id e categories no select e no retorno", async () => {
+    const product = await getProductById("p1", "mypetbrasil");
+    expect((calls["select"] as unknown[])[0]).toContain("category_id");
+    expect((calls["select"] as unknown[])[0]).toContain("categories(id, name, slug)");
+    expect(product).toMatchObject({
+      categoryId: "cat-1",
+      category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
+    });
   });
 });
 
