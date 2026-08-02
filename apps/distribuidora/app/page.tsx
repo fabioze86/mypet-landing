@@ -11,6 +11,7 @@ import { CompactBanner } from "@mypet/core/components/compact-banner";
 import { QuickNavIcons } from "@mypet/core/components/quick-nav-icons";
 import { MiniBannerStrip } from "@mypet/core/components/mini-banner-strip";
 import { clientConfig } from "@/client.config";
+import { canonicalUrl } from "@mypet/core/seo";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -90,6 +91,12 @@ async function DynamicCatalog({
   );
 }
 
+export async function generateMetadata() {
+  return {
+    alternates: { canonical: canonicalUrl(clientConfig.domain, "/") },
+  };
+}
+
 export default async function Home({
   searchParams,
 }: {
@@ -97,11 +104,10 @@ export default async function Home({
 }) {
   const categories = await getCategories();
   return (
-    <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
+    <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
 
       {/* GOOGLE FONTS */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body { margin: 0; }
