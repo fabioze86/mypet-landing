@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import Image from "next/image";
 import { badgeStyle, useClientConfig } from "../theme";
 import { UnlockButton } from "./lead-gate";
 import { AddToCartControl } from "./add-to-cart-control";
@@ -84,10 +85,13 @@ function ProductMedia({
         }}
       >
         <div className="img-container" style={{ width: "100%", height: 450, position: "relative" }}>
-          <img
+          <Image
             src={img}
             alt={cartName}
-            style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+            fill
+            priority
+            sizes="(max-width: 768px) 100vw, 450px"
+            style={{ objectFit: "contain" }}
           />
         </div>
 
