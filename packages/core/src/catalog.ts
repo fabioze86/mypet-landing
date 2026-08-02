@@ -13,6 +13,7 @@ import {
   type ProductVariant,
   type VariantAxisEntry,
   type CategoryNode,
+  type RawCategory,
 } from "./catalog-utils";
 
 export const CATALOG_SELECT =
@@ -149,7 +150,7 @@ export async function getProductById(id: string, channel: string) {
     productRole: data.product_role as "simple" | "parent" | "variant",
     parentProductId: data.parent_product_id,
     categoryId: data.category_id as string | null,
-    category: (data.categories as unknown as { id: string; name: string; slug: string } | null) ?? null,
+    category: (data.categories as unknown as RawCategory | null) ?? null,
     variantAxis: (data.variant_axis as VariantAxisEntry[] | null) ?? [],
     variants,
   };
