@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { badgeStyle, useClientConfig } from "../theme";
 import { PriceLockSlot, UnlockButton } from "./lead-gate";
 import type { CatalogProduct } from "../catalog-utils";
@@ -22,16 +23,12 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             overflow: "hidden",
           }}
         >
-          <img
+          <Image
             src={product.img}
             alt={product.name}
-            loading="lazy"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              display: "block",
-            }}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+            style={{ objectFit: "contain" }}
           />
           {product.badge && style && (
             <span style={{ position: "absolute", top: 10, left: 10, background: style.bg, color: style.color, fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 100, letterSpacing: "0.02em" }}>
