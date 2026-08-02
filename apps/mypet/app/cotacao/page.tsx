@@ -23,7 +23,7 @@ export default async function CotacaoPage() {
           border: none;
           border-radius: 100px;
           padding: 10px 22px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 14px;
           font-weight: 800;
           cursor: pointer;
@@ -65,7 +65,7 @@ export default async function CotacaoPage() {
           color: white;
           border: none;
           border-radius: 10px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 16px;
           font-weight: 800;
           cursor: pointer;

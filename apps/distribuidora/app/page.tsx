@@ -118,7 +118,7 @@ export default async function Home({
           border: 1.5px solid ${PALETTE.gray200};
           background: ${PALETTE.white};
           color: ${PALETTE.gray600};
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
@@ -177,7 +177,7 @@ export default async function Home({
           color: ${PALETTE.white};
           border: none;
           border-radius: 10px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 13px;
           font-weight: 700;
           cursor: pointer;
@@ -200,7 +200,7 @@ export default async function Home({
           border: none;
           border-radius: 100px;
           padding: 16px 36px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 16px;
           font-weight: 800;
           cursor: pointer;
@@ -214,7 +214,7 @@ export default async function Home({
           border: 2px solid rgba(255,255,255,0.5);
           border-radius: 100px;
           padding: 14px 32px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 15px;
           font-weight: 700;
           cursor: pointer;
@@ -241,7 +241,7 @@ export default async function Home({
           padding: 12px 16px;
           border: 1.5px solid ${PALETTE.gray200};
           border-radius: 10px;
-          font-family: 'Nunito Sans', sans-serif;
+          font-family: var(--font-nunito-sans), sans-serif;
           font-size: 15px;
           color: ${PALETTE.gray800};
           outline: none;
@@ -256,7 +256,7 @@ export default async function Home({
           color: white;
           border: none;
           border-radius: 10px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 16px;
           font-weight: 800;
           cursor: pointer;

@@ -4,6 +4,7 @@ import {
   breadcrumbJsonLd,
   canonicalUrl,
   organizationJsonLd,
+  jsonLdScript,
   type PdpProductForSeo,
 } from "./seo";
 import type { ClientConfig } from "./theme";
@@ -69,6 +70,15 @@ describe("breadcrumbJsonLd", () => {
         { "@type": "ListItem", position: 3, name: "Ração X", item: "https://dominio.com/produtos/p1" },
       ],
     });
+  });
+});
+
+describe("jsonLdScript", () => {
+  it("neutraliza uma sequência </script> sem alterar o conteúdo semântico", () => {
+    const payload = { name: "</script><script>alert(1)</script>" };
+    const html = jsonLdScript(payload);
+    expect(html).not.toContain("</script>");
+    expect(JSON.parse(html)).toEqual(payload);
   });
 });
 

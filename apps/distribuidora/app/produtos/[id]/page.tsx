@@ -6,7 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { ProductVariantPanel } from "@mypet/core/components/product-variant-panel";
-import { productGroupJsonLd, productJsonLd, breadcrumbJsonLd, canonicalUrl } from "@mypet/core/seo";
+import { productGroupJsonLd, productJsonLd, breadcrumbJsonLd, canonicalUrl, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
@@ -56,7 +56,7 @@ export default async function ProductPage({
           color: ${PALETTE.white};
           border: none;
           border-radius: 12px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 16px;
           font-weight: 800;
           cursor: pointer;
@@ -77,7 +77,7 @@ export default async function ProductPage({
           border: none;
           border-radius: 100px;
           padding: 10px 22px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 14px;
           font-weight: 800;
           cursor: pointer;
@@ -117,7 +117,7 @@ export default async function ProductPage({
           padding: 12px 16px;
           border: 1.5px solid ${PALETTE.gray200};
           border-radius: 10px;
-          font-family: 'Nunito Sans', sans-serif;
+          font-family: var(--font-nunito-sans), sans-serif;
           font-size: 15px;
           color: ${PALETTE.gray800};
           outline: none;
@@ -132,7 +132,7 @@ export default async function ProductPage({
           color: white;
           border: none;
           border-radius: 10px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 16px;
           font-weight: 800;
           cursor: pointer;
@@ -223,7 +223,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbItems, clientConfig.domain)) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbJsonLd(breadcrumbItems, clientConfig.domain)) }}
       />
       <nav aria-label="Breadcrumb" style={{ marginBottom: 16 }}>
         <ol style={{ display: "flex", flexWrap: "wrap", gap: 6, listStyle: "none", margin: 0, padding: 0, fontSize: 13, color: PALETTE.gray600 }}>
@@ -242,7 +242,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
 
       <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
         {jsonLd && (
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
         )}
         {/* COLUNA ESQUERDA - IMAGEM + VARIANTES + CTA */}
         <div>

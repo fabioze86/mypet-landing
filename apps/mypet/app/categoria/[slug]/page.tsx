@@ -52,7 +52,7 @@ export default async function CategoriaPage({
           border: 1.5px solid ${PALETTE.gray200};
           background: ${PALETTE.white};
           color: ${PALETTE.gray600};
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
@@ -83,7 +83,7 @@ export default async function CategoriaPage({
           color: ${PALETTE.white};
           border: none;
           border-radius: 10px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 13px;
           font-weight: 700;
           cursor: pointer;
@@ -103,7 +103,7 @@ export default async function CategoriaPage({
           border: none;
           border-radius: 100px;
           padding: 10px 22px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 14px;
           font-weight: 800;
           cursor: pointer;
@@ -130,7 +130,7 @@ export default async function CategoriaPage({
           padding: 12px 16px;
           border: 1.5px solid ${PALETTE.gray200};
           border-radius: 10px;
-          font-family: 'Nunito Sans', sans-serif;
+          font-family: var(--font-nunito-sans), sans-serif;
           font-size: 15px;
           color: ${PALETTE.gray800};
           outline: none;
@@ -145,7 +145,7 @@ export default async function CategoriaPage({
           color: white;
           border: none;
           border-radius: 10px;
-          font-family: 'Nunito', sans-serif;
+          font-family: var(--font-nunito), sans-serif;
           font-size: 16px;
           font-weight: 800;
           cursor: pointer;

@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   transpilePackages: ["@mypet/core"],
   images: {
-    remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
+    remotePatterns: [{ protocol: "https", hostname: "imagedelivery.net" }],
   },
 };
 

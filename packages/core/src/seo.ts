@@ -11,6 +11,14 @@ export type PdpProductForSeo = {
   variants: ProductVariant[];
 };
 
+export function canonicalUrl(domain: string, path: string): string {
+  return `https://${domain}${path}`;
+}
+
+function absoluteImageUrl(domain: string, img: string): string {
+  return img.startsWith("http") ? img : canonicalUrl(domain, img);
+}
+
 export function productGroupJsonLd(product: PdpProductForSeo, domain: string) {
   if (product.productRole !== "parent" || product.variants.length === 0) return null;
 
@@ -26,18 +34,16 @@ export function productGroupJsonLd(product: PdpProductForSeo, domain: string) {
     productGroupID: product.id,
     variesBy,
     url: productUrl,
+    image: absoluteImageUrl(domain, product.img),
     hasVariant: product.variants.map((v) => ({
       "@type": "Product",
       name: v.name,
       ...(v.sku ? { sku: v.sku } : {}),
       ...(v.barcode ? { gtin13: v.barcode } : {}),
+      image: absoluteImageUrl(domain, v.img),
       url: `${productUrl}?variante=${v.id}`,
     })),
   };
-}
-
-export function canonicalUrl(domain: string, path: string): string {
-  return `https://${domain}${path}`;
 }
 
 export function productJsonLd(product: PdpProductForSeo, domain: string) {
@@ -49,9 +55,13 @@ export function productJsonLd(product: PdpProductForSeo, domain: string) {
     sku: product.id,
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
     ...(product.description ? { description: product.description } : {}),
-    image: product.img,
+    image: absoluteImageUrl(domain, product.img),
     url: canonicalUrl(domain, `/produtos/${product.id}`),
   };
+}
+
+export function jsonLdScript(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
 export function breadcrumbJsonLd(

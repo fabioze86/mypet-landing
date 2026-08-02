@@ -7,7 +7,7 @@ import { ProductCard } from "./product-card";
 import type { Palette } from "../theme";
 import { getBanners } from "../banners";
 import type { Channel } from "../channels";
-import { breadcrumbJsonLd } from "../seo";
+import { breadcrumbJsonLd, jsonLdScript } from "../seo";
 
 export async function CategoryListing({
   slug,
@@ -44,7 +44,7 @@ export async function CategoryListing({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbItems, domain)) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbJsonLd(breadcrumbItems, domain)) }}
       />
       <nav aria-label="Breadcrumb" style={{ marginBottom: 16 }}>
         <ol style={{ display: "flex", flexWrap: "wrap", gap: 6, listStyle: "none", margin: 0, padding: 0, fontSize: 13, color: palette.gray600 }}>
@@ -75,7 +75,7 @@ export async function CategoryListing({
                 alt={categoryBanner.title ?? node.name}
                 fill
                 sizes="(max-width: 768px) 100vw, 1200px"
-                style={{ objectFit: "cover" }}
+                style={{ objectFit: "contain" }}
               />
             </a>
           ) : (
@@ -85,7 +85,7 @@ export async function CategoryListing({
                 alt={categoryBanner.title ?? node.name}
                 fill
                 sizes="(max-width: 768px) 100vw, 1200px"
-                style={{ objectFit: "cover" }}
+                style={{ objectFit: "contain" }}
               />
             </div>
           )}

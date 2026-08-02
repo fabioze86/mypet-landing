@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Nunito, Nunito_Sans } from "next/font/google";
 import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
-import { organizationJsonLd } from "@mypet/core/seo";
+import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import RegisterSW from "./components/register-sw";
 import InstallPrompt from "./components/install-prompt";
@@ -49,7 +49,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd(clientConfig)) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(organizationJsonLd(clientConfig)) }}
         />
         <ClientConfigProvider config={clientConfig}>
           <CartProvider>{children}</CartProvider>
