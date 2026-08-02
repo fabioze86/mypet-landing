@@ -1,11 +1,12 @@
 import { Suspense } from "react";
 import { getProductById, getCategories } from "@mypet/core/catalog";
+import { getCategoryPath } from "@mypet/core/catalog-utils";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { ProductVariantPanel } from "@mypet/core/components/product-variant-panel";
-import { productGroupJsonLd } from "@mypet/core/seo";
+import { productGroupJsonLd, productJsonLd, breadcrumbJsonLd, canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
@@ -22,6 +23,16 @@ export async function generateMetadata({
   return {
     title: `${product.name} — ${clientConfig.name} Atacado`,
     description: `Confira os detalhes de ${product.name} no atacado B2B da ${clientConfig.name}. Solicite cotação sem compromisso.`,
+    alternates: { canonical: canonicalUrl(clientConfig.domain, `/produtos/${id}`) },
+    openGraph: {
+      title: product.name,
+      description: `Confira os detalhes de ${product.name} no atacado B2B da ${clientConfig.name}.`,
+      images: [product.img],
+    },
+    twitter: {
+      card: "summary_large_image",
+      images: [product.img],
+    },
   };
 }
 
@@ -32,10 +43,8 @@ export default async function ProductPage({
 }) {
   const categories = await getCategories();
   return (
-    <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
-      {/* GOOGLE FONTS */}
+    <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body { margin: 0; }
@@ -192,24 +201,55 @@ export default async function ProductPage({
 
 async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getProductById(id, clientConfig.catalogChannel);
+  const [product, categories] = await Promise.all([
+    getProductById(id, clientConfig.catalogChannel),
+    getCategories(),
+  ]);
 
   if (!product) {
     notFound();
   }
 
-  const jsonLd = productGroupJsonLd(product, clientConfig.domain);
+  const categoryPath = product.categoryId ? getCategoryPath(categories, product.categoryId) : [];
+  const breadcrumbItems = [
+    { name: "Início", path: "/" },
+    ...categoryPath.map((c) => ({ name: c.name, path: `/categoria/${c.slug}` })),
+    { name: product.name, path: `/produtos/${product.id}` },
+  ];
+
+  const jsonLd = productGroupJsonLd(product, clientConfig.domain) ?? productJsonLd(product, clientConfig.domain);
 
   return (
-    <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
-      {jsonLd && (
-        // eslint-disable-next-line react/no-danger
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      )}
-      {/* COLUNA ESQUERDA - IMAGEM + VARIANTES + CTA */}
-      <div>
-        <ProductVariantPanel product={product} />
-      </div>
+    <>
+      {/* eslint-disable-next-line react/no-danger */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbItems, clientConfig.domain)) }}
+      />
+      <nav aria-label="Breadcrumb" style={{ marginBottom: 16 }}>
+        <ol style={{ display: "flex", flexWrap: "wrap", gap: 6, listStyle: "none", margin: 0, padding: 0, fontSize: 13, color: PALETTE.gray600 }}>
+          {breadcrumbItems.map((item, i) => (
+            <li key={item.path} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {i > 0 && <span aria-hidden="true">/</span>}
+              {i === breadcrumbItems.length - 1 ? (
+                <span style={{ color: PALETTE.navy, fontWeight: 700 }} aria-current="page">{item.name}</span>
+              ) : (
+                <Link href={item.path} style={{ color: PALETTE.gray600, textDecoration: "none" }}>{item.name}</Link>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
+        {jsonLd && (
+          // eslint-disable-next-line react/no-danger
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        )}
+        {/* COLUNA ESQUERDA - IMAGEM + VARIANTES + CTA */}
+        <div>
+          <ProductVariantPanel product={product} />
+        </div>
 
             {/* COLUNA DIREITA - INFORMAÇÕES */}
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -277,5 +317,6 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
 
             </div>
           </div>
+    </>
   );
 }
