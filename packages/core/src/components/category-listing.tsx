@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getCatalog, getCategories } from "../catalog";
 import { parsePage, collectCategorySubtreeIds, getCategoryPath } from "../catalog-utils";
@@ -6,17 +7,20 @@ import { ProductCard } from "./product-card";
 import type { Palette } from "../theme";
 import { getBanners } from "../banners";
 import type { Channel } from "../channels";
+import { breadcrumbJsonLd } from "../seo";
 
 export async function CategoryListing({
   slug,
   page: pageRaw,
   channel,
   palette,
+  domain,
 }: {
   slug: string;
   page?: string;
   channel: string;
   palette: Palette;
+  domain: string;
 }) {
   const page = parsePage(pageRaw);
   const categories = await getCategories();
@@ -27,6 +31,10 @@ export async function CategoryListing({
   }
 
   const path = getCategoryPath(categories, node.id);
+  const breadcrumbItems = [
+    { name: "Início", path: "/" },
+    ...path.map((c) => ({ name: c.name, path: `/categoria/${c.slug}` })),
+  ];
   const children = categories.filter((c) => c.parentId === node.id);
   const subtreeIds = collectCategorySubtreeIds(categories, node.id);
   const catalog = await getCatalog({ categoryId: subtreeIds, page, channel });
@@ -34,6 +42,11 @@ export async function CategoryListing({
 
   return (
     <>
+      {/* eslint-disable-next-line react/no-danger */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbItems, domain)) }}
+      />
       <nav aria-label="Breadcrumb" style={{ marginBottom: 16 }}>
         <ol style={{ display: "flex", flexWrap: "wrap", gap: 6, listStyle: "none", margin: 0, padding: 0, fontSize: 13, color: palette.gray600 }}>
           <li>
@@ -57,13 +70,25 @@ export async function CategoryListing({
       {categoryBanner && (
         <div style={{ marginBottom: 20 }}>
           {categoryBanner.linkUrl ? (
-            <a href={categoryBanner.linkUrl}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={categoryBanner.imageUrl} alt={categoryBanner.title ?? node.name} style={{ width: "100%", borderRadius: 16, display: "block" }} />
+            <a href={categoryBanner.linkUrl} style={{ position: "relative", display: "block", width: "100%", aspectRatio: "3 / 1", borderRadius: 16, overflow: "hidden" }}>
+              <Image
+                src={categoryBanner.imageUrl}
+                alt={categoryBanner.title ?? node.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 1200px"
+                style={{ objectFit: "cover" }}
+              />
             </a>
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={categoryBanner.imageUrl} alt={categoryBanner.title ?? node.name} style={{ width: "100%", borderRadius: 16, display: "block" }} />
+            <div style={{ position: "relative", width: "100%", aspectRatio: "3 / 1", borderRadius: 16, overflow: "hidden" }}>
+              <Image
+                src={categoryBanner.imageUrl}
+                alt={categoryBanner.title ?? node.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 1200px"
+                style={{ objectFit: "cover" }}
+              />
+            </div>
           )}
         </div>
       )}
