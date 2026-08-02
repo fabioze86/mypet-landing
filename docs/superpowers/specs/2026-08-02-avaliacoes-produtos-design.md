@@ -69,9 +69,13 @@ antes de publicar, e evitar incentivo pago por nota positiva.
 - `created_at` (timestamptz, default `now()`)
 
 Sem RLS coberta por sessão (o token não é um usuário autenticado) — o acesso
-ao formulário de avaliação valida o token manualmente no server (rota busca
-com `service role` / mesmo padrão já usado nas outras `*-server.ts` do core),
-não depende de política de RLS por `auth.uid()`.
+ao formulário de avaliação usa `getHubClient()` (cliente anônimo, mesmo
+padrão já usado em `catalog.ts` e `leads-server.ts` pra leitura/escrita
+pública) e valida o token manualmente no código, não depende de política de
+RLS por `auth.uid()`. As policies de RLS que liberam esse acesso público
+(select em `review_invite_tokens`/`orders`/`order_items` por `id`, insert em
+`product_reviews`) são configuradas no painel do Supabase, fora deste repo —
+mesmo modelo já usado pra `leads`.
 
 ### Fluxo de convite (`packages/core/src/review-invites-server.ts`, novo)
 
@@ -81,9 +85,16 @@ não depende de política de RLS por `auth.uid()`.
    - gera token, insere em `review_invite_tokens`;
    - busca e-mail do `buyer` do pedido;
    - chama `sendReviewInviteEmail(buyer.email, orderId, token, channel)`
-     (nova função em `packages/core`, usa Resend, mesmo `RESEND_API_KEY`/
-     domínio remetente configurados na spec de identidade — variável já
-     existe no ambiente do admin).
+     (nova função em `packages/core`, chama a API HTTP do Resend diretamente
+     via `fetch` — **não** reaproveita nada existente: na spec de identidade
+     o Resend só está configurado como SMTP interno do Supabase Auth,
+     usado exclusivamente pelo e-mail de magic link; não há pacote `resend`
+     instalado nem `RESEND_API_KEY` em nenhum `.env` do repo hoje. Esta spec
+     introduz o primeiro uso do Resend a partir de código da aplicação:
+     precisa de `RESEND_API_KEY` novo em `apps/admin/.env.local` — mesma
+     conta/domínio remetente já verificado no painel do Resend para o SMTP
+     de identidade, só que agora chamado via API pra e-mail transacional
+     arbitrário).
    - link do e-mail: `https://{domínio do canal}/avaliar/{token}`.
 3. Falha no envio de e-mail é logada e não bloqueia a atualização de status
    (mesmo padrão de "melhor esforço" usado hoje pros outros side-effects).
