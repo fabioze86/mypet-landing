@@ -5,6 +5,7 @@ import { CategoryListing } from "@mypet/core/components/category-listing";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import type { Palette } from "@mypet/core/theme";
 import { clientConfig } from "@/client.config";
+import { canonicalUrl } from "@mypet/core/seo";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -21,6 +22,11 @@ export async function generateMetadata({
   return {
     title: `${node.name} — ${clientConfig.name} Atacado`,
     description: `Confira os produtos de ${node.name} no atacado B2B da ${clientConfig.name}. Preços sob consulta para lojistas.`,
+    alternates: { canonical: canonicalUrl(clientConfig.domain, `/categoria/${slug}`) },
+    openGraph: {
+      title: node.name,
+      description: `Confira os produtos de ${node.name} no atacado B2B da ${clientConfig.name}.`,
+    },
   };
 }
 
@@ -34,9 +40,8 @@ export default async function CategoriaPage({
   const categories = await getCategories();
 
   return (
-    <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
+    <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
         body { margin: 0; }
@@ -197,5 +202,5 @@ async function CategoryListingResolved({
 }) {
   const { slug } = await params;
   const { page } = await searchParams;
-  return <CategoryListing slug={slug} page={page} channel={channel} palette={palette} />;
+  return <CategoryListing slug={slug} page={page} channel={channel} palette={palette} domain={clientConfig.domain} />;
 }
