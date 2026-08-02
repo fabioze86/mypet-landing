@@ -221,7 +221,6 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      {/* eslint-disable-next-line react/no-danger */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(breadcrumbItems, clientConfig.domain)) }}
@@ -243,7 +242,6 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
 
       <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
         {jsonLd && (
-          // eslint-disable-next-line react/no-danger
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         )}
         {/* COLUNA ESQUERDA - IMAGEM + VARIANTES + CTA */}

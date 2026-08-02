@@ -36,7 +36,6 @@ export default function RootLayout({
       className={`${nunito.variable} ${nunitoSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* eslint-disable-next-line react/no-danger */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd(clientConfig)) }}
