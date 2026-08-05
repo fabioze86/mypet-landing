@@ -14,6 +14,12 @@ export type RawBadge = {
 
 export type RawCategory = { id: string; name: string; slug: string };
 
+export type RawChannelPrice = {
+  channel: string | null;
+  sale_price: number | string | null;
+  sale_updated_at?: string | null;
+};
+
 export type CategoryNode = {
   id: string;
   parentId: string | null;
@@ -34,6 +40,7 @@ export type RawProductRow = {
   categories: RawCategory | null;
   product_assets: { url: string; type: string }[] | null;
   product_badges: RawBadge[] | null;
+  product_channel_prices?: RawChannelPrice[] | null;
 };
 
 export type CatalogProduct = {
@@ -44,6 +51,8 @@ export type CatalogProduct = {
   img: string;
   badge: Badge | null;
   category: RawCategory | null;
+  salePrice: number | null;
+  priceLabel: string | null;
 };
 
 export type CatalogResult = {
@@ -62,6 +71,8 @@ export type ProductVariant = {
   barcode: string | null;
   img: string;
   axis: VariantAxisEntry[];
+  salePrice: number | null;
+  priceLabel: string | null;
 };
 
 export type RawVariantRow = {
@@ -71,10 +82,12 @@ export type RawVariantRow = {
   barcode: string | null;
   variant_axis: VariantAxisEntry[] | null;
   product_assets: { url: string; type: string }[] | null;
+  product_channel_prices?: RawChannelPrice[] | null;
 };
 
 export function mapVariant(row: RawVariantRow): ProductVariant {
   const axis = (row.variant_axis ?? []).slice().sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+  const salePrice = salePriceFromChannelPrices(row.product_channel_prices);
   return {
     id: row.id,
     name: row.name,
@@ -82,7 +95,21 @@ export function mapVariant(row: RawVariantRow): ProductVariant {
     barcode: row.barcode,
     img: mainImage(row.product_assets),
     axis,
+    salePrice,
+    priceLabel: formatPrice(salePrice),
   };
+}
+
+export function salePriceFromChannelPrices(prices: RawChannelPrice[] | null | undefined): number | null {
+  const raw = prices?.find((price) => price.sale_price !== null && price.sale_price !== undefined)?.sale_price;
+  if (raw === null || raw === undefined) return null;
+  const value = typeof raw === "number" ? raw : Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
+export function formatPrice(value: number | null): string | null {
+  if (value === null) return null;
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
 export function parsePage(raw: string | undefined): number {
@@ -121,6 +148,7 @@ export function mainImage(assets: RawProductRow["product_assets"]): string {
 }
 
 export function mapProduct(row: RawProductRow, now: Date = new Date()): CatalogProduct {
+  const salePrice = salePriceFromChannelPrices(row.product_channel_prices);
   return {
     id: row.id,
     name: row.name,
@@ -129,6 +157,8 @@ export function mapProduct(row: RawProductRow, now: Date = new Date()): CatalogP
     img: mainImage(row.product_assets),
     badge: pickActiveBadge(row.product_badges, now),
     category: row.categories ?? null,
+    salePrice,
+    priceLabel: formatPrice(salePrice),
   };
 }
 

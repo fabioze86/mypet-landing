@@ -3,7 +3,9 @@ import { getHubClient } from "./supabase";
 import {
   mapProduct,
   mapVariant,
+  formatPrice,
   pageRange,
+  salePriceFromChannelPrices,
   totalPages,
   mainImage,
   pickActiveBadge,
@@ -17,7 +19,7 @@ import {
 } from "./catalog-utils";
 
 export const CATALOG_SELECT =
-  "id, name, reference, brand, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at)";
+  "id, name, reference, brand, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at)";
 
 export async function queryCatalog(params: {
   q?: string;
@@ -36,6 +38,7 @@ export async function queryCatalog(params: {
     .eq("status", "active")
     .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
+    .eq("product_channel_prices.channel", channel)
     .order("name", { ascending: true });
 
   if (q) query = query.ilike("name", `%${q}%`);
@@ -120,11 +123,12 @@ export async function getProductById(id: string, channel: string) {
   const { data, error } = await supabase
     .from("v_produtos_resolvidos")
     .select(
-      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_role, parent_product_id, variant_axis, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_links!inner(channel)"
+      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_role, parent_product_id, variant_axis, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)"
     )
     .eq("id", id)
     .eq("status", "active")
     .eq("product_channel_links.channel", channel)
+    .eq("product_channel_prices.channel", channel)
     .single();
 
   if (error || !data) {
@@ -147,6 +151,8 @@ export async function getProductById(id: string, channel: string) {
     length_cm: data.length_cm,
     img: mainImage(data.product_assets),
     badge: pickActiveBadge(data.product_badges),
+    salePrice: salePriceFromChannelPrices(data.product_channel_prices),
+    priceLabel: formatPrice(salePriceFromChannelPrices(data.product_channel_prices)),
     productRole: data.product_role as "simple" | "parent" | "variant",
     parentProductId: data.parent_product_id,
     categoryId: data.category_id as string | null,
@@ -161,11 +167,12 @@ async function getVariantsByParentId(parentId: string, channel: string): Promise
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, name, reference, barcode, variant_axis, product_assets(url, type), product_channel_links!inner(channel)"
+      "id, name, reference, barcode, variant_axis, product_assets(url, type), product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)"
     )
     .eq("parent_product_id", parentId)
     .eq("status", "active")
     .eq("product_channel_links.channel", channel)
+    .eq("product_channel_prices.channel", channel)
     .order("name", { ascending: true });
 
   if (error) {

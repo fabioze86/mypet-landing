@@ -93,6 +93,8 @@ describe("mapProduct", () => {
       brand: "PLAST PET",
       img: "https://img/x",
       badge: { code: "novidade", label: "Novidade" },
+      salePrice: null,
+      priceLabel: null,
       category: { id: "cat-1", name: "Cães", slug: "caes" },
     });
   });

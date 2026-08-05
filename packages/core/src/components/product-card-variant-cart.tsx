@@ -13,7 +13,7 @@ export type ProductCardVariantCartProduct = CatalogProduct & {
 };
 
 function toSelfVariant(product: ProductCardVariantCartProduct): ProductVariant {
-  return { id: product.id, name: product.name, sku: product.sku, barcode: null, img: product.img, axis: [] };
+  return { id: product.id, name: product.name, sku: product.sku, barcode: null, img: product.img, axis: [], salePrice: product.salePrice, priceLabel: product.priceLabel };
 }
 
 export function ProductCardVariantCart({ product }: { product: ProductCardVariantCartProduct }) {
@@ -110,7 +110,7 @@ export function ProductCardVariantCart({ product }: { product: ProductCardVarian
 
         <div style={{ marginBottom: 10 }}>
           <div style={{ fontSize: 17, fontWeight: 900, color: palette.navy }}>
-            {product.demoPriceLabel ?? "Preço sob consulta"}
+            {product.demoPriceLabel ?? selected.priceLabel ?? "Preço sob consulta"}
           </div>
           {product.demoInstallmentLabel && (
             <div style={{ fontSize: 11, color: palette.gray600 }}>{product.demoInstallmentLabel}</div>

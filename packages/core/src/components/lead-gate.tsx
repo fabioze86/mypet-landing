@@ -89,13 +89,13 @@ export function UnlockButton({
   );
 }
 
-export function PriceLockSlot() {
+export function PriceLockSlot({ priceLabel }: { priceLabel?: string | null }) {
   const { palette } = useClientConfig();
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ fontSize: 10, color: palette.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Atacado B2B</div>
-      <div style={{ fontSize: 18, fontWeight: 900, color: palette.pink }}>Preço sob consulta</div>
-      <div style={{ fontSize: 11, color: palette.gray400 }}>Solicite sua cotação</div>
+      <div style={{ fontSize: 18, fontWeight: 900, color: palette.pink }}>{priceLabel ?? "Preço sob consulta"}</div>
+      <div style={{ fontSize: 11, color: palette.gray400 }}>{priceLabel ? "Preço do canal distribuidora" : "Solicite sua cotação"}</div>
     </div>
   );
 }

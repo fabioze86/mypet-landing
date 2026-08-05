@@ -65,7 +65,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </div>
       </Link>
       <div style={{ padding: "0 12px 12px" }}>
-        <PriceLockSlot />
+        <PriceLockSlot priceLabel={product.priceLabel} />
         <UnlockButton className="unlock-btn">
           <><span>💬</span> Solicitar cotação</>
         </UnlockButton>

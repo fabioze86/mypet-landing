@@ -17,6 +17,8 @@ export type PdpProduct = {
   img: string;
   badge: Badge | null;
   variants: ProductVariant[];
+  salePrice?: number | null;
+  priceLabel?: string | null;
 };
 
 export function ProductVariantPanel({ product }: { product: PdpProduct }) {
@@ -50,7 +52,16 @@ function ProductVariantPanelInner({ product }: { product: PdpProduct }) {
 }
 
 function toSelfVariant(product: PdpProduct): ProductVariant {
-  return { id: product.id, name: product.name, sku: product.sku, barcode: product.barcode, img: product.img, axis: [] };
+  return {
+    id: product.id,
+    name: product.name,
+    sku: product.sku,
+    barcode: product.barcode,
+    img: product.img,
+    axis: [],
+    salePrice: product.salePrice ?? null,
+    priceLabel: product.priceLabel ?? null,
+  };
 }
 
 function ProductMedia({
@@ -67,6 +78,7 @@ function ProductMedia({
   const barcode = variantOverride?.barcode ?? product.barcode;
   const cartId = variantOverride?.id ?? product.id;
   const cartName = variantOverride?.name ?? product.name;
+  const priceLabel = product.variants.find((variant) => variant.id === cartId)?.priceLabel ?? product.priceLabel;
 
   return (
     <>
@@ -162,7 +174,7 @@ function ProductMedia({
           <div style={{ fontSize: 11, color: PALETTE.gray600, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
             Atacado B2B
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>Preço sob consulta</div>
+          <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>{priceLabel ?? "Preço sob consulta"}</div>
           <p style={{ fontSize: 13, color: PALETTE.gray600, marginTop: 4 }}>
             Venda exclusiva para CNPJ de pet shops e revendedores.
           </p>

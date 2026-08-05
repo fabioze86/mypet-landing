@@ -12,7 +12,19 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 function isStandalone(): boolean {
-  return window.matchMedia("(display-mode: standalone)").matches;
+  const navigatorWithStandalone = window.navigator as Navigator & { standalone?: boolean };
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    navigatorWithStandalone.standalone === true
+  );
+}
+
+function isMobileLike(): boolean {
+  return window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+}
+
+function isIos(): boolean {
+  return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
 function isDismissedRecently(): boolean {
@@ -40,20 +52,25 @@ function markDismissed() {
 export default function InstallPrompt() {
   const clientConfig = useClientConfig();
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (isStandalone() || isDismissedRecently()) return;
+    if (isMobileLike()) {
+      queueMicrotask(() => setIsVisible(true));
+    }
 
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault();
       setDeferredEvent(event as BeforeInstallPromptEvent);
+      setIsVisible(true);
     }
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   }, []);
 
-  if (!deferredEvent) return null;
+  if (!isVisible && !deferredEvent) return null;
 
   async function handleInstall() {
     if (!deferredEvent) return;
@@ -67,32 +84,41 @@ export default function InstallPrompt() {
       // Falha relacionada a PWA deve ser sempre silenciosa e nunca travar a UI.
     } finally {
       setDeferredEvent(null);
+      setIsVisible(false);
     }
   }
 
   function handleDismiss() {
     markDismissed();
     setDeferredEvent(null);
+    setIsVisible(false);
   }
+
+  const hasNativeInstall = Boolean(deferredEvent);
+  const message = hasNativeInstall
+    ? `Adicione ${clientConfig.name} à tela inicial para acessar mais rápido.`
+    : isIos()
+      ? `No Safari, toque em Compartilhar e depois em "Adicionar à Tela de Início".`
+      : `Adicione ${clientConfig.name} à tela inicial para acessar mais rápido.`;
 
   return (
     <div
       role="dialog"
       aria-label="Instalar aplicativo"
       style={{ background: clientConfig.palette.navy }}
-      className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-4 px-4 py-3 text-white shadow-lg"
+      className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 px-4 py-3 text-white shadow-lg"
     >
-      <span className="text-sm">
-        Adicione {clientConfig.name} à tela inicial para acessar mais rápido.
-      </span>
+      <span className="min-w-0 text-sm leading-snug">{message}</span>
       <div className="flex shrink-0 items-center gap-2">
-        <button
-          type="button"
-          onClick={handleInstall}
-          className="rounded bg-white px-3 py-1.5 text-sm font-medium text-slate-900"
-        >
-          Instalar
-        </button>
+        {hasNativeInstall && (
+          <button
+            type="button"
+            onClick={handleInstall}
+            className="rounded bg-white px-3 py-1.5 text-sm font-medium text-slate-900"
+          >
+            Instalar
+          </button>
+        )}
         <button
           type="button"
           onClick={handleDismiss}
