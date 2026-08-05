@@ -59,7 +59,7 @@ export function LeadGateProvider({ children }: { children: React.ReactNode }) {
                 <p style={{ color: palette.orange, fontSize: 13, marginBottom: 8, textAlign: "center" }}>{submitError}</p>
               )}
               <button type="submit" className="form-submit" disabled={submitting}>
-                {submitting ? "Salvando..." : "Solicitar cotação →"}
+                {submitting ? "Salvando..." : "Enviar cadastro →"}
               </button>
             </form>
             <button onClick={() => setShowModal(false)} style={{ display: "block", margin: "16px auto 0", background: "none", border: "none", color: palette.gray400, fontSize: 13, cursor: "pointer", fontFamily: "Nunito, sans-serif" }}>

@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { badgeStyle, useClientConfig } from "../theme";
-import { PriceLockSlot, UnlockButton } from "./lead-gate";
-import type { CatalogProduct } from "../catalog-utils";
 import Link from "next/link";
+import { badgeStyle, useClientConfig } from "../theme";
+import { PriceLockSlot } from "./lead-gate";
 import { AddToCartControl } from "./add-to-cart-control";
+import type { CatalogProduct } from "../catalog-utils";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   const { palette } = useClientConfig();
@@ -66,9 +66,6 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
       </Link>
       <div style={{ padding: "0 12px 12px" }}>
         <PriceLockSlot priceLabel={product.priceLabel} />
-        <UnlockButton className="unlock-btn">
-          <><span>💬</span> Solicitar cotação</>
-        </UnlockButton>
         <AddToCartControl
           product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img }}
         />

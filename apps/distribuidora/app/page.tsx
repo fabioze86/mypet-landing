@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Palette } from "@mypet/core/theme";
 import type { Channel } from "@mypet/core/channels";
-import { LeadGateProvider, UnlockButton } from "@mypet/core/components/lead-gate";
+import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { getProductCount, getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
@@ -361,9 +361,6 @@ export default async function Home({
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.82)", marginBottom: 28, lineHeight: 1.6 }}>
               Mais de 10.000 pet shops já compram pela My Pet Brasil. Cadastro gratuito, sem burocracia e cotações sob consulta.
             </p>
-            <UnlockButton className="cta-secondary" style={{ fontSize: 16 }}>
-              Solicitar cotação agora
-            </UnlockButton>
           </div>
         </section>
 

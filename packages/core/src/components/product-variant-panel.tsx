@@ -3,7 +3,6 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import { badgeStyle, useClientConfig } from "../theme";
-import { UnlockButton } from "./lead-gate";
 import { AddToCartControl } from "./add-to-cart-control";
 import { VariantSelector, useSelectedVariant } from "./variant-selector";
 import type { Badge, ProductVariant } from "../catalog-utils";
@@ -180,9 +179,6 @@ function ProductMedia({
           </p>
         </div>
 
-        <UnlockButton className="unlock-btn">
-          <span>💬</span> Solicitar cotação deste produto
-        </UnlockButton>
         <AddToCartControl
           product={{ id: cartId, name: cartName, sku, brand: product.brand, img }}
         />

@@ -56,7 +56,7 @@ export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }
           transition: "background 0.2s, color 0.2s",
         }}
       >
-        {added ? "Adicionado ✓" : "+ Adicionar à cotação"}
+        {added ? "Adicionado ✓" : "+Adicionar"}
       </button>
     </div>
   );
