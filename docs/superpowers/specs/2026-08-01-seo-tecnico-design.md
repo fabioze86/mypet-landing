@@ -131,9 +131,9 @@ Em `packages/core/src/seo.ts`, além de `productGroupJsonLd` (mantido sem
 mudança):
 
 `PdpProductForSeo` (tipo já existente em `seo.ts`) ganha um novo campo
-`image: string` (resolvido via `mainImage(product.product_assets)` no
-`page.tsx` da PDP, mesma função já usada para o `<img>`/`next/image` da
-página), necessário para popular o `image` do JSON-LD abaixo:
+`img: string` — o objeto retornado por `getProductById`
+(`packages/core/src/catalog.ts`) já tem esse campo (via `mainImage()`),
+então nenhuma mudança é necessária na query, só no tipo:
 
 ```ts
 // Produtos simples (sem variantes) — hoje sem nenhum JSON-LD.
@@ -146,7 +146,7 @@ export function productJsonLd(product: PdpProductForSeo, domain: string) {
     sku: product.id,
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
     ...(product.description ? { description: product.description } : {}),
-    ...(product.image ? { image: product.image } : {}),
+    image: product.img,
     url: `https://${domain}/produtos/${product.id}`,
   };
 }
@@ -184,9 +184,19 @@ export function organizationJsonLd(config: ClientConfig) {
 - `productJsonLd` é usado na PDP quando `productRole !== "parent"`;
   `productGroupJsonLd` continua sendo usado quando `productRole === "parent"`
   — mutuamente exclusivos, cobrindo os dois casos.
-- `breadcrumbJsonLd` é usado na PDP (Home > Categoria > Produto) e na página
-  de categoria (Home > Categoria), a partir dos mesmos itens já montados
-  para o breadcrumb visual em `category-listing.tsx`.
+- `breadcrumbJsonLd` é usado na página de categoria (Home > Categoria), a
+  partir dos mesmos itens já montados para o breadcrumb visual em
+  `category-listing.tsx`.
+- **Correção em relação à primeira versão desta spec**: a PDP
+  (`produtos/[id]/page.tsx`) **não tem breadcrumb visual hoje** — só um link
+  "← Voltar ao catálogo". Esta spec adiciona um breadcrumb visual novo
+  (Home > Categoria > Produto) à PDP, no mesmo padrão de
+  `category-listing.tsx` (lista `<ol>` com `aria-label="Breadcrumb"`), e usa
+  `breadcrumbJsonLd` sobre os mesmos itens. Isso exige que `getProductById`
+  (`packages/core/src/catalog.ts`) passe a selecionar `category_id,
+  categories(id, name, slug)` na view `v_produtos_resolvidos` (hoje não
+  seleciona esses campos), para resolver o caminho de categoria do produto
+  via `getCategoryPath` (já existente em `catalog-utils.ts`).
 - `organizationJsonLd` é renderizado uma vez via `<script
   type="application/ld+json">` no `layout.tsx` raiz de cada app (não em cada
   página).

@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Diretivas Internas: Agent Skills de Design e Marketing</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f8fa;
+        --surface: #ffffff;
+        --text: #1b1f24;
+        --muted: #5f6b7a;
+        --line: #d8dee7;
+        --accent: #0f766e;
+        --accent-soft: #e6f4f1;
+        --warning: #8a5a00;
+        --warning-soft: #fff6d8;
+        --code: #eef2f7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0 56px;
+      }
+
+      header {
+        margin-bottom: 28px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.15;
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        max-width: 860px;
+      }
+
+      h2 {
+        font-size: 1.35rem;
+        margin-bottom: 14px;
+      }
+
+      h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .lead {
+        max-width: 780px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .pill {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--surface);
+        color: var(--muted);
+        padding: 6px 10px;
+        font-size: 0.86rem;
+      }
+
+      section {
+        margin-top: 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 22px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .callout {
+        border-color: #a7d6cf;
+        background: var(--accent-soft);
+      }
+
+      .warning {
+        border-color: #ead18a;
+        background: var(--warning-soft);
+      }
+
+      ul,
+      ol {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        font-size: 0.94rem;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        padding: 12px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.78rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      code {
+        border-radius: 5px;
+        background: var(--code);
+        padding: 2px 5px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      .examples {
+        display: grid;
+        gap: 10px;
+      }
+
+      .example {
+        border-left: 3px solid var(--accent);
+        background: #f9fbfc;
+        padding: 10px 12px;
+      }
+
+      .footer-note {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 760px) {
+        main {
+          width: min(100% - 20px, 1120px);
+          padding-top: 28px;
+        }
+
+        section {
+          padding: 18px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Diretivas Internas: Agent Skills de Design e Marketing</h1>
+        <p class="lead">
+          Documento de referencia para uso das skills instaladas neste
+          repositorio. O objetivo e orientar Copilot, Codex e agentes humanos
+          sobre quando usar cada skill sem alterar a aplicacao.
+        </p>
+        <div class="meta" aria-label="Metadados do documento">
+          <span class="pill">Diretorio principal: <code>.github/skills</code></span>
+          <span class="pill">Arquivo de gatilhos: <code>.github/copilot-instructions.md</code></span>
+          <span class="pill">Status: validado localmente</span>
+        </div>
+      </header>
+
+      <section class="callout" aria-labelledby="regra-principal">
+        <h2 id="regra-principal">Regra Principal</h2>
+        <p>
+          Use estas skills para orientar criacao, implementacao e auditoria de
+          interfaces e campanhas de e-mail. Nenhuma campanha deve ser enviada,
+          agendada ou publicada automaticamente. Qualquer envio real exige
+          confirmacao humana explicita.
+        </p>
+      </section>
+
+      <section aria-labelledby="skills-instaladas">
+        <h2 id="skills-instaladas">Skills Instaladas</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Skill</th>
+              <th>Diretorio</th>
+              <th>Finalidade</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/ui-ux-pro-max</code></td>
+              <td><code>.github/skills/ui-ux-pro-max</code></td>
+              <td>Direcao visual, hierarquia, layout, cores, tipografia e comportamento responsivo.</td>
+              <td>OK</td>
+            </tr>
+            <tr>
+              <td><code>/frontend-ui-engineering</code></td>
+              <td><code>.github/skills/frontend-ui-engineering</code></td>
+              <td>Implementacao de paginas e componentes com qualidade de producao, acessibilidade e responsividade.</td>
+              <td>OK</td>
+            </tr>
+            <tr>
+              <td><code>/web-design-guidelines</code></td>
+              <td><code>.github/skills/web-design-guidelines</code></td>
+              <td>Auditoria de UX, responsividade, acessibilidade, estados de interacao e polimento visual.</td>
+              <td>OK, adaptador local</td>
+            </tr>
+            <tr>
+              <td><code>/email-design</code></td>
+              <td><code>.github/skills/email-design</code></td>
+              <td>Conceito visual, composicao, tom, imagens e briefing estruturado para campanhas de e-mail.</td>
+              <td>OK</td>
+            </tr>
+            <tr>
+              <td><code>/email-html-mjml</code></td>
+              <td><code>.github/skills/email-html-mjml</code></td>
+              <td>Construcao de e-mail responsivo em MJML e HTML compilado compativel com clientes de e-mail.</td>
+              <td>OK</td>
+            </tr>
+            <tr>
+              <td><code>/email-marketing-bible</code></td>
+              <td><code>.github/skills/email-marketing-bible</code></td>
+              <td>Estrategia, segmentacao, automacoes, reativacao, entregabilidade, compliance e sequencias.</td>
+              <td>OK</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="fluxos">
+        <h2 id="fluxos">Fluxos Recomendados</h2>
+        <div class="grid">
+          <article>
+            <h3>Interface nova ou redesign</h3>
+            <ol>
+              <li>Use <code>/ui-ux-pro-max</code> para propor uma direcao visual resumida antes de programar.</li>
+              <li>Use <code>/frontend-ui-engineering</code> para implementar o layout aprovado.</li>
+              <li>Use <code>/web-design-guidelines</code> para revisar responsividade, acessibilidade e UX apos a implementacao.</li>
+            </ol>
+          </article>
+          <article>
+            <h3>Campanha de e-mail</h3>
+            <ol>
+              <li>Use <code>/email-marketing-bible</code> para estrategia, publico, sequencia, entregabilidade e compliance.</li>
+              <li>Use <code>/email-design</code> para definir conceito visual, composicao e briefing.</li>
+              <li>Use <code>/email-html-mjml</code> para gerar MJML e HTML responsivo.</li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="principios">
+        <h2 id="principios">Principios do Projeto</h2>
+        <ul>
+          <li>Evitar interfaces genericas com aparencia evidente de conteudo gerado por IA.</li>
+          <li>Antes de programar uma interface nova, apresentar uma direcao visual resumida.</li>
+          <li>Reutilizar o design system, componentes e padroes ja existentes no projeto.</li>
+          <li>Priorizar responsividade real para desktop e mobile.</li>
+          <li>Nao alterar a identidade visual global sem autorizacao.</li>
+          <li>Em e-mails, nao gerar HTML moderno comum como se fosse uma pagina web.</li>
+          <li>Para e-mails, considerar limitacoes de Gmail, Outlook e Apple Mail.</li>
+          <li>Usar texto editavel para informacoes importantes, evitando transformar tudo em imagem.</li>
+          <li>Nunca enviar, agendar ou publicar uma campanha automaticamente.</li>
+          <li>Qualquer envio real exige confirmacao humana explicita.</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="validacao">
+        <h2 id="validacao">Validacao Executada</h2>
+        <ul>
+          <li>Todos os diretorios em <code>.github/skills</code> contem <code>SKILL.md</code>.</li>
+          <li>Todos os <code>SKILL.md</code> possuem frontmatter com <code>name</code> e <code>description</code>.</li>
+          <li>Os nomes das skills sao unicos.</li>
+          <li>As referencias locais mencionadas nos <code>SKILL.md</code> existem.</li>
+          <li>Links Markdown relativos foram verificados sem quebras.</li>
+          <li><code>gh skill publish .github\skills --dry-run</code> passou.</li>
+        </ul>
+      </section>
+
+      <section class="warning" aria-labelledby="limitacoes">
+        <h2 id="limitacoes">Riscos e Limitacoes</h2>
+        <ul>
+          <li>O repositorio da Vercel para <code>web-design-guidelines</code> nao trouxe arquivo <code>LICENSE</code>; por isso foi criado um adaptador local, sem copiar o conteudo upstream sem licenca.</li>
+          <li><code>email-html-mjml</code> declara MIT no <code>SKILL.md</code> e no README upstream, mas nao trouxe arquivo <code>LICENSE</code> separado.</li>
+          <li>O dry-run do GitHub CLI avisou que nao ha ruleset de protecao de tags; isso afeta publicacao/release, nao a instalacao local.</li>
+          <li>Para o Copilot reconhecer as skills, recarregue a janela do VS Code ou inicie uma nova conversa.</li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="exemplos">
+        <h2 id="exemplos">Exemplos Curtos de Uso</h2>
+        <div class="examples">
+          <p class="example"><code>Use /ui-ux-pro-max para propor o redesign desta pagina antes de programar.</code></p>
+          <p class="example"><code>Use /frontend-ui-engineering para implementar o layout aprovado em Next.js.</code></p>
+          <p class="example"><code>Use /web-design-guidelines para revisar a responsividade desta tela.</code></p>
+          <p class="example"><code>Use /email-marketing-bible e /email-design para planejar uma campanha de reativacao.</code></p>
+          <p class="example"><code>Use /email-html-mjml para transformar o briefing aprovado em MJML e HTML responsivo.</code></p>
+        </div>
+      </section>
+
+      <p class="footer-note">
+        Documento interno criado para acompanhamento da instalacao das Agent
+        Skills. Ele nao substitui os arquivos <code>SKILL.md</code> originais.
+      </p>
+    </main>
+  </body>
+</html>
