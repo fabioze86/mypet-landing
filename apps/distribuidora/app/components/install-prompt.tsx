@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useClientConfig } from "@mypet/core/theme";
+import { subscribeToPush } from "@mypet/core/push";
 
 const DISMISS_KEY = "mypet_pwa_install_dismissed_at";
 const DISMISS_DAYS = 7;
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -49,13 +51,24 @@ function markDismissed() {
   }
 }
 
+function requestPushSubscription() {
+  if (!VAPID_PUBLIC_KEY) return;
+  void subscribeToPush("distribuidora", VAPID_PUBLIC_KEY);
+}
+
 export default function InstallPrompt() {
   const clientConfig = useClientConfig();
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (isStandalone() || isDismissedRecently()) return;
+    const standalone = isStandalone();
+
+    if (standalone && typeof Notification !== "undefined" && Notification.permission === "default") {
+      requestPushSubscription();
+    }
+
+    if (standalone || isDismissedRecently()) return;
     if (isMobileLike()) {
       queueMicrotask(() => setIsVisible(true));
     }
@@ -79,6 +92,8 @@ export default function InstallPrompt() {
       const { outcome } = await deferredEvent.userChoice;
       if (outcome === "dismissed") {
         markDismissed();
+      } else {
+        requestPushSubscription();
       }
     } catch {
       // Falha relacionada a PWA deve ser sempre silenciosa e nunca travar a UI.
