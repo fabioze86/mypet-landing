@@ -17,6 +17,7 @@
 - Sem segmentação de público: todo broadcast vai para todas as subscriptions daquele `channel`.
 - Sem UI de administração para disparar campanha — só via script de terminal (`pnpm push:send`).
 - Segue o padrão já existente em `@mypet/core`: `Channel`/`isChannel` de `./channels`, `getHubClient()` de `./supabase`, handler de API no formato `create*PostHandler(channel)`.
+- O projeto Supabase hub tem **RLS habilitado em todas as tabelas** (confirmado em `leads`: só `INSERT` é liberado para `anon`; `SELECT`/`UPDATE` exigem usuário autenticado admin). `push_subscriptions` segue o mesmo padrão: `anon`/`authenticated` só podem `INSERT`/`UPDATE` (necessário para o `upsert` do subscribe); `SELECT`/`DELETE` (usados por `sendPushBroadcast`) não têm policy pública — só a `service_role` (que ignora RLS) acessa. Por isso `sendPushBroadcast` usa um client novo, `getHubServiceClient()`, autenticado com `SUPABASE_SERVICE_ROLE_KEY` — nunca a `SUPABASE_ANON_KEY`. Essa chave é ainda mais sensível que a anônima (ignora toda política de RLS do projeto inteiro) e só entra em `.env`/`.env.local` da raiz do monorepo (onde roda o script `push:send`), nunca em `apps/distribuidora` nem em variável `NEXT_PUBLIC_*`.
 - `packages/core` roda testes com `environment: "node"` (`packages/core/vitest.config.ts`) — sem `jsdom`. Globals de browser (`navigator`, `Notification`, `PushManager`, `fetch`) são simulados via `vi.stubGlobal`, mesmo padrão já usado em `packages/core/src/leads.test.ts`. Módulos são mockados via `vi.mock` com closures sobre `vi.fn()`, mesmo padrão de `packages/core/src/leads-server.test.ts`.
 - `apps/distribuidora` não tem infraestrutura de teste automatizado hoje (sem Vitest configurado no app) — mudanças nesse app são verificadas manualmente, não por teste automatizado, mesmo critério já usado na entrega anterior de PWA.
 - Segredos (chaves VAPID, credenciais Supabase) nunca são commitados — só em arquivos `.env`/`.env.local` locais (já ignorados via `.gitignore` na raiz). Arquivos `.env.example` documentam os nomes das variáveis, sem valores reais.
@@ -28,11 +29,11 @@
 **Files:** nenhum arquivo do repositório — mudança é só no banco (mesmo processo manual já usado para a tabela `leads`, não há pasta de migrations versionada no repo).
 
 **Interfaces:**
-- Produces: tabela `push_subscriptions(id uuid, channel text, endpoint text unique, p256dh text, auth text, created_at timestamptz)`, consumida pelas Tasks 3 e 4 via `getHubClient()`.
+- Produces: tabela `push_subscriptions(id uuid, channel text, endpoint text unique, p256dh text, auth text, created_at timestamptz)` com RLS habilitado, consumida pela Task 3 (`INSERT`/`UPDATE`, via `getHubClient()`, chave anônima) e pela Task 4 (`SELECT`/`DELETE`, via `getHubServiceClient()`, chave `service_role`).
 
-- [ ] **Step 1: Rodar o SQL de criação da tabela**
+- [ ] **Step 1: Rodar o SQL de criação da tabela, com RLS**
 
-No SQL editor do projeto Supabase hub (mesmo projeto onde já existe a tabela `leads`):
+No SQL editor do projeto Supabase hub (mesmo projeto onde já existe a tabela `leads`, que também tem RLS habilitado):
 
 ```sql
 create table push_subscriptions (
@@ -45,17 +46,33 @@ create table push_subscriptions (
 );
 
 create index push_subscriptions_channel_idx on push_subscriptions (channel);
+
+alter table push_subscriptions enable row level security;
+
+create policy push_subscriptions_insert_publico
+  on push_subscriptions for insert
+  to anon, authenticated
+  with check (true);
+
+create policy push_subscriptions_update_publico
+  on push_subscriptions for update
+  to anon, authenticated
+  using (true)
+  with check (true);
 ```
 
-- [ ] **Step 2: Verificar que a tabela foi criada**
+A policy de `UPDATE` é necessária porque o `upsert` da Task 3 (`insert ... on conflict (endpoint) do update`) exige privilégio de `UPDATE` na linha, não só `INSERT`. Não há policy de `SELECT`/`DELETE` para `anon`/`authenticated` — de propósito: só a chave `service_role` (Task 4) pode listar ou apagar subscriptions.
+
+- [ ] **Step 2: Verificar que a tabela e as policies foram criadas**
 
 Rodar no mesmo SQL editor:
 
 ```sql
 select column_name, data_type from information_schema.columns where table_name = 'push_subscriptions';
+select policyname, cmd, roles from pg_policies where tablename = 'push_subscriptions';
 ```
 
-Esperado: 6 linhas (`id`, `channel`, `endpoint`, `p256dh`, `auth`, `created_at`).
+Esperado: 6 linhas na primeira consulta (`id`, `channel`, `endpoint`, `p256dh`, `auth`, `created_at`); 2 linhas na segunda (`push_subscriptions_insert_publico` / INSERT, `push_subscriptions_update_publico` / UPDATE).
 
 Sem commit — esta tarefa não altera nenhum arquivo do repositório.
 
@@ -240,16 +257,19 @@ git commit -m "feat(core): adiciona handler de subscribe para push notifications
 
 ---
 
-### Task 4: `push-server.ts` — `sendPushBroadcast`
+### Task 4: `getHubServiceClient` + `sendPushBroadcast`
 
 **Files:**
+- Modify: `packages/core/src/supabase.ts` (adiciona `getHubServiceClient`)
 - Modify: `packages/core/src/push-server.ts` (adiciona `sendPushBroadcast`)
 - Modify: `packages/core/src/push-server.test.ts` (adiciona testes de `sendPushBroadcast`)
 - Modify: `packages/core/package.json` (adiciona dependência `web-push` e devDependency `@types/web-push`)
 
 **Interfaces:**
-- Consumes: `getHubClient()` de `./supabase`, `Channel` de `./channels`.
-- Produces: `sendPushBroadcast(channel: Channel, payload: { title: string; body: string; url?: string }): Promise<{ sent: number; removed: number }>`, consumido pela Task 9 (`scripts/push-send.ts`).
+- Consumes: `Channel` de `./channels`.
+- Produces: `getHubServiceClient(): SupabaseClient` em `./supabase`, consumido só por `sendPushBroadcast` (nunca pelo lado público/anônimo). `sendPushBroadcast(channel: Channel, payload: { title: string; body: string; url?: string }): Promise<{ sent: number; removed: number }>`, consumido pela Task 9 (`scripts/push-send.ts`).
+
+**Contexto:** a tabela `push_subscriptions` (Task 1) tem RLS habilitado com policy pública só de `INSERT`/`UPDATE` — não há policy de `SELECT`/`DELETE` para `anon`/`authenticated`. Por isso `sendPushBroadcast` não pode usar `getHubClient()` (chave anônima, mesma da Task 3): ele precisa de um client novo, autenticado com a chave `service_role`, que ignora RLS.
 
 - [ ] **Step 1: Adicionar a dependência `web-push`**
 
@@ -258,7 +278,35 @@ pnpm --filter @mypet/core add web-push@^3.6.7
 pnpm --filter @mypet/core add -D @types/web-push@^3.6.4
 ```
 
-- [ ] **Step 2: Escrever os testes que falham**
+- [ ] **Step 2: Adicionar `getHubServiceClient` a `packages/core/src/supabase.ts`**
+
+Substituir o conteúdo completo de `packages/core/src/supabase.ts` por:
+
+```ts
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+export function getHubClient(): SupabaseClient {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error("SUPABASE_URL e SUPABASE_ANON_KEY precisam estar definidos no ambiente.");
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+export function getHubServiceClient(): SupabaseClient {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar definidos no ambiente.",
+    );
+  }
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+```
+
+- [ ] **Step 3: Escrever os testes que falham**
 
 Substituir o conteúdo completo de `packages/core/src/push-server.test.ts` por:
 
@@ -275,8 +323,13 @@ vi.mock("./supabase", () => ({
   getHubClient: () => ({
     from: (table: string) => {
       fromCalls.push(table);
+      return { upsert: upsertMock };
+    },
+  }),
+  getHubServiceClient: () => ({
+    from: (table: string) => {
+      fromCalls.push(table);
       return {
-        upsert: upsertMock,
         select: () => ({ eq: selectEqMock }),
         delete: () => ({ eq: deleteEqMock }),
       };
@@ -411,19 +464,19 @@ describe("sendPushBroadcast", () => {
 });
 ```
 
-- [ ] **Step 3: Rodar os testes e confirmar que os novos falham**
+- [ ] **Step 4: Rodar os testes e confirmar que os novos falham**
 
 Run: `pnpm --filter @mypet/core test -- push-server`
 Expected: FAIL — `sendPushBroadcast` ainda não é exportado por `./push-server`.
 
-- [ ] **Step 4: Implementar `sendPushBroadcast`**
+- [ ] **Step 5: Implementar `sendPushBroadcast`**
 
 Substituir o conteúdo completo de `packages/core/src/push-server.ts` por:
 
 ```ts
 import { NextRequest } from "next/server";
 import webpush from "web-push";
-import { getHubClient } from "./supabase";
+import { getHubClient, getHubServiceClient } from "./supabase";
 import type { Channel } from "./channels";
 
 export function createPushSubscribePostHandler(channel: Channel) {
@@ -475,7 +528,7 @@ export async function sendPushBroadcast(
   const { publicKey, privateKey, subject } = getVapidDetails();
   webpush.setVapidDetails(subject, publicKey, privateKey);
 
-  const supabase = getHubClient();
+  const supabase = getHubServiceClient();
   const { data, error } = await supabase
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth")
@@ -511,20 +564,19 @@ export async function sendPushBroadcast(
 }
 ```
 
-- [ ] **Step 5: Rodar os testes e confirmar que passam**
+- [ ] **Step 6: Rodar os testes e confirmar que passam**
 
 Run: `pnpm --filter @mypet/core test -- push-server`
 Expected: PASS — 7 testes (3 de subscribe + 4 de broadcast).
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add packages/core/src/push-server.ts packages/core/src/push-server.test.ts packages/core/package.json pnpm-lock.yaml
-git commit -m "feat(core): adiciona sendPushBroadcast para disparo de campanhas push"
+git add packages/core/src/supabase.ts packages/core/src/push-server.ts packages/core/src/push-server.test.ts packages/core/package.json pnpm-lock.yaml
+git commit -m "feat(core): adiciona sendPushBroadcast (via service role) para disparo de campanhas push"
 ```
 
 ---
-
 ### Task 5: `push.ts` — helper client-side de subscribe
 
 **Files:**
@@ -1030,11 +1082,13 @@ Criar `.env.example`:
 
 ```
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 PUSH_VAPID_PUBLIC_KEY=your-vapid-public-key
 PUSH_VAPID_PRIVATE_KEY=your-vapid-private-key
 PUSH_VAPID_SUBJECT=mailto:contato@suaempresa.com.br
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY` é a chave privilegiada (ignora RLS) consumida por `getHubServiceClient()` (Task 4) — nunca a mesma chave anônima usada pelos apps. Nunca deve ser exposta como variável `NEXT_PUBLIC_*` nem sair da raiz do monorepo.
 
 - [ ] **Step 5: Verificar que o script roda e falha do jeito esperado sem argumentos**
 
