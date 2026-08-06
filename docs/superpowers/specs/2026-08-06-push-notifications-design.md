@@ -13,7 +13,7 @@ Permitir que quem instalou o PWA da distribuidora receba notificações push de 
 ## Escopo
 
 **Dentro do escopo:**
-- Tabela `push_subscriptions` no Supabase hub (mesmo projeto de `leads`), com coluna `channel`.
+- Tabela `push_subscriptions` no Supabase hub (mesmo projeto de `leads`), com coluna `channel` e RLS habilitado.
 - Lógica reutilizável em `@mypet/core`: helper client-side de subscribe, handler de API de subscribe, e função de envio de broadcast (server-side, usando `web-push`).
 - Integração em `apps/distribuidora`: rota de API de subscribe, atualização do `public/sw.js` para tratar eventos `push`/`notificationclick`, e opt-in de permissão amarrado ao fluxo de instalação já existente (`install-prompt.tsx`).
 - Script de linha de comando na raiz do monorepo para disparar um broadcast por canal.
@@ -32,6 +32,7 @@ Permitir que quem instalou o PWA da distribuidora receba notificações push de 
 ```
 packages/core/
 ├── src/
+│   ├── supabase.ts                (editado — adiciona getHubServiceClient)
 │   ├── push.ts                    (novo — client)
 │   ├── push-server.ts             (novo — server: subscribe handler + sendPushBroadcast)
 │   └── push-server.test.ts        (novo)
@@ -46,19 +47,21 @@ apps/distribuidora/
 scripts/
 └── push-send.ts                   (novo, raiz do monorepo)
 
-package.json                       (editado — script "push:send", devDependencies "tsx"/"dotenv",
-                                     dependency "@mypet/core": "workspace:*" para o script importar)
+package.json                       (editado — script "push:send")
 ```
 
 Fluxo de opt-in: usuário toca "Instalar" no banner existente → `beforeinstallprompt.prompt()` resolve com `outcome === "accepted"` → `install-prompt.tsx` chama `subscribeToPush("distribuidora", vapidPublicKey)` → `Notification.requestPermission()` → se concedida, `pushManager.subscribe()` → `POST /api/push/subscribe` → grava em `push_subscriptions`. Para iOS (que não dispara `beforeinstallprompt`), o mesmo `subscribeToPush` é tentado no `mount` do componente quando o app já está rodando em modo standalone e a permissão ainda não foi decidida — cobre o cliente que já adicionou manualmente à tela de início.
 
-Fluxo de envio: operador roda `pnpm push:send distribuidora "Título" "Mensagem" [url]` → script lê todas as linhas de `push_subscriptions` do canal → chama `web-push.sendNotification` para cada uma → subscriptions que retornam 404/410 (expiradas) são removidas do banco.
+Fluxo de envio: operador roda `pnpm push:send distribuidora "Título" "Mensagem" [url]` → script lê todas as linhas de `push_subscriptions` do canal (via client `service_role`, que ignora RLS) → chama `web-push.sendNotification` para cada uma → subscriptions que retornam 404/410 (expiradas) são removidas do banco.
 
 Fluxo de recepção: navegador recebe push em segundo plano → `sw.js` escuta `push`, monta a notificação com `title`/`body`/`icon` do payload → usuário toca a notificação → `notificationclick` fecha a notificação e abre a `url` do payload (ou `/`).
 
 ## Componentes
 
 ### Tabela `push_subscriptions` (Supabase hub)
+
+O projeto Supabase hub tem RLS habilitado em todas as tabelas (confirmado em `leads`: só `INSERT` é liberado para `anon`; `SELECT`/`UPDATE` exigem usuário autenticado admin). `push_subscriptions` segue o mesmo padrão de segurança:
+
 ```sql
 create table push_subscriptions (
   id uuid primary key default gen_random_uuid(),
@@ -69,8 +72,25 @@ create table push_subscriptions (
   created_at timestamptz not null default now()
 );
 create index push_subscriptions_channel_idx on push_subscriptions (channel);
+
+alter table push_subscriptions enable row level security;
+
+create policy push_subscriptions_insert_publico
+  on push_subscriptions for insert
+  to anon, authenticated
+  with check (true);
+
+create policy push_subscriptions_update_publico
+  on push_subscriptions for update
+  to anon, authenticated
+  using (true)
+  with check (true);
 ```
-Migração aplicada manualmente no Supabase hub (mesmo processo já usado para `leads`; não há pasta de migrations versionada no repo hoje).
+
+`INSERT`/`UPDATE` são públicos (necessários para o `upsert` do opt-in, feito com a chave anônima). Não há policy de `SELECT`/`DELETE` para `anon`/`authenticated` — de propósito: só a chave `service_role` (que ignora RLS) pode listar ou apagar subscriptions, usada exclusivamente pelo script de broadcast (nunca por uma rota pública). Migração aplicada manualmente no Supabase hub (mesmo processo já usado para `leads`; não há pasta de migrations versionada no repo hoje).
+
+### `packages/core/src/supabase.ts` (editado)
+Ganha `getHubServiceClient()`, análogo ao `getHubClient()` já existente mas autenticado com `SUPABASE_SERVICE_ROLE_KEY` em vez de `SUPABASE_ANON_KEY`. Usado exclusivamente por `sendPushBroadcast` — nunca pelo lado público/anônimo (rota de subscribe, client-side).
 
 ### `packages/core/src/push.ts` (client)
 ```ts
@@ -87,8 +107,8 @@ export async function subscribeToPush(channel: Channel, vapidPublicKey: string):
 export function createPushSubscribePostHandler(channel: Channel): (req: NextRequest) => Promise<Response>
 export async function sendPushBroadcast(channel: Channel, payload: { title: string; body: string; url?: string }): Promise<{ sent: number; removed: number }>
 ```
-- `createPushSubscribePostHandler`: valida `endpoint`, `keys.p256dh`, `keys.auth` no corpo; faz `upsert` na tabela `push_subscriptions` por `endpoint` (evita duplicata se o mesmo dispositivo assinar de novo). Retorna 400 se faltar campo, 500 genérico em erro do Supabase (mesmo padrão de `leads-server.ts`).
-- `sendPushBroadcast`: busca todas as linhas do `channel`, chama `web-push.sendNotification(subscription, JSON.stringify(payload), { vapidDetails })` para cada uma. Em erro com `statusCode` 404 ou 410, apaga a linha do banco (subscription morta). Outros erros só são logados, não interrompem o loop. Retorna contagem de enviados/removidos pro script de CLI reportar.
+- `createPushSubscribePostHandler`: valida `endpoint`, `keys.p256dh`, `keys.auth` no corpo; faz `upsert` (via `getHubClient()`, chave anônima) na tabela `push_subscriptions` por `endpoint` (evita duplicata se o mesmo dispositivo assinar de novo). Retorna 400 se faltar campo, 500 genérico em erro do Supabase (mesmo padrão de `leads-server.ts`).
+- `sendPushBroadcast`: usa `getHubServiceClient()` (chave `service_role`, necessária porque não há policy de `SELECT`/`DELETE` pública na tabela) para buscar todas as linhas do `channel`, chama `web-push.sendNotification(subscription, JSON.stringify(payload), { vapidDetails })` para cada uma. Em erro com `statusCode` 404 ou 410, apaga a linha do banco (subscription morta). Outros erros só são logados, não interrompem o loop. Retorna contagem de enviados/removidos pro script de CLI reportar.
 
 ### `apps/distribuidora/app/api/push/subscribe/route.ts`
 ```ts
@@ -127,12 +147,13 @@ pnpm push:send <channel> "<título>" "<mensagem>" [url]
 ```
 - Valida `channel` contra `isChannel()` de `@mypet/core/channels`.
 - Chama `sendPushBroadcast` e imprime `Enviado: N, removidas (expiradas): M`.
-- Lê `PUSH_VAPID_PUBLIC_KEY`, `PUSH_VAPID_PRIVATE_KEY`, `PUSH_VAPID_SUBJECT`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` do ambiente (`.env` na raiz, via `dotenv`, novo devDependency).
+- Lê `PUSH_VAPID_PUBLIC_KEY`, `PUSH_VAPID_PRIVATE_KEY`, `PUSH_VAPID_SUBJECT`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` do ambiente (`.env` na raiz, via `dotenv`, novo devDependency).
 
 ### Variáveis de ambiente (novas)
 - `PUSH_VAPID_PUBLIC_KEY` / `PUSH_VAPID_PRIVATE_KEY` — par único gerado uma vez (`npx web-push generate-vapid-keys`) para todo o hub.
 - `PUSH_VAPID_SUBJECT` — `mailto:` de contato exigido pelo protocolo VAPID.
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — mesma chave pública, exposta ao browser no app `distribuidora`.
+- `SUPABASE_SERVICE_ROLE_KEY` — chave privilegiada (ignora RLS) consumida por `getHubServiceClient()`, usada só pelo script `push:send` na raiz do monorepo. Mais sensível que a `SUPABASE_ANON_KEY` já existente (que continua sendo a única usada pelos apps/rotas públicas) — nunca vira variável `NEXT_PUBLIC_*` nem sai do ambiente do script.
 
 ## Tratamento de erro
 
@@ -142,6 +163,6 @@ pnpm push:send <channel> "<título>" "<mensagem>" [url]
 
 ## Testes / verificação
 
-- `push-server.test.ts` (Vitest, Supabase mockado): valida upsert do subscribe, 400 em campo faltando, 500 em erro do Supabase, e o comportamento de `sendPushBroadcast` (conta enviados, remove subscription em 404/410, não remove em outros erros) com `web-push` mockado.
+- `push-server.test.ts` (Vitest, Supabase mockado): valida upsert do subscribe, 400 em campo faltando, 500 em erro do Supabase, e o comportamento de `sendPushBroadcast` (conta enviados, remove subscription em 404/410, não remove em outros erros) com `web-push` mockado. `getHubClient` e `getHubServiceClient` são mockados separadamente, refletindo que cada um é chamado por uma função diferente.
 - Verificação manual: build de produção do `distribuidora`, instalar o PWA num Android real ou emulado, aceitar a permissão de notificação, rodar `pnpm push:send distribuidora "Teste" "Mensagem de teste"` e confirmar que a notificação chega mesmo com o app fechado.
 - Sem verificação automatizada de iOS (exige dispositivo físico com iOS 16.4+); validar manualmente se houver aparelho disponível.

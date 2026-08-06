@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useClientConfig } from "@mypet/core/theme";
+import { subscribeToPush } from "@mypet/core/push";
 
 const DISMISS_KEY = "mypet_pwa_install_dismissed_at";
 const DISMISS_DAYS = 7;
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -49,13 +51,34 @@ function markDismissed() {
   }
 }
 
+function requestPushSubscription() {
+  if (!VAPID_PUBLIC_KEY) return;
+  void subscribeToPush("distribuidora", VAPID_PUBLIC_KEY);
+}
+
 export default function InstallPrompt() {
   const clientConfig = useClientConfig();
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [showNotifyButton, setShowNotifyButton] = useState(false);
 
   useEffect(() => {
-    if (isStandalone() || isDismissedRecently()) return;
+    const standalone = isStandalone();
+
+    if (standalone && typeof Notification !== "undefined") {
+      if (Notification.permission === "granted") {
+        // Ja concedida antes: reinscreve silenciosamente a cada abertura (idempotente,
+        // sem exigir gesto do usuario) para se autocurar de uma subscription perdida
+        // (POST anterior falhou, ou o servidor removeu por expiracao).
+        requestPushSubscription();
+      } else if (Notification.permission === "default") {
+        // Notification.requestPermission() exige gesto do usuario no Safari/iOS -
+        // nao pode ser chamado direto aqui dentro do efeito.
+        setShowNotifyButton(true);
+      }
+    }
+
+    if (standalone || isDismissedRecently()) return;
     if (isMobileLike()) {
       queueMicrotask(() => setIsVisible(true));
     }
@@ -70,7 +93,7 @@ export default function InstallPrompt() {
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
   }, []);
 
-  if (!isVisible && !deferredEvent) return null;
+  if (!isVisible && !deferredEvent && !showNotifyButton) return null;
 
   async function handleInstall() {
     if (!deferredEvent) return;
@@ -79,6 +102,8 @@ export default function InstallPrompt() {
       const { outcome } = await deferredEvent.userChoice;
       if (outcome === "dismissed") {
         markDismissed();
+      } else {
+        requestPushSubscription();
       }
     } catch {
       // Falha relacionada a PWA deve ser sempre silenciosa e nunca travar a UI.
@@ -92,6 +117,43 @@ export default function InstallPrompt() {
     markDismissed();
     setDeferredEvent(null);
     setIsVisible(false);
+  }
+
+  function handleActivateNotifications() {
+    setShowNotifyButton(false);
+    requestPushSubscription();
+  }
+
+  if (showNotifyButton) {
+    return (
+      <div
+        role="dialog"
+        aria-label="Ativar notificações"
+        style={{ background: clientConfig.palette.navy }}
+        className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 px-4 py-3 text-white shadow-lg"
+      >
+        <span className="min-w-0 text-sm leading-snug">
+          Ative os avisos para receber promoções direto no seu celular.
+        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={handleActivateNotifications}
+            className="rounded bg-white px-3 py-1.5 text-sm font-medium text-slate-900"
+          >
+            Ativar
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowNotifyButton(false)}
+            aria-label="Fechar"
+            className="px-2 py-1.5 text-lg leading-none text-white/80"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const hasNativeInstall = Boolean(deferredEvent);

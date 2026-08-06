@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# scratch state for the subagent-driven-development skill (progress ledger, briefs, reports)
+.superpowers/
+
 # vercel
 .vercel
 
