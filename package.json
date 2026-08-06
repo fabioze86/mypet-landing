@@ -11,11 +11,17 @@
     "dev:all": "concurrently -n mypet,distribuidora,azpetshop,admin,hub -c blue,green,yellow,magenta,cyan \"pnpm --filter mypet dev\" \"pnpm --filter distribuidora dev\" \"pnpm --filter azpetshop dev\" \"pnpm --filter admin dev\" \"pnpm --filter hub dev\"",
     "build": "pnpm -r build",
     "lint": "eslint",
-    "test": "pnpm --filter @mypet/core test"
+    "test": "pnpm --filter @mypet/core test",
+    "push:send": "tsx scripts/push-send.ts"
   },
   "devDependencies": {
     "concurrently": "^9",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "16.2.6"
+    "eslint-config-next": "16.2.6",
+    "tsx": "^4.23.9"
+  },
+  "dependencies": {
+    "@mypet/core": "workspace:*"
   }
 }
