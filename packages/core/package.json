@@ -18,6 +18,7 @@
     "./leads": "./src/leads.ts",
     "./leads-server": "./src/leads-server.ts",
     "./orders-server": "./src/orders-server.ts",
+    "./push-server": "./src/push-server.ts",
     "./querystring": "./src/querystring.ts",
     "./seo": "./src/seo.ts",
     "./supabase": "./src/supabase.ts",
