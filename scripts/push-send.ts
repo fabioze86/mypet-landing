@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { isChannel } from "@mypet/core/channels";
-import { sendPushBroadcast } from "@mypet/core/push-server";
+import { sendPushBroadcast } from "@mypet/core/push-broadcast";
 
 const [channelArg, title, body, url] = process.argv.slice(2);
 

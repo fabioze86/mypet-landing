@@ -19,6 +19,7 @@
     "./leads-server": "./src/leads-server.ts",
     "./orders-server": "./src/orders-server.ts",
     "./push": "./src/push.ts",
+    "./push-broadcast": "./src/push-broadcast.ts",
     "./push-server": "./src/push-server.ts",
     "./querystring": "./src/querystring.ts",
     "./seo": "./src/seo.ts",

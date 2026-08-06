@@ -5,5 +5,9 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+# tsx e fixado numa versao exata (4.23.9, ver devDependencies do package.json raiz);
+# excluido da quarentena de release-age do pnpm porque essa versao especifica ja foi
+# instalada e auditada nesta entrega - a exclusao vale so para 4.23.9, nao para o
+# pacote inteiro, entao versoes futuras continuam protegidas pela quarentena normal.
 minimumReleaseAgeExclude:
   - tsx@4.23.9
