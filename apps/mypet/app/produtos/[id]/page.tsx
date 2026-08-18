@@ -160,11 +160,6 @@ export default async function ProductPage({
           color: ${PALETTE.navyDark};
           font-weight: 700;
         }
-
-        @media (max-width: 768px) {
-          .detail-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
-          .img-container { height: 300px !important; }
-        }
       `}</style>
 
       <LeadGateProvider>
@@ -240,81 +235,64 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
         </ol>
       </nav>
 
-      <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "start" }}>
-        {jsonLd && (
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
-        )}
-        {/* COLUNA ESQUERDA - IMAGEM + VARIANTES + CTA */}
+      {jsonLd && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
+      )}
+
+      <ProductVariantPanel product={product} />
+
+      <div style={{ marginTop: 48, display: "flex", flexDirection: "column", gap: 24 }}>
+        {/* DESCRIÇÃO */}
         <div>
-          <ProductVariantPanel product={product} />
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: PALETTE.navy, marginBottom: 10 }}>
+            Descrição do Produto
+          </h2>
+          <div style={{ fontSize: 15, color: PALETTE.gray600, lineHeight: 1.6, whiteSpace: "pre-line" }}>
+            {product.description || (
+              <span style={{ color: PALETTE.gray400, fontStyle: "italic" }}>
+                Descrição detalhada não cadastrada no catálogo. Solicite informações adicionais no momento da cotação.
+              </span>
+            )}
+          </div>
         </div>
 
-            {/* COLUNA DIREITA - INFORMAÇÕES */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-              <div>
-                {product.brand && (
-                  <p style={{ fontSize: 13, color: PALETTE.pink, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
-                    {product.brand}
-                  </p>
+        {/* ESPECIFICAÇÕES TÉCNICAS */}
+        {(product.weight_kg || product.width_cm || product.height_cm || product.length_cm) && (
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: PALETTE.navy, marginBottom: 8 }}>
+              Especificações Físicas
+            </h2>
+            <table className="info-table">
+              <tbody>
+                {product.weight_kg && (
+                  <tr>
+                    <td className="label">Peso</td>
+                    <td className="value">{product.weight_kg} kg</td>
+                  </tr>
                 )}
-                <h1 style={{ fontSize: 32, fontWeight: 900, color: PALETTE.navy, lineHeight: 1.25, marginBottom: 12 }}>
-                  {product.name}
-                </h1>
-              </div>
-
-              {/* DESCRIÇÃO */}
-              <div>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: PALETTE.navy, marginBottom: 10 }}>
-                  Descrição do Produto
-                </h2>
-                <div style={{ fontSize: 15, color: PALETTE.gray600, lineHeight: 1.6, whiteSpace: "pre-line" }}>
-                  {product.description || (
-                    <span style={{ color: PALETTE.gray400, fontStyle: "italic" }}>
-                      Descrição detalhada não cadastrada no catálogo. Solicite informações adicionais no momento da cotação.
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* ESPECIFICAÇÕES TÉCNICAS */}
-              {(product.weight_kg || product.width_cm || product.height_cm || product.length_cm) && (
-                <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: PALETTE.navy, marginBottom: 8 }}>
-                    Especificações Físicas
-                  </h2>
-                  <table className="info-table">
-                    <tbody>
-                      {product.weight_kg && (
-                        <tr>
-                          <td className="label">Peso</td>
-                          <td className="value">{product.weight_kg} kg</td>
-                        </tr>
-                      )}
-                      {product.width_cm && (
-                        <tr>
-                          <td className="label">Largura</td>
-                          <td className="value">{product.width_cm} cm</td>
-                        </tr>
-                      )}
-                      {product.height_cm && (
-                        <tr>
-                          <td className="label">Altura</td>
-                          <td className="value">{product.height_cm} cm</td>
-                        </tr>
-                      )}
-                      {product.length_cm && (
-                        <tr>
-                          <td className="label">Comprimento</td>
-                          <td className="value">{product.length_cm} cm</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-            </div>
+                {product.width_cm && (
+                  <tr>
+                    <td className="label">Largura</td>
+                    <td className="value">{product.width_cm} cm</td>
+                  </tr>
+                )}
+                {product.height_cm && (
+                  <tr>
+                    <td className="label">Altura</td>
+                    <td className="value">{product.height_cm} cm</td>
+                  </tr>
+                )}
+                {product.length_cm && (
+                  <tr>
+                    <td className="label">Comprimento</td>
+                    <td className="value">{product.length_cm} cm</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+        )}
+      </div>
     </>
   );
 }
