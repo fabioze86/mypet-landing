@@ -18,8 +18,11 @@ export function VariantTable({
   const scrollable = variants.length > SCROLL_THRESHOLD;
 
   return (
-    <div
+    <ul
       style={{
+        listStyle: "none",
+        margin: 0,
+        padding: 0,
         border: `1px solid ${palette.gray200}`,
         borderRadius: 16,
         overflow: "hidden",
@@ -28,8 +31,10 @@ export function VariantTable({
       }}
     >
       {variants.map((variant, index) => (
-        <div
+        <li
           key={variant.id}
+          role="group"
+          aria-label={variantLabel(variant)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -53,8 +58,8 @@ export function VariantTable({
               product={{ id: variant.id, name: variant.name, sku: variant.sku, brand, img: variant.img }}
             />
           </div>
-        </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

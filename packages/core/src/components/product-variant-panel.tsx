@@ -34,7 +34,7 @@ export function ProductVariantPanel({ product }: { product: PdpProduct }) {
         }
       `}</style>
       <Suspense
-        fallback={<PurchaseGrid product={product} variants={variants} selected={variants[0]} onSelect={() => {}} />}
+        fallback={<PurchaseGrid product={product} selected={variants[0]} onSelect={() => {}} />}
       >
         <ProductVariantPanelInner product={product} variants={variants} />
       </Suspense>
@@ -50,7 +50,7 @@ function ProductVariantPanelInner({
   variants: ProductVariant[];
 }) {
   const { selected, select } = useSelectedVariant(variants);
-  return <PurchaseGrid product={product} variants={variants} selected={selected} onSelect={select} />;
+  return <PurchaseGrid product={product} selected={selected} onSelect={select} />;
 }
 
 function toSelfVariant(product: PdpProduct): ProductVariant {
@@ -68,12 +68,10 @@ function toSelfVariant(product: PdpProduct): ProductVariant {
 
 function PurchaseGrid({
   product,
-  variants,
   selected,
   onSelect,
 }: {
   product: PdpProduct;
-  variants: ProductVariant[];
   selected: ProductVariant;
   onSelect: (id: string) => void;
 }) {
@@ -81,7 +79,7 @@ function PurchaseGrid({
   const hasVariants = product.variants.length > 0;
   const useTable = hasVariants && !hasAxisData(product.variants);
 
-  const variantOverride = hasVariants
+  const variantOverride = hasVariants && !useTable
     ? { id: selected.id, sku: selected.sku, barcode: selected.barcode, img: selected.img, name: selected.name }
     : null;
 
