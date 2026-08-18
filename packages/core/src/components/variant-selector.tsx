@@ -14,6 +14,13 @@ export function hasAxisData(variants: ProductVariant[]): boolean {
   return variants.some((variant) => variant.axis.length > 0);
 }
 
+export function variantDisplayLabel(variant: ProductVariant, index: number): string {
+  const label = variantLabel(variant);
+  const isJustTheReference = label.trim().toLowerCase() === variant.sku.trim().toLowerCase();
+  if (label && !isJustTheReference) return label;
+  return `N.${index + 1}`;
+}
+
 export function useSelectedVariant(variants: ProductVariant[]): {
   selected: ProductVariant;
   select: (id: string) => void;
@@ -58,7 +65,7 @@ export function VariantSelector({
         Escolha uma opção
       </span>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {variants.map((variant) => {
+        {variants.map((variant, index) => {
           const active = variant.id === selectedId;
           return (
             <button
@@ -77,7 +84,7 @@ export function VariantSelector({
                 transition: "all 0.15s",
               }}
             >
-              {variantLabel(variant)}
+              {variantDisplayLabel(variant, index)}
             </button>
           );
         })}

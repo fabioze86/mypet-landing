@@ -2,7 +2,7 @@
 
 import { useClientConfig } from "../theme";
 import { AddToCartControl } from "./add-to-cart-control";
-import { variantLabel } from "./variant-selector";
+import { variantDisplayLabel } from "./variant-selector";
 import type { ProductVariant } from "../catalog-utils";
 
 const SCROLL_THRESHOLD = 6;
@@ -34,7 +34,7 @@ export function VariantTable({
         <li
           key={variant.id}
           role="group"
-          aria-label={variantLabel(variant)}
+          aria-label={variantDisplayLabel(variant, index)}
           style={{
             display: "flex",
             alignItems: "center",
@@ -47,7 +47,7 @@ export function VariantTable({
         >
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: palette.navy }}>
-              {variantLabel(variant)}
+              {variantDisplayLabel(variant, index)}
             </div>
             <div style={{ fontSize: 15, fontWeight: 900, color: palette.pink, marginTop: 2 }}>
               {variant.priceLabel ?? "Preço sob consulta"}

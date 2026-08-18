@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { variantLabel, hasAxisData } from "./variant-selector";
+import { variantLabel, hasAxisData, variantDisplayLabel } from "./variant-selector";
 import type { ProductVariant } from "../catalog-utils";
 
 function makeVariant(overrides: Partial<ProductVariant> = {}): ProductVariant {
@@ -25,6 +25,33 @@ describe("variantLabel", () => {
   it("cai para o nome do produto quando axis está vazio", () => {
     const variant = makeVariant({ axis: [] });
     expect(variantLabel(variant)).toBe("Vestido Chic Tule Rosa P");
+  });
+});
+
+describe("variantDisplayLabel", () => {
+  it("usa o valor do eixo quando ele é diferente da referência", () => {
+    const variant = makeVariant({ axis: [{ eixo: "Tamanho", valor: "M", ordem: 1 }] });
+    expect(variantDisplayLabel(variant, 0)).toBe("M");
+  });
+
+  it("usa o nome do produto quando axis está vazio e o nome é diferente da referência", () => {
+    const variant = makeVariant({ axis: [] });
+    expect(variantDisplayLabel(variant, 0)).toBe("Vestido Chic Tule Rosa P");
+  });
+
+  it("cai para numeração gerada quando o eixo repete a própria referência (dado mal cadastrado)", () => {
+    const variant = makeVariant({ sku: "23988", axis: [{ eixo: "Referência", valor: "23988" }] });
+    expect(variantDisplayLabel(variant, 0)).toBe("N.1");
+  });
+
+  it("cai para numeração gerada quando o nome do produto é a própria referência", () => {
+    const variant = makeVariant({ sku: "23988", name: "23988", axis: [] });
+    expect(variantDisplayLabel(variant, 2)).toBe("N.3");
+  });
+
+  it("ignora espaços e maiúsculas ao comparar com a referência", () => {
+    const variant = makeVariant({ sku: "23988", axis: [{ eixo: "Referência", valor: " 23988 " }] });
+    expect(variantDisplayLabel(variant, 4)).toBe("N.5");
   });
 });
 
