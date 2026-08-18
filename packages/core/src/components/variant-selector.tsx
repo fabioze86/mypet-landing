@@ -10,6 +10,10 @@ export function variantLabel(variant: ProductVariant): string {
   return variant.axis.map((a) => a.valor).join(" / ");
 }
 
+export function hasAxisData(variants: ProductVariant[]): boolean {
+  return variants.some((variant) => variant.axis.length > 0);
+}
+
 export function useSelectedVariant(variants: ProductVariant[]): {
   selected: ProductVariant;
   select: (id: string) => void;
