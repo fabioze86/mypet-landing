@@ -1,6 +1,7 @@
 import { getBanners } from "../banners";
 import type { Palette } from "../theme";
 import type { Channel } from "../channels";
+import { BannerCarousel } from "./banner-carousel";
 
 export async function CompactBanner({ channel, palette }: { channel: Channel; palette: Palette }) {
   const banners = await getBanners(channel, "principal");
@@ -9,25 +10,7 @@ export async function CompactBanner({ channel, palette }: { channel: Channel; pa
     return <FallbackBanner palette={palette} />;
   }
 
-  return (
-    <div className="banner-row">
-      {banners.map((b) => {
-        const image = (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={b.imageUrl}
-            alt={b.title ?? ""}
-            style={{ width: 320, height: 150, borderRadius: 14, objectFit: "cover", display: "block" }}
-          />
-        );
-        return (
-          <div key={b.id} className="banner-row-item">
-            {b.linkUrl ? <a href={b.linkUrl}>{image}</a> : image}
-          </div>
-        );
-      })}
-    </div>
-  );
+  return <BannerCarousel banners={banners} />;
 }
 
 function FallbackBanner({ palette }: { palette: Palette }) {
