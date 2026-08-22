@@ -23,7 +23,9 @@ describe("computeArrowState", () => {
   });
 
   it("tolera erro de arredondamento no fim do scroll (guarda de 1px)", () => {
-    const state = computeArrowState({ scrollLeft: 799.6, clientWidth: 1200.4, scrollWidth: 2000 });
+    // scrollLeft + clientWidth = 1999.5: sem a guarda de -1px isso leria
+    // canScrollNext=true (1999.5 < 2000); com a guarda, false (1999.5 < 1999 é falso).
+    const state = computeArrowState({ scrollLeft: 799.5, clientWidth: 1200, scrollWidth: 2000 });
     expect(state.canScrollNext).toBe(false);
   });
 });
