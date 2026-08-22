@@ -6,29 +6,59 @@ import type { Banner } from "../banners";
 const CARD_WIDTH_DESKTOP = 320;
 const CARD_GAP = 10;
 
+export function computeArrowState({
+  scrollLeft,
+  clientWidth,
+  scrollWidth,
+}: {
+  scrollLeft: number;
+  clientWidth: number;
+  scrollWidth: number;
+}): { canScrollPrev: boolean; canScrollNext: boolean } {
+  return {
+    canScrollPrev: scrollLeft > 0,
+    canScrollNext: scrollLeft + clientWidth < scrollWidth - 1,
+  };
+}
+
 export function BannerCarousel({ banners }: { banners: Banner[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
 
   const updateArrows = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
-    setCanScrollPrev(el.scrollLeft > 0);
-    setCanScrollNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+    const state = computeArrowState({
+      scrollLeft: el.scrollLeft,
+      clientWidth: el.clientWidth,
+      scrollWidth: el.scrollWidth,
+    });
+    setCanScrollPrev(state.canScrollPrev);
+    setCanScrollNext(state.canScrollNext);
   }, []);
+
+  const handleScroll = useCallback(() => {
+    if (rafRef.current !== null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      updateArrows();
+    });
+  }, [updateArrows]);
 
   useEffect(() => {
     updateArrows();
     const el = trackRef.current;
     if (!el) return;
-    el.addEventListener("scroll", updateArrows, { passive: true });
+    el.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", updateArrows);
     return () => {
-      el.removeEventListener("scroll", updateArrows);
+      el.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", updateArrows);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [updateArrows, banners.length]);
+  }, [updateArrows, handleScroll, banners.length]);
 
   const scrollByCard = (direction: 1 | -1) => {
     const el = trackRef.current;
@@ -43,7 +73,7 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
   return (
     <div className="bc-wrap">
       <style>{`
-        .bc-wrap { position: relative; }
+        .bc-wrap { position: relative; max-width: 1200px; margin: 0 auto; }
         .bc-track {
           display: flex;
           gap: ${CARD_GAP}px;
@@ -90,21 +120,22 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
           .bc-arrow:hover { background: rgba(0,0,0,0.65); transform: translateY(-50%) scale(1.06); }
         }
         .bc-arrow:focus-visible { opacity: 1; outline: 2px solid #fff; outline-offset: 2px; }
+        .bc-arrow-hidden { opacity: 0 !important; pointer-events: none; }
         @media (hover: none), (pointer: coarse) {
           .bc-arrow { display: none; }
         }
       `}</style>
 
-      {canScrollPrev && (
-        <button
-          type="button"
-          aria-label="Banner anterior"
-          className="bc-arrow bc-arrow-prev"
-          onClick={() => scrollByCard(-1)}
-        >
-          <ChevronIcon direction="left" />
-        </button>
-      )}
+      <button
+        type="button"
+        aria-label="Banner anterior"
+        aria-disabled={!canScrollPrev}
+        tabIndex={canScrollPrev ? 0 : -1}
+        className={`bc-arrow bc-arrow-prev${canScrollPrev ? "" : " bc-arrow-hidden"}`}
+        onClick={() => canScrollPrev && scrollByCard(-1)}
+      >
+        <ChevronIcon direction="left" />
+      </button>
 
       <div className="bc-track" ref={trackRef}>
         {banners.map((b) => {
@@ -120,16 +151,16 @@ export function BannerCarousel({ banners }: { banners: Banner[] }) {
         })}
       </div>
 
-      {canScrollNext && (
-        <button
-          type="button"
-          aria-label="Próximo banner"
-          className="bc-arrow bc-arrow-next"
-          onClick={() => scrollByCard(1)}
-        >
-          <ChevronIcon direction="right" />
-        </button>
-      )}
+      <button
+        type="button"
+        aria-label="Próximo banner"
+        aria-disabled={!canScrollNext}
+        tabIndex={canScrollNext ? 0 : -1}
+        className={`bc-arrow bc-arrow-next${canScrollNext ? "" : " bc-arrow-hidden"}`}
+        onClick={() => canScrollNext && scrollByCard(1)}
+      >
+        <ChevronIcon direction="right" />
+      </button>
     </div>
   );
 }
