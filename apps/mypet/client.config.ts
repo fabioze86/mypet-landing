@@ -5,7 +5,7 @@ export const clientConfig: ClientConfig = {
   name: "My Pet Brasil",
   tagline: "Atacado B2B",
   domain: "mypetbrasil.com.br",
-  catalogChannel: "ffa_fabrica",
+  catalogChannel: "mypetbrasil",
   palette: {
     pink: "#E5197A",
     pinkDark: "#B8115F",
