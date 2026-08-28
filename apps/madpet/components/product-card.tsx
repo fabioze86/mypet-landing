@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { CatalogProduct } from "@mypet/core/catalog-utils";
 import { buildWhatsAppLink, buildProductInterestMessage } from "@mypet/core/whatsapp";
-import { madPetPalette as palette } from "@/client-theme";
+import { madPetPalette as palette, theme } from "@/client-theme";
 
 export function ProductCard({
   product,
@@ -14,10 +14,11 @@ export function ProductCard({
 
   return (
     <div
+      className="mp-card"
       style={{
         background: palette.white,
-        borderRadius: 20,
-        border: `2px solid ${palette.purpleLight}`,
+        borderRadius: theme.radiusCard,
+        border: `1px solid ${palette.purpleLight}`,
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
@@ -26,11 +27,11 @@ export function ProductCard({
         scrollSnapAlign: "start",
       }}
     >
-      <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", background: palette.greenLight }}>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", background: palette.purpleLight }}>
         <Image src={product.img} alt={product.name} fill sizes="240px" style={{ objectFit: "contain" }} />
       </div>
       <div style={{ padding: 16, display: "flex", flexDirection: "column", flex: 1 }}>
-        <h3
+        <h4
           style={{
             fontSize: 15,
             fontWeight: 800,
@@ -41,24 +42,25 @@ export function ProductCard({
           }}
         >
           {product.name}
-        </h3>
+        </h4>
         <a
           href={link}
           target="_blank"
           rel="noopener noreferrer"
+          className="mp-btn mp-btn-green"
           style={{
             marginTop: "auto",
             textAlign: "center",
-            background: palette.green,
+            background: palette.greenDark,
             color: palette.white,
             fontWeight: 800,
             fontSize: 14,
             padding: "10px 0",
-            borderRadius: 100,
+            borderRadius: theme.radiusPill,
             textDecoration: "none",
           }}
         >
-          Quero esse
+          Pedir este item
         </a>
       </div>
     </div>

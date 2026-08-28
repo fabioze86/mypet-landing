@@ -1,4 +1,5 @@
-import { madPetPalette as palette } from "@/client-theme";
+import { madPetPalette as palette, theme } from "@/client-theme";
+import { Logo } from "./logo";
 
 export function Footer({
   mainSiteUrl,
@@ -10,36 +11,47 @@ export function Footer({
   whatsappLink: string;
 }) {
   return (
-    <footer style={{ background: palette.purpleDark, padding: "40px 24px" }}>
+    <footer style={{ background: palette.purpleDark, padding: "48px 24px" }}>
       <div
         style={{
-          maxWidth: 1200,
+          maxWidth: theme.maxWidth,
           margin: "0 auto",
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "space-between",
-          gap: 24,
+          gap: 28,
         }}
       >
-        <div>
-          <p style={{ fontFamily: "var(--font-fredoka)", fontSize: 20, color: palette.white, fontWeight: 700, marginBottom: 8 }}>
-            MAD PET
+        <div style={{ maxWidth: 320 }}>
+          <Logo size={22} variant="plain" />
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.72)", marginTop: 14, lineHeight: 1.6 }}>
+            Linha própria de acessórios do Grupo AZ. Fabricação própria, venda para revenda.
           </p>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Uma marca do Grupo AZ (My Pet Brasil)</p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <a href={whatsappLink} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, textDecoration: "none" }}>
-            Fale no WhatsApp
+
+        <nav aria-label="Links do rodapé" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mp-link"
+            style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, textDecoration: "none" }}
+          >
+            Falar com o comercial
           </a>
-          <a href={mainSiteUrl} style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, textDecoration: "none" }}>
+          <a href="#como-comprar" className="mp-link" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, textDecoration: "none" }}>
+            Como comprar para revender
+          </a>
+          <a href={mainSiteUrl} className="mp-link" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, textDecoration: "none" }}>
             My Pet Brasil
           </a>
-          <a href={distribuidoraUrl} style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, textDecoration: "none" }}>
+          <a href={distribuidoraUrl} className="mp-link" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, textDecoration: "none" }}>
             Distribuidora Petshop
           </a>
-        </div>
-        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", maxWidth: 320 }}>
-          © 2026 MAD PET — Grupo AZ. Todos os direitos reservados.
+        </nav>
+
+        <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", maxWidth: 260, lineHeight: 1.6 }}>
+          © 2026 MAD PET, Grupo AZ. Todos os direitos reservados.
         </p>
       </div>
     </footer>

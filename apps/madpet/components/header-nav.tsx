@@ -1,25 +1,20 @@
-import { madPetPalette as palette } from "@/client-theme";
+import { madPetPalette as palette, theme } from "@/client-theme";
+import { Logo } from "./logo";
 
 const NAV_LINKS = [
   { href: "#bandanas", label: "Bandanas" },
   { href: "#lacos", label: "Laços" },
   { href: "#peitorais", label: "Peitorais" },
   { href: "#coleiras", label: "Coleiras" },
-  { href: "#onde-comprar", label: "Onde Comprar" },
+  { href: "#como-comprar", label: "Como comprar" },
 ];
 
-export function HeaderNav({
-  whatsappLink,
-  mainSiteUrl,
-}: {
-  whatsappLink: string;
-  mainSiteUrl: string;
-}) {
+export function HeaderNav({ whatsappLink }: { whatsappLink: string }) {
   return (
     <header
       style={{
         background: palette.white,
-        borderBottom: `2px solid ${palette.purpleLight}`,
+        borderBottom: `1px solid ${palette.purpleLight}`,
         position: "sticky",
         top: 0,
         zIndex: 50,
@@ -27,52 +22,59 @@ export function HeaderNav({
     >
       <div
         style={{
-          maxWidth: 1200,
+          maxWidth: theme.maxWidth,
           margin: "0 auto",
-          padding: "14px 24px",
+          padding: "12px 24px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: 16,
+          gap: 20,
           flexWrap: "wrap",
         }}
       >
-        <a
-          href="#topo"
-          style={{
-            fontFamily: "var(--font-fredoka)",
-            fontWeight: 700,
-            fontSize: 24,
-            color: palette.purple,
-            textDecoration: "none",
-            transform: "rotate(-3deg)",
-            display: "inline-block",
-          }}
-        >
-          MAD PET
+        <a href="#topo" aria-label="MAD PET, ir para o início" style={{ display: "inline-flex", flexShrink: 0 }}>
+          <Logo size={20} />
         </a>
-        <nav aria-label="Seções da página" style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+
+        <nav
+          aria-label="Seções da página"
+          style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}
+        >
           {NAV_LINKS.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              style={{ color: palette.gray800, fontWeight: 700, fontSize: 14, textDecoration: "none" }}
+              className="mp-link"
+              style={{
+                color: palette.gray800,
+                fontWeight: 700,
+                fontSize: 14,
+                textDecoration: "none",
+              }}
             >
               {l.label}
             </a>
           ))}
         </nav>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <a
             href={whatsappLink}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: palette.green, fontWeight: 800, fontSize: 14, textDecoration: "none" }}
+            className="mp-btn mp-btn-green"
+            style={{
+              background: palette.greenDark,
+              color: palette.white,
+              fontWeight: 800,
+              fontSize: 14,
+              padding: "10px 20px",
+              borderRadius: theme.radiusPill,
+              textDecoration: "none",
+              whiteSpace: "nowrap",
+            }}
           >
-            💬 WhatsApp
-          </a>
-          <a href={mainSiteUrl} style={{ color: palette.gray600, fontSize: 12, textDecoration: "underline" }}>
-            Voltar pro site principal
+            Quero revender
           </a>
         </div>
       </div>

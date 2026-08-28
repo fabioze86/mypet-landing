@@ -3,11 +3,11 @@ import { ALL_CHANNEL_KINDS, CHANNELS, CHANNEL_LABELS, isChannel } from "./channe
 
 describe("CHANNELS", () => {
   it("contém todos os canais de site", () => {
-    expect(CHANNELS).toEqual(["mypetbrasil", "distribuidora", "azpetshop", "ffa_fabrica"]);
+    expect(CHANNELS).toEqual(["mypetbrasil", "distribuidora", "ffa_fabrica"]);
   });
 
   it("mantém todos os tipos de canal", () => {
-    expect(ALL_CHANNEL_KINDS).toEqual(["mypetbrasil", "distribuidora", "azpetshop", "ffa_fabrica"]);
+    expect(ALL_CHANNEL_KINDS).toEqual(["mypetbrasil", "distribuidora", "ffa_fabrica"]);
   });
 });
 
@@ -15,7 +15,6 @@ describe("isChannel", () => {
   it("aceita os canais válidos", () => {
     expect(isChannel("mypetbrasil")).toBe(true);
     expect(isChannel("distribuidora")).toBe(true);
-    expect(isChannel("azpetshop")).toBe(true);
     expect(isChannel("ffa_fabrica")).toBe(true);
   });
 

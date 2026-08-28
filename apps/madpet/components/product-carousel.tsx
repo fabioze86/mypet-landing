@@ -19,6 +19,7 @@ const arrowBaseStyle: React.CSSProperties = {
   cursor: "pointer",
   alignItems: "center",
   justifyContent: "center",
+  boxShadow: "0 6px 16px rgba(82,48,120,0.28)",
 };
 
 export function ProductCarousel({

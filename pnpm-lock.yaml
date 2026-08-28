@@ -74,40 +74,6 @@ importers:
         specifier: ^4.1.9
         version: 4.1.10(@types/node@20.19.43)(vite@8.1.4(@types/node@20.19.43)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.9))
 
-  apps/azpetshop:
-    dependencies:
-      '@mypet/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      next:
-        specifier: 16.2.6
-        version: 16.2.6(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react:
-        specifier: 19.2.4
-        version: 19.2.4
-      react-dom:
-        specifier: 19.2.4
-        version: 19.2.4(react@19.2.4)
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4
-        version: 4.3.2
-      '@types/node':
-        specifier: ^20
-        version: 20.19.43
-      '@types/react':
-        specifier: ^19
-        version: 19.2.17
-      '@types/react-dom':
-        specifier: ^19
-        version: 19.2.3(@types/react@19.2.17)
-      tailwindcss:
-        specifier: ^4
-        version: 4.3.2
-      typescript:
-        specifier: ^5
-        version: 5.9.3
-
   apps/distribuidora:
     dependencies:
       '@mypet/core':
@@ -166,6 +132,40 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.17)
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  apps/madpet:
+    dependencies:
+      '@mypet/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      next:
+        specifier: 16.2.6
+        version: 16.2.6(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.3.2
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      '@types/react':
+        specifier: ^19
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.2.3(@types/react@19.2.17)
+      tailwindcss:
+        specifier: ^4
+        version: 4.3.2
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -2039,6 +2039,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'

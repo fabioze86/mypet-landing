@@ -83,7 +83,7 @@ O endpoint adiciona uma linha no intervalo `Leads!A:E`:
 ## Executando localmente
 
 Este repositório é um monorepo pnpm com múltiplos apps. Para subir tudo de uma
-vez (mypet, distribuidora, azpetshop, admin e hub):
+vez (mypet, distribuidora, madpet, admin e hub):
 
 ```bash
 pnpm dev:all
@@ -102,7 +102,7 @@ Cada app roda numa porta fixa:
 | --- | --- |
 | mypet | 4100 |
 | distribuidora | 4101 |
-| azpetshop | 4102 |
+| madpet | 4102 |
 | admin | 4103 |
 | hub | 4104 |
 
@@ -111,7 +111,7 @@ Se quiser subir só um app específico, use o comando individual correspondente:
 ```bash
 pnpm dev:mypet
 pnpm dev:distribuidora
-pnpm dev:azpetshop
+pnpm dev:madpet
 pnpm dev:admin
 pnpm dev:hub
 ```
@@ -123,7 +123,7 @@ pnpm dev:hub
 | `pnpm dev:all` | Inicia os 5 apps em desenvolvimento simultaneamente |
 | `pnpm dev:mypet` | Inicia só o app mypet (porta 4100) |
 | `pnpm dev:distribuidora` | Inicia só o app distribuidora (porta 4101) |
-| `pnpm dev:azpetshop` | Inicia só o app azpetshop (porta 4102) |
+| `pnpm dev:madpet` | Inicia só o app madpet (porta 4102) |
 | `pnpm dev:admin` | Inicia só o app admin (porta 4103) |
 | `pnpm dev:hub` | Inicia só o hub (porta 4104) |
 | `pnpm build` | Gera o build de produção de todos os apps |

@@ -1,7 +1,6 @@
 import { getCatalog } from "@mypet/core/catalog";
 import { ProductCarousel } from "./product-carousel";
-import { WaveDivider } from "./wave-divider";
-import { madPetPalette as palette } from "@/client-theme";
+import { madPetPalette as palette, theme } from "@/client-theme";
 import type { ProductLine } from "@/lib/product-lines";
 
 export async function LineSection({
@@ -9,58 +8,64 @@ export async function LineSection({
   channel,
   brand,
   whatsappNumber,
-  background,
+  tone,
 }: {
   line: ProductLine;
   channel: string;
   brand: string;
   whatsappNumber: string;
-  background: "green" | "purple";
+  tone: "plain" | "tint";
 }) {
   let catalog: Awaited<ReturnType<typeof getCatalog>>;
   try {
     catalog = await getCatalog({ categoryId: line.categoryId, brand, page: 1, channel });
   } catch (error) {
-    console.error(`[azpetshop] erro ao buscar catalogo da linha ${line.slug}:`, error);
+    console.error(`[madpet] erro ao buscar catalogo da linha ${line.slug}:`, error);
     catalog = { items: [], total: 0, page: 1, totalPages: 1 };
   }
-  const bg = background === "green" ? palette.green : palette.purple;
 
   return (
-    <section id={line.slug} style={{ position: "relative", background: bg, padding: "64px 0 72px" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-        <h2
+    <div
+      id={line.slug}
+      style={{
+        background: tone === "tint" ? palette.purpleLight : palette.white,
+        scrollMarginTop: 80,
+      }}
+    >
+      <div style={{ maxWidth: theme.maxWidth, margin: "0 auto", padding: "40px 24px 44px" }}>
+        <h3
           style={{
             fontFamily: "var(--font-fredoka)",
-            fontSize: 32,
+            fontSize: 24,
             fontWeight: 700,
-            color: palette.white,
-            marginBottom: 10,
+            color: palette.gray800,
+            marginBottom: 6,
           }}
         >
           {line.bannerTitle}
-        </h2>
-        <p style={{ fontSize: 16, color: "rgba(255,255,255,0.88)", marginBottom: 32, maxWidth: 560 }}>
+        </h3>
+        <p style={{ fontSize: 15, color: palette.gray600, lineHeight: 1.6, maxWidth: "58ch", marginBottom: 24 }}>
           {line.bannerCopy}
         </p>
         {catalog.items.length === 0 ? (
           <p
             style={{
               fontSize: 15,
-              color: "rgba(255,255,255,0.85)",
-              background: "rgba(255,255,255,0.12)",
-              padding: "20px 24px",
-              borderRadius: 16,
-              maxWidth: 420,
+              color: palette.gray800,
+              background: palette.greenLight,
+              padding: "18px 22px",
+              borderRadius: theme.radiusCard,
+              maxWidth: 460,
+              lineHeight: 1.6,
             }}
           >
-            Essa linha chega em breve por aqui. Fala com a gente no WhatsApp pra saber mais!
+            Essa linha entra no catálogo em breve. Fale no WhatsApp para reservar as primeiras
+            peças.
           </p>
         ) : (
           <ProductCarousel products={catalog.items} whatsappNumber={whatsappNumber} />
         )}
       </div>
-      <WaveDivider color={palette.white} flip />
-    </section>
+    </div>
   );
 }

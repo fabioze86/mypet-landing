@@ -4,7 +4,7 @@ import { SITES, FEATURE_REGISTRY, type SiteId, type Features } from "./features"
 describe("features registry", () => {
   it("declara os 3 sites esperados", () => {
     const ids = Object.keys(SITES).sort();
-    expect(ids).toEqual(["azpetshop", "distribuidora", "mypet"]);
+    expect(ids).toEqual(["distribuidora", "madpet", "mypet"]);
   });
 
   it("cada site preenche todas as chaves de Features", () => {
@@ -31,6 +31,6 @@ describe("features registry", () => {
   it("todos os sites começam em modo cotação", () => {
     expect(SITES.mypet.features.commerce).toBe("quote");
     expect(SITES.distribuidora.features.commerce).toBe("quote");
-    expect(SITES.azpetshop.features.commerce).toBe("quote");
+    expect(SITES.madpet.features.commerce).toBe("quote");
   });
 });

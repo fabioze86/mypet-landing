@@ -15,9 +15,16 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "MAD PET — acessórios de fabricação própria para cães e gatos",
+  title: "MAD PET | Acessórios de fabricação própria para revenda em pet shop",
   description:
-    "Bandanas, laços, peitorais e coleiras MAD PET: cores vibrantes, materiais resistentes e preço-benefício. Fale no WhatsApp e descubra onde comprar.",
+    "Canal de compra para lojistas: bandanas, laços, peitorais e coleiras MAD PET de fabricação própria. Cor que vende na gôndola, giro rápido e frete grátis por faixa de pedido. Peça sua tabela no WhatsApp.",
+  openGraph: {
+    title: "MAD PET | Revenda de acessórios para pet shop",
+    description:
+      "Fabricação própria, giro rápido e frete grátis por faixa de pedido. Peça a tabela de revenda no WhatsApp.",
+    type: "website",
+    locale: "pt_BR",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

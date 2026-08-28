@@ -16,8 +16,8 @@ const SITES: SiteLink[] = [
     port: 4101,
   },
   {
-    name: "MAD PET (azpetshop)",
-    description: "Site público — acessórios",
+    name: "MAD PET",
+    description: "Canal de vendas B2B — revenda de acessórios",
     port: 4102,
   },
   {
