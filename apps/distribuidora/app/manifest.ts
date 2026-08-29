@@ -4,7 +4,7 @@ import { clientConfig } from "@/client.config";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: clientConfig.name,
-    short_name: "Distribuidora",
+    short_name: "MadPet",
     description: "Catálogo de atacado para pet shops e distribuidores",
     start_url: "/",
     display: "standalone",

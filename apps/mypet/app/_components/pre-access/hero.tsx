@@ -1,19 +1,27 @@
+import { AccessForm } from "./access-form";
+
 export function Hero() {
   return (
-    <section aria-labelledby="hero-title" style={{ padding: "64px 24px", maxWidth: 960, margin: "0 auto" }}>
-      <p style={{ textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>
-        Atacado para pet shops
-      </p>
-      <h1 id="hero-title" style={{ fontSize: 40, fontWeight: 900, margin: "12px 0 16px" }}>
-        Abasteça sua loja com condições claras
-      </h1>
-      <p style={{ fontSize: 18, maxWidth: 640 }}>
-        Veja pedido mínimo, desconto por volume e prazos antes de entrar na loja. Sem cotação por
-        WhatsApp para começar.
-      </p>
-      <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
-        <a href="#condicoes" className="cta-primary">Ver condições</a>
-        <a href="#acesso" className="cta-secondary">Já tenho acesso</a>
+    <section className="pa-hero" aria-labelledby="hero-title">
+      <div className="pa-wrap pa-hero-grid">
+        <div>
+          <p className="pa-eyebrow">Atacado para pet shops</p>
+          <h1 id="hero-title">Abasteça sua loja com condições de atacado claras</h1>
+          <p className="pa-hero-lead">
+            Pedido mínimo, desconto por volume e prazos ficam à vista antes de você entrar. Cadastro
+            com CNPJ e WhatsApp, acesso imediato.
+          </p>
+          <div className="pa-hero-actions">
+            <a href="#condicoes" className="pa-btn pa-btn-primary">Ver condições</a>
+            <a href="#categorias" className="pa-btn pa-btn-ghost">Ver categorias</a>
+          </div>
+        </div>
+
+        <div className="pa-panel" id="acesso">
+          <h2>Criar acesso à loja</h2>
+          <p className="pa-panel-sub">CNPJ e WhatsApp. Liberação na hora, sem cotação por WhatsApp.</p>
+          <AccessForm />
+        </div>
       </div>
     </section>
   );

@@ -2,29 +2,22 @@ import { commercialConditions } from "../../pre-access-content";
 
 export function CommercialConditions() {
   return (
-    <section
-      id="condicoes"
-      aria-labelledby="condicoes-title"
-      style={{ padding: "48px 24px", maxWidth: 960, margin: "0 auto" }}
-    >
-      <h2 id="condicoes-title">Condições comerciais</h2>
-      <ul
-        style={{
-          display: "grid",
-          gap: 16,
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          listStyle: "none",
-          padding: 0,
-        }}
-      >
-        {commercialConditions.map((c) => (
-          <li key={c.id} style={{ border: "1px solid #DDE2EC", borderRadius: 16, padding: 20 }}>
-            <h3>{c.title}</h3>
-            <p style={{ fontSize: 22, fontWeight: 900 }}>{c.value}</p>
-            <p>{c.detail}</p>
-          </li>
-        ))}
-      </ul>
+    <section id="condicoes" className="pa-section" aria-labelledby="condicoes-title">
+      <div className="pa-wrap">
+        <h2 id="condicoes-title" className="pa-h2">Condições comerciais</h2>
+        <p className="pa-sec-lead">
+          O que define o pedido antes de qualquer conversa. Os valores exatos aparecem dentro da loja.
+        </p>
+        <ul className="pa-cond-grid" style={{ listStyle: "none", padding: 0 }}>
+          {commercialConditions.map((c) => (
+            <li key={c.id} className="pa-card pa-cond-card">
+              <h3>{c.title}</h3>
+              <p className="pa-cond-value">{c.value}</p>
+              <p className="pa-cond-detail">{c.detail}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

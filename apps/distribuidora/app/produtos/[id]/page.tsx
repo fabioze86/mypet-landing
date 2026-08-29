@@ -66,7 +66,7 @@ export default async function ProductPage({
           justify-content: center;
           gap: 8px;
           letter-spacing: 0.01em;
-          box-shadow: 0 4px 12px rgba(229,25,122,0.2);
+          box-shadow: 0 4px 12px rgba(113,68,164,0.22);
         }
         .unlock-btn:hover { background: ${PALETTE.pinkDark}; transform: translateY(-1px); }
         .unlock-btn:active { transform: translateY(0); }
@@ -100,7 +100,7 @@ export default async function ProductPage({
 
         .modal-overlay {
           position: fixed; inset: 0;
-          background: rgba(15,31,69,0.6);
+          background: rgba(59,35,87,0.55);
           display: flex; align-items: center; justify-content: center;
           z-index: 999;
           padding: 16px;

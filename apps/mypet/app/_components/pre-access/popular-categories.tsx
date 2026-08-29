@@ -1,29 +1,54 @@
-// Deviation from brief: this is a SYNC component that receives `categories` as a
-// prop. `LandingPage` is the single async component — it calls `getCategories()`
-// once and passes the array down. This keeps `render(await LandingPage())`
-// working in jsdom (React cannot render an unresolved promise from an async
-// child). Only category names are shown here — no price, no ProductCard.
+// Server component. Recebe as categorias e um mapa opcional de imagens
+// (id -> url) montado em page.tsx via getCategoryThumbs. Só nome + foto de
+// categoria — nenhum preço, nenhum ProductCard.
 
-type CategoryName = { id: string; name: string };
+type Category = { id: string; slug: string; name: string };
 
-export function PopularCategories({ categories }: { categories: readonly CategoryName[] }) {
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter((w) => w.length > 2)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+export function PopularCategories({
+  categories,
+  thumbs = {},
+}: {
+  categories: readonly Category[];
+  thumbs?: Record<string, string>;
+}) {
   return (
-    <section
-      id="categorias"
-      aria-labelledby="categorias-title"
-      style={{ padding: "48px 24px", maxWidth: 960, margin: "0 auto" }}
-    >
-      <h2 id="categorias-title">Categorias mais procuradas</h2>
-      <ul style={{ display: "flex", flexWrap: "wrap", gap: 8, listStyle: "none", padding: 0 }}>
-        {categories.map((category) => (
-          <li
-            key={category.id}
-            style={{ border: "1px solid #DDE2EC", borderRadius: 100, padding: "6px 14px" }}
-          >
-            {category.name}
-          </li>
-        ))}
-      </ul>
+    <section id="categorias" className="pa-section" aria-labelledby="categorias-title">
+      <div className="pa-wrap">
+        <h2 id="categorias-title" className="pa-h2">Categorias mais procuradas</h2>
+        <p className="pa-sec-lead">
+          Reconheça o mix da sua loja. O catálogo completo abre depois do acesso.
+        </p>
+        <ul className="pa-cat-grid" style={{ listStyle: "none", padding: 0 }}>
+          {categories.map((category) => {
+            const src = thumbs[category.id];
+            return (
+              <li key={category.id}>
+                <a className="pa-cat-tile" href="#acesso">
+                  <span className="pa-cat-media">
+                    {src ? (
+                      <img src={src} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <span className="pa-cat-fallback" aria-hidden>
+                        {initials(category.name)}
+                      </span>
+                    )}
+                  </span>
+                  <span className="pa-cat-name">{category.name}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </section>
   );
 }

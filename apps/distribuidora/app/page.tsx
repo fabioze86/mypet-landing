@@ -167,7 +167,7 @@ export default async function Home({
         }
         .product-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 12px 32px rgba(26,52,114,0.10);
+          box-shadow: 0 12px 32px rgba(82,48,120,0.12);
         }
 
         .unlock-btn {
@@ -224,7 +224,7 @@ export default async function Home({
 
         .modal-overlay {
           position: fixed; inset: 0;
-          background: rgba(15,31,69,0.6);
+          background: rgba(59,35,87,0.55);
           display: flex; align-items: center; justify-content: center;
           z-index: 999;
           padding: 16px;

@@ -8,6 +8,10 @@ vi.mock("@mypet/core/catalog", () => ({
   ],
 }));
 
+vi.mock("./_data/category-thumbs", () => ({
+  getCategoryThumbs: async () => ({}),
+}));
+
 import LandingPage from "./page";
 
 describe("LandingPage", () => {

@@ -46,7 +46,7 @@ export default async function CotacaoPage() {
 
         .modal-overlay {
           position: fixed; inset: 0;
-          background: rgba(15,31,69,0.6);
+          background: rgba(59,35,87,0.55);
           display: flex; align-items: center; justify-content: center;
           z-index: 999;
           padding: 16px;
