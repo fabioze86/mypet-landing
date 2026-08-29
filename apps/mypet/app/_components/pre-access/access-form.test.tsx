@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AccessForm } from "./access-form";
 
@@ -9,10 +9,6 @@ beforeEach(() => {
   assign.mockReset();
   vi.stubGlobal("fetch", vi.fn());
   Object.defineProperty(window, "location", { value: { assign }, writable: true });
-});
-
-afterEach(() => {
-  cleanup();
 });
 
 describe("AccessForm", () => {
