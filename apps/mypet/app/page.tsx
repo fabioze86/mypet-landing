@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
+import { getCategories } from "@mypet/core/catalog";
 import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { Hero } from "./_components/pre-access/hero";
+import { CommercialConditions } from "./_components/pre-access/commercial-conditions";
+import { EducationCards } from "./_components/pre-access/education-cards";
+import { PopularCategories } from "./_components/pre-access/popular-categories";
+import { CommercialFaq } from "./_components/pre-access/commercial-faq";
+import { InstitutionalTrust } from "./_components/pre-access/institutional-trust";
 import { AccessForm } from "./_components/pre-access/access-form";
 
 export function generateMetadata(): Metadata {
@@ -10,21 +16,16 @@ export function generateMetadata(): Metadata {
   };
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const categories = await getCategories();
   return (
     <main>
       <Hero />
-      <section
-        id="condicoes"
-        aria-labelledby="condicoes-title"
-        style={{ padding: "24px", maxWidth: 960, margin: "0 auto" }}
-      >
-        <h2 id="condicoes-title">Condições de compra</h2>
-        <p>
-          Pedido mínimo, desconto por volume e prazos ficam visíveis aqui antes de você entrar na
-          loja.
-        </p>
-      </section>
+      <CommercialConditions />
+      <EducationCards />
+      <PopularCategories categories={categories} />
+      <CommercialFaq />
+      <InstitutionalTrust />
       <section
         id="acesso"
         aria-labelledby="acesso-title"
