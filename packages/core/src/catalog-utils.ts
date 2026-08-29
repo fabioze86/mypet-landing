@@ -112,6 +112,29 @@ export function formatPrice(value: number | null): string | null {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
+/**
+ * Canais em que o preço vem do espelho do ERP (Bling) via `product_prices`,
+ * e não da tabela de preço manual por canal (`product_channel_prices`).
+ */
+export const ERP_PRICE_CHANNELS = new Set<string>(["mypetbrasil"]);
+
+export function channelUsesErpPrice(channel: string): boolean {
+  return ERP_PRICE_CHANNELS.has(channel);
+}
+
+/**
+ * Sobrescreve o preço de um item já mapeado com o valor do ERP (Bling),
+ * indexado por referência (`sku`). O ERP é a fonte única: se não houver preço
+ * para a referência, o item volta a "sob consulta" (`null`).
+ */
+export function applyErpPrice<T extends { sku: string; salePrice: number | null; priceLabel: string | null }>(
+  item: T,
+  pricesByReference: Map<string, number>,
+): T {
+  const preco = item.sku ? pricesByReference.get(item.sku) ?? null : null;
+  return { ...item, salePrice: preco, priceLabel: formatPrice(preco) };
+}
+
 export function parsePage(raw: string | undefined): number {
   const n = Number(raw);
   return Number.isInteger(n) && n >= 1 ? n : 1;

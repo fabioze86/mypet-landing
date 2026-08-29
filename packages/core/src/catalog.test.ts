@@ -23,19 +23,21 @@ type QueryBuilder = {
 vi.mock("./supabase", () => {
   return {
     getHubClient: () => {
+      let currentTable = "";
       const builder = {} as QueryBuilder;
+      const accumulate = (name: string) => (...args: unknown[]) => {
+        calls[name] = [...((calls[name] as unknown[][] | undefined) ?? []), args];
+        return builder;
+      };
       const chain = (name: string) => (...args: unknown[]) => {
         calls[name] = args;
         return builder;
       };
-      builder.select = chain("select");
-      builder.eq = (...args: unknown[]) => {
-        calls["eq"] = [...((calls["eq"] as unknown[][] | undefined) ?? []), args];
-        return builder;
-      };
+      builder.select = accumulate("select");
+      builder.eq = accumulate("eq");
       builder.neq = chain("neq");
       builder.ilike = chain("ilike");
-      builder.in = chain("in");
+      builder.in = accumulate("in");
       builder.order = chain("order");
       builder.not = chain("not");
       builder.range = (...args: unknown[]) => {
@@ -80,15 +82,25 @@ vi.mock("./supabase", () => {
         error: null,
       });
       builder.then = (resolve) => {
-        resolve({
-          data: [
-            { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1, sort_order: 0 },
-            { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sort_order: 1 },
-          ],
-          error: null,
-        });
+        const data =
+          currentTable === "v_precos_erp"
+            ? [{ reference: "100", preco: "42.90" }] // numeric chega como string via PostgREST
+            : currentTable === "products"
+              ? [] // variantes
+              : [
+                  { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1, sort_order: 0 },
+                  { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sort_order: 1 },
+                ];
+        resolve({ data, error: null });
       };
-      return { from: chain("from") };
+      return {
+        from: (...args: unknown[]) => {
+          currentTable = args[0] as string;
+          calls["from"] = args;
+          calls["fromAll"] = [...((calls["fromAll"] as unknown[] | undefined) ?? []), args[0]];
+          return builder;
+        },
+      };
     },
   };
 });
@@ -99,6 +111,9 @@ beforeEach(() => {
   for (const k of Object.keys(calls)) delete calls[k];
 });
 
+const selectContains = (needle: string) =>
+  ((calls["select"] as unknown[][] | undefined) ?? []).some((args) => String(args[0]).includes(needle));
+
 describe("queryCatalog", () => {
   it("aplica busca, marca, canal, paginação e mapeia os itens", async () => {
     const result = await queryCatalog({ q: "ração", brand: "NAPI", page: 2, channel: "mypetbrasil" });
@@ -107,7 +122,7 @@ describe("queryCatalog", () => {
     expect(calls["neq"]).toEqual(["product_role", "variant"]);
     expect(calls["eq"]).toContainEqual(["brand", "NAPI"]);
     expect(calls["eq"]).toContainEqual(["product_channel_links.channel", "mypetbrasil"]);
-    expect((calls["select"] as unknown[])[0]).toContain("product_channel_links");
+    expect(selectContains("product_channel_links")).toBe(true);
     expect(calls["range"]).toEqual([24, 47]);
     expect(result.total).toBe(50);
     expect(result.totalPages).toBe(3);
@@ -128,19 +143,41 @@ describe("queryCatalog com filtro de categoria", () => {
 
   it("filtra por uma lista de categoryIds (subárvore) quando informado um array", async () => {
     await queryCatalog({ page: 1, channel: "mypetbrasil", categoryId: ["cat-9", "cat-10", "cat-11"] });
-    expect(calls["in"]).toEqual(["category_id", ["cat-9", "cat-10", "cat-11"]]);
+    expect(calls["in"]).toContainEqual(["category_id", ["cat-9", "cat-10", "cat-11"]]);
   });
 });
 
 describe("getProductById", () => {
   it("inclui category_id e categories no select e no retorno", async () => {
     const product = await getProductById("p1", "mypetbrasil");
-    expect((calls["select"] as unknown[])[0]).toContain("category_id");
-    expect((calls["select"] as unknown[])[0]).toContain("categories(id, name, slug)");
+    expect(selectContains("category_id")).toBe(true);
+    expect(selectContains("categories(id, name, slug)")).toBe(true);
     expect(product).toMatchObject({
       categoryId: "cat-1",
       category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
     });
+  });
+});
+
+describe("preço do ERP (Bling) no canal mypetbrasil", () => {
+  it("queryCatalog sobrescreve o preço dos itens com o valor de v_precos_erp", async () => {
+    const result = await queryCatalog({ page: 1, channel: "mypetbrasil" });
+    expect(calls["fromAll"]).toContain("v_precos_erp");
+    expect(calls["in"]).toContainEqual(["reference", ["100"]]);
+    expect(result.items[0].salePrice).toBe(42.9);
+    expect(result.items[0].priceLabel).toMatch(/42,90/);
+  });
+
+  it("getProductById sobrescreve o preço do produto com o valor de v_precos_erp", async () => {
+    const product = await getProductById("p1", "mypetbrasil");
+    expect(calls["fromAll"]).toContain("v_precos_erp");
+    expect(product?.salePrice).toBe(42.9);
+    expect(product?.priceLabel).toMatch(/42,90/);
+  });
+
+  it("não consulta v_precos_erp para canais que usam preço manual", async () => {
+    await queryCatalog({ page: 1, channel: "distribuidora" });
+    expect(calls["fromAll"] ?? []).not.toContain("v_precos_erp");
   });
 });
 
