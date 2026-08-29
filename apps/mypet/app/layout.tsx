@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(`https://${clientConfig.domain}`),
   title: `${clientConfig.name} — ${clientConfig.tagline}`,
   description:
-    "Catálogo de atacado para pet shops e distribuidores. Cadastro gratuito, cotações sob consulta.",
+    "Atacado para pet shops: veja condições de compra, pedido mínimo e categorias antes de acessar a loja.",
 };
 
 export default function RootLayout({

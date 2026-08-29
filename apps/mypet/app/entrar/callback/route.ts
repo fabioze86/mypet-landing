@@ -1,3 +1,5 @@
-import { createAuthCallbackHandler } from "@mypet/core/auth-server";
+import { NextResponse, type NextRequest } from "next/server";
 
-export const GET = createAuthCallbackHandler();
+export function GET(request: NextRequest) {
+  return NextResponse.redirect(new URL("/", request.url));
+}
