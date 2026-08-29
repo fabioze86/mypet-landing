@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { createServerSupabaseClient } from "@mypet/core/supabase-server";
+import { getHubServiceClient } from "@mypet/core/supabase";
 import { getOrdersByBuyer } from "@mypet/core/orders-server";
 import { getCategories } from "@mypet/core/catalog";
+import { requireBuyer } from "@/lib/require-buyer";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { clientConfig } from "@/client.config";
@@ -16,17 +17,12 @@ const STATUS_LABEL: Record<string, string> = {
   cancelado: "Cancelado",
 };
 
-async function PedidosContent() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+// exported for tests
+export async function PedidosContent() {
+  const buyer = await requireBuyer();
+  if (!buyer) redirect("/");
 
-  if (!user) {
-    redirect("/entrar?next=%2Fpedidos");
-  }
-
-  const orders = await getOrdersByBuyer(supabase, user.id);
+  const orders = await getOrdersByBuyer(getHubServiceClient(), buyer.id);
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>

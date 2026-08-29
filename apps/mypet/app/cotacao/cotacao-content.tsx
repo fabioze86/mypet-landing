@@ -28,7 +28,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
           Abrimos o WhatsApp com os itens da sua cotação. Nossa equipe vai te responder por lá.
         </p>
         <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-          <Link href="/" className="cta-primary" style={{ textDecoration: "none", display: "inline-block" }}>
+          <Link href="/loja" className="cta-primary" style={{ textDecoration: "none", display: "inline-block" }}>
             Voltar ao catálogo
           </Link>
           <Link href="/pedidos" className="back-link" style={{ display: "inline-flex", alignItems: "center" }}>
@@ -49,7 +49,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
         <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
           Adicione produtos do catálogo para montar sua cotação.
         </p>
-        <Link href="/" className="cta-primary" style={{ textDecoration: "none", display: "inline-block" }}>
+        <Link href="/loja" className="cta-primary" style={{ textDecoration: "none", display: "inline-block" }}>
           Ver catálogo
         </Link>
       </div>
@@ -67,12 +67,8 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     const result = await finalizeQuote(cart.items);
 
     if (!result.ok) {
-      if (result.needsProfile) {
-        router.push(`/completar-cadastro?next=${encodeURIComponent("/cotacao")}`);
-        return;
-      }
       if (result.needsAuth) {
-        router.push(`/entrar?next=${encodeURIComponent("/cotacao")}`);
+        router.push("/#acesso");
         return;
       }
       setSubmitError(result.error);

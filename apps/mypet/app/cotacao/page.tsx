@@ -1,13 +1,28 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getCategories } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { clientConfig } from "@/client.config";
+import { requireBuyer } from "@/lib/require-buyer";
 import { CotacaoContent } from "./cotacao-content";
 
 const { palette: PALETTE } = clientConfig;
 
-export default async function CotacaoPage() {
+export default function CotacaoPage() {
+  return (
+    <Suspense fallback={null}>
+      <CotacaoPageBody />
+    </Suspense>
+  );
+}
+
+// exported for tests
+export async function CotacaoPageBody() {
+  const buyer = await requireBuyer();
+  if (!buyer) redirect("/");
+
   const categories = await getCategories();
 
   return (
@@ -80,7 +95,7 @@ export default async function CotacaoPage() {
         <SiteNav categories={categories} />
 
         <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>
-          <Link href="/" className="back-link">
+          <Link href="/loja" className="back-link">
             ← Voltar ao catálogo
           </Link>
 
