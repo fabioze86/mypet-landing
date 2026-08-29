@@ -43,7 +43,24 @@ describe("POST /api/pre-acesso", () => {
     expect(await res.json()).toEqual({ ok: true });
     const cookie = res.headers.get("set-cookie") ?? "";
     expect(cookie).toContain("mypet_acesso=signed-token");
+    expect(cookie).toContain("Path=/");
+    expect(cookie).toContain("Max-Age=2592000");
+    expect(cookie).toContain("SameSite=Lax");
     expect(cookie).toContain("HttpOnly");
+    expect(cookie).toContain("Secure");
+  });
+
+  it("responde 400 quando o corpo não é JSON válido", async () => {
+    provisionBuyer.mockRejectedValue(new PreAccessError("INVALID_INPUT"));
+    const badRequest = {
+      json: async () => {
+        throw new SyntaxError("Unexpected token");
+      },
+      headers: new Headers({ "x-forwarded-for": "203.0.113.7" }),
+    } as unknown as NextRequest;
+    const res = await POST(badRequest);
+    expect(res.status).toBe(400);
+    expect(provisionBuyer).toHaveBeenCalledWith(null, expect.anything());
   });
 
   it("não devolve dado pessoal no corpo", async () => {
