@@ -34,9 +34,28 @@ export async function proxy(request: NextRequest) {
 
   await supabase.auth.getUser();
 
+  const { pathname } = request.nextUrl;
+  if (pathname === "/loja" || pathname.startsWith("/loja/")) {
+    try {
+      const { verifyAccessToken, ACCESS_COOKIE } = await import("@mypet/core/access-session");
+      if (!verifyAccessToken(request.cookies.get(ACCESS_COOKIE)?.value)) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/entrar/:path*", "/completar-cadastro", "/cotacao", "/pedidos"],
+  matcher: [
+    "/entrar/:path*",
+    "/completar-cadastro",
+    "/cotacao",
+    "/pedidos",
+    "/loja",
+    "/loja/:path*",
+  ],
 };
