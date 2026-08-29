@@ -36,5 +36,5 @@ export async function finalizeQuote(items: CartItem[]): Promise<FinalizeQuoteRes
     return { ok: false, error };
   }
 
-  return { ok: true, buyer: { nome: buyer.nome, empresa: buyer.empresa, whatsapp: buyer.whatsapp, cnpj: buyer.cnpj } };
+  return { ok: true, buyer: { nome: buyer.nome ?? "", empresa: buyer.empresa ?? "", whatsapp: buyer.whatsapp, cnpj: buyer.cnpj } };
 }
