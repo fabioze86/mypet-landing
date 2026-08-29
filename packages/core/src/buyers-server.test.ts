@@ -54,6 +54,28 @@ describe("createBuyer", () => {
     expect(result.error).toBeNull();
   });
 
+  it("aceita nome e empresa nulos", async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const supabase = { from: vi.fn(() => ({ insert })) } as unknown as SupabaseClient;
+
+    const result = await createBuyer(supabase, {
+      id: "u1",
+      email: null,
+      whatsapp: "5511999999999",
+      cnpj: "12345678000195",
+    });
+
+    expect(insert).toHaveBeenCalledWith({
+      id: "u1",
+      email: null,
+      nome: null,
+      empresa: null,
+      whatsapp: "5511999999999",
+      cnpj: "12345678000195",
+    });
+    expect(result.error).toBeNull();
+  });
+
   it("retorna erro genérico quando o Supabase falha", async () => {
     const insert = vi.fn().mockResolvedValue({ error: { message: "conexão recusada" } });
     const supabase = { from: vi.fn(() => ({ insert })) } as unknown as SupabaseClient;

@@ -2,9 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Buyer = {
   id: string;
-  email: string;
-  nome: string;
-  empresa: string;
+  email: string | null;
+  nome: string | null;
+  empresa: string | null;
   whatsapp: string;
   cnpj: string | null;
 };
@@ -22,11 +22,11 @@ export async function getBuyerById(supabase: SupabaseClient, userId: string): Pr
 
 export type CreateBuyerInput = {
   id: string;
-  email: string;
-  nome: string;
-  empresa: string;
+  email?: string | null;
+  nome?: string | null;
+  empresa?: string | null;
   whatsapp: string;
-  cnpj?: string;
+  cnpj?: string | null;
 };
 
 export async function createBuyer(
@@ -35,11 +35,11 @@ export async function createBuyer(
 ): Promise<{ error: string | null }> {
   const { error } = await supabase.from("buyers").insert({
     id: input.id,
-    email: input.email,
-    nome: input.nome,
-    empresa: input.empresa,
+    email: input.email ?? null,
+    nome: input.nome ?? null,
+    empresa: input.empresa ?? null,
     whatsapp: input.whatsapp,
-    cnpj: input.cnpj || null,
+    cnpj: input.cnpj ?? null,
   });
 
   if (error) {
