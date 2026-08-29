@@ -12,7 +12,7 @@ vi.mock("@mypet/core/catalog", () => ({
   getProductCount: async () => 0,
 }));
 
-import LojaPage from "./page";
+import { LojaContent } from "./page";
 
 beforeEach(() => {
   requireBuyer.mockReset();
@@ -22,7 +22,7 @@ beforeEach(() => {
 describe("LojaPage", () => {
   it("redireciona para / quando não há comprador", async () => {
     requireBuyer.mockResolvedValue(null);
-    await expect(LojaPage({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT");
+    await expect(LojaContent({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT");
     expect(redirect).toHaveBeenCalledWith("/");
   });
 });

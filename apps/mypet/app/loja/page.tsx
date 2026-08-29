@@ -98,7 +98,19 @@ export async function generateMetadata() {
   };
 }
 
-export default async function LojaPage({
+export default function LojaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <LojaContent searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+export async function LojaContent({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
