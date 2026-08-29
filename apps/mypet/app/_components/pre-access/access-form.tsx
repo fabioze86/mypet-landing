@@ -72,8 +72,8 @@ export function AccessForm() {
       ) : null}
 
       <p>
-        Ao criar o acesso você concorda com o uso dos dados para liberação da loja, conforme a{" "}
-        <a href="/politica-de-privacidade">política de privacidade</a>.
+        Ao criar o acesso você concorda com o uso dos dados de CNPJ e WhatsApp para liberação da
+        loja.
       </p>
 
       <button type="submit" disabled={submitting}>
