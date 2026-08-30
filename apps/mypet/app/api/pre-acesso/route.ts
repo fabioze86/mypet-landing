@@ -53,7 +53,13 @@ export async function POST(request: NextRequest): Promise<Response> {
     return res;
   } catch (error) {
     if (!(error instanceof PreAccessError)) {
-      console.error("[pre-acesso] falha inesperada ao liberar acesso", error);
+      console.error("[pre-acesso] falha inesperada ao liberar acesso", error, {
+        envPresente: {
+          SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
+          SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+          ACCESS_SESSION_SECRET: Boolean(process.env.ACCESS_SESSION_SECRET),
+        },
+      });
     }
     const code = error instanceof PreAccessError ? error.code : "UNAVAILABLE";
     const { status, message, field } = MESSAGES[code] ?? MESSAGES.UNAVAILABLE;

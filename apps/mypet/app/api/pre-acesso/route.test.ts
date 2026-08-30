@@ -112,13 +112,20 @@ describe("POST /api/pre-acesso", () => {
     );
   });
 
-  it("registra no log o erro real quando a falha é inesperada", async () => {
+  it("registra no log o erro real e a presença das envs quando a falha é inesperada", async () => {
     const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
     provisionBuyer.mockRejectedValue(new Error("SUPABASE_SERVICE_ROLE_KEY precisa estar definido"));
     await POST(fakeRequest({ cnpj: "12345678000195", whatsapp: "5511999990000" }));
     expect(errorLog).toHaveBeenCalledWith(
       "[pre-acesso] falha inesperada ao liberar acesso",
       expect.objectContaining({ message: "SUPABASE_SERVICE_ROLE_KEY precisa estar definido" }),
+      expect.objectContaining({
+        envPresente: {
+          SUPABASE_URL: expect.any(Boolean),
+          SUPABASE_SERVICE_ROLE_KEY: expect.any(Boolean),
+          ACCESS_SESSION_SECRET: expect.any(Boolean),
+        },
+      }),
     );
   });
 });
