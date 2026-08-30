@@ -171,3 +171,76 @@ a {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ---- Home v2 (/v2) — grids responsivos. Prefixo mpv2- evita colisão com mp-. ---- */
+.mpv2-mosaic {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.mpv2-adv {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.mpv2-about {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.mpv2-footer {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+.mpv2-nav {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mpv2-nav-toggle {
+  display: none;
+}
+@media (max-width: 900px) {
+  .mpv2-mosaic {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mpv2-about {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .mpv2-adv {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mpv2-footer {
+    grid-template-columns: 1fr 1fr;
+  }
+  .mpv2-nav {
+    display: none;
+  }
+  .mpv2-nav.mpv2-nav-open {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    padding-top: 12px;
+  }
+  .mpv2-nav-toggle {
+    display: inline-flex;
+  }
+}
+@media (max-width: 560px) {
+  .mpv2-mosaic {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .mpv2-adv,
+  .mpv2-footer {
+    grid-template-columns: 1fr;
+  }
+}
