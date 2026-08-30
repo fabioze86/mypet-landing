@@ -63,6 +63,15 @@ export default async function LandingPage() {
           </div>
           <small>
             © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberação da loja.
+            {" "}Desenvolvido por{" "}
+            <a
+              href="https://www.zemann.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              Zemann.ai
+            </a>
           </small>
         </div>
       </footer>

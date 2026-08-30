@@ -52,6 +52,9 @@ export async function POST(request: NextRequest): Promise<Response> {
     );
     return res;
   } catch (error) {
+    if (!(error instanceof PreAccessError)) {
+      console.error("[pre-acesso] falha inesperada ao liberar acesso", error);
+    }
     const code = error instanceof PreAccessError ? error.code : "UNAVAILABLE";
     const { status, message, field } = MESSAGES[code] ?? MESSAGES.UNAVAILABLE;
     return Response.json({ error: { code, message, ...(field ? { field } : {}) } }, { status });

@@ -181,7 +181,17 @@ export default async function CategoriaPage({
               <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
               <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
             </div>
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
+            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+              © 2026 {clientConfig.name}. Todos os direitos reservados. · Desenvolvido por{" "}
+              <a
+                href="https://www.zemann.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "inherit", textDecoration: "underline" }}
+              >
+                Zemann.ai
+              </a>
+            </span>
           </div>
         </footer>
       </LeadGateProvider>

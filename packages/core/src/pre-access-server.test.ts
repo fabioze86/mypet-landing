@@ -137,6 +137,15 @@ describe("provisionBuyer", () => {
     expect(state.insertedRow).toBeNull();
   });
 
+  it("propaga o código específico da validação de campo", async () => {
+    await expect(
+      provisionBuyer({ cnpj: "12345678000100", whatsapp: "5511999990000" }),
+    ).rejects.toMatchObject({ code: "INVALID_CNPJ" });
+    await expect(
+      provisionBuyer({ cnpj: "12345678000195", whatsapp: "5511" }),
+    ).rejects.toMatchObject({ code: "INVALID_WHATSAPP" });
+  });
+
   it("aplica RATE_LIMITED acima de 5 tentativas em 5 min", async () => {
     state.attemptsCount = 6;
     await expect(provisionBuyer(valid)).rejects.toMatchObject({ code: "RATE_LIMITED" });

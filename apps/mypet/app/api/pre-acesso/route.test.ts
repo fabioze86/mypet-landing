@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { NextRequest } from "next/server";
 
 const provisionBuyer = vi.fn();
@@ -32,6 +32,10 @@ function fakeRequest(body: unknown): NextRequest {
 
 beforeEach(() => {
   provisionBuyer.mockReset();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("POST /api/pre-acesso", () => {
@@ -99,11 +103,22 @@ describe("POST /api/pre-acesso", () => {
   });
 
   it("mapeia erro inesperado para 503", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
     provisionBuyer.mockRejectedValue(new Error("boom"));
     const res = await POST(fakeRequest({ cnpj: "12345678000195", whatsapp: "5511999990000" }));
     expect(res.status).toBe(503);
     expect((await res.json()).error.message).toBe(
       "Não foi possível liberar seu acesso agora. Tente novamente em instantes.",
+    );
+  });
+
+  it("registra no log o erro real quando a falha é inesperada", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => {});
+    provisionBuyer.mockRejectedValue(new Error("SUPABASE_SERVICE_ROLE_KEY precisa estar definido"));
+    await POST(fakeRequest({ cnpj: "12345678000195", whatsapp: "5511999990000" }));
+    expect(errorLog).toHaveBeenCalledWith(
+      "[pre-acesso] falha inesperada ao liberar acesso",
+      expect.objectContaining({ message: "SUPABASE_SERVICE_ROLE_KEY precisa estar definido" }),
     );
   });
 });

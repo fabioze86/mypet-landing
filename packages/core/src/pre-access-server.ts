@@ -89,7 +89,8 @@ export async function provisionBuyer(
   ctx: { ipHash?: string | null } = {},
 ): Promise<{ buyerId: string }> {
   const normalized = normalizePreAccessInput(input);
-  if (validatePreAccessInput(normalized)) throw new PreAccessError("INVALID_INPUT");
+  const validationError = validatePreAccessInput(normalized);
+  if (validationError) throw new PreAccessError(validationError);
 
   await assertUnderRateLimit(normalized.cnpj, ctx.ipHash ?? null);
 
