@@ -6,6 +6,7 @@ import { CategoryMosaic } from "@/components/v2/category-mosaic";
 import { AdvantagesStrip } from "@/components/v2/advantages-strip";
 import { CatalogSection } from "@/components/catalog-section";
 import { LineSection } from "@/components/line-section";
+import { AboutBlock } from "@/components/v2/about-block";
 import { buildWhatsAppLink } from "@mypet/core/whatsapp";
 import { clientConfig } from "@/client.config";
 import { PRODUCT_LINES } from "@/lib/product-lines";
@@ -20,6 +21,11 @@ export default function HomeV2() {
   const genericWhatsappLink = buildWhatsAppLink(
     clientConfig.whatsappNumber,
     "Olá! Tenho loja e quero a tabela de revenda da linha MAD PET."
+  );
+
+  const atacadistaLink = buildWhatsAppLink(
+    clientConfig.whatsappNumber,
+    "Olá! Quero ser cliente atacadista MAD PET e receber a tabela de revenda."
   );
 
   return (
@@ -40,6 +46,7 @@ export default function HomeV2() {
           />
         ))}
       </CatalogSection>
+      <AboutBlock whatsappLink={atacadistaLink} />
     </div>
   );
 }
