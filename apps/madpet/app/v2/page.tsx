@@ -3,6 +3,7 @@ import { madPetPalette as palette } from "@/client-theme";
 import { AnnouncementBar } from "@/components/v2/announcement-bar";
 import { SiteHeader } from "@/components/v2/site-header";
 import { CategoryMosaic } from "@/components/v2/category-mosaic";
+import { AdvantagesStrip } from "@/components/v2/advantages-strip";
 import { buildWhatsAppLink } from "@mypet/core/whatsapp";
 import { clientConfig } from "@/client.config";
 import { PRODUCT_LINES } from "@/lib/product-lines";
@@ -24,6 +25,7 @@ export default function HomeV2() {
       <AnnouncementBar />
       <SiteHeader whatsappLink={genericWhatsappLink} />
       <CategoryMosaic lines={PRODUCT_LINES} whatsappNumber={clientConfig.whatsappNumber} />
+      <AdvantagesStrip />
     </div>
   );
 }
