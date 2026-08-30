@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { madPetPalette as palette } from "@/client-theme";
 import { AnnouncementBar } from "@/components/v2/announcement-bar";
+import { SiteHeader } from "@/components/v2/site-header";
+import { buildWhatsAppLink } from "@mypet/core/whatsapp";
+import { clientConfig } from "@/client.config";
 
 export const metadata: Metadata = {
   title: "MAD PET | Catálogo de fabricação própria para revenda em pet shop",
@@ -9,9 +12,15 @@ export const metadata: Metadata = {
 };
 
 export default function HomeV2() {
+  const genericWhatsappLink = buildWhatsAppLink(
+    clientConfig.whatsappNumber,
+    "Olá! Tenho loja e quero a tabela de revenda da linha MAD PET."
+  );
+
   return (
     <div id="topo" style={{ background: palette.white, minHeight: "100vh" }}>
       <AnnouncementBar />
+      <SiteHeader whatsappLink={genericWhatsappLink} />
     </div>
   );
 }
