@@ -9,6 +9,8 @@ import { LineSection } from "@/components/line-section";
 import { AboutBlock } from "@/components/v2/about-block";
 import { TestimonialsCarousel } from "@/components/v2/testimonials-carousel";
 import { NewsletterBlock } from "@/components/v2/newsletter-block";
+import { SiteFooter } from "@/components/v2/site-footer";
+import { WhatsAppFloatButton } from "@/components/whatsapp-float-button";
 import { buildWhatsAppLink } from "@mypet/core/whatsapp";
 import { clientConfig } from "@/client.config";
 import { PRODUCT_LINES } from "@/lib/product-lines";
@@ -51,6 +53,12 @@ export default function HomeV2() {
       <AboutBlock whatsappLink={atacadistaLink} />
       <TestimonialsCarousel />
       <NewsletterBlock />
+      <SiteFooter
+        mainSiteUrl={clientConfig.mainSiteUrl}
+        distribuidoraUrl={clientConfig.distribuidoraUrl}
+        whatsappLink={genericWhatsappLink}
+      />
+      <WhatsAppFloatButton link={genericWhatsappLink} />
     </div>
   );
 }
