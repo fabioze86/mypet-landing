@@ -4,6 +4,8 @@ import { AnnouncementBar } from "@/components/v2/announcement-bar";
 import { SiteHeader } from "@/components/v2/site-header";
 import { CategoryMosaic } from "@/components/v2/category-mosaic";
 import { AdvantagesStrip } from "@/components/v2/advantages-strip";
+import { CatalogSection } from "@/components/catalog-section";
+import { LineSection } from "@/components/line-section";
 import { buildWhatsAppLink } from "@mypet/core/whatsapp";
 import { clientConfig } from "@/client.config";
 import { PRODUCT_LINES } from "@/lib/product-lines";
@@ -26,6 +28,18 @@ export default function HomeV2() {
       <SiteHeader whatsappLink={genericWhatsappLink} />
       <CategoryMosaic lines={PRODUCT_LINES} whatsappNumber={clientConfig.whatsappNumber} />
       <AdvantagesStrip />
+      <CatalogSection>
+        {PRODUCT_LINES.map((line, i) => (
+          <LineSection
+            key={line.slug}
+            line={line}
+            channel={clientConfig.catalogChannel}
+            brand={clientConfig.brand}
+            whatsappNumber={clientConfig.whatsappNumber}
+            tone={i % 2 === 0 ? "plain" : "tint"}
+          />
+        ))}
+      </CatalogSection>
     </div>
   );
 }
