@@ -39,13 +39,12 @@ export function SiteHeader({ whatsappLink }: { whatsappLink: string }) {
         <div
           style={{
             width: "100%",
+            position: "relative",
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
+            justifyContent: "center",
           }}
         >
-          <span style={{ width: 40 }} aria-hidden="true" />
           <a href="#topo" aria-label="MAD PET, ir para o início" style={{ display: "inline-flex" }}>
             <Logo size={22} />
           </a>
@@ -64,6 +63,10 @@ export function SiteHeader({ whatsappLink }: { whatsappLink: string }) {
               borderRadius: theme.radiusInput,
               background: palette.white,
               cursor: "pointer",
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              transform: "translateY(-50%)",
             }}
           >
             <svg

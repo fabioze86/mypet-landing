@@ -68,7 +68,7 @@ export function NewsletterBlock() {
 
         <p
           aria-live="polite"
-          style={{ minHeight: 20, marginTop: 14, fontSize: 13.5, color: palette.green }}
+          style={{ minHeight: 20, marginTop: 14, fontSize: 13.5, color: palette.greenDark }}
         >
           {sent ? "Pronto! Em breve você recebe nossas novidades." : ""}
         </p>

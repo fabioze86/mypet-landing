@@ -244,3 +244,13 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* Home v2 — offset de âncora sob o header sticky de duas linhas. */
+.mpv2-page [id] {
+  scroll-margin-top: 136px !important;
+}
+@media (max-width: 760px) {
+  .mpv2-page [id] {
+    scroll-margin-top: 88px !important;
+  }
+}

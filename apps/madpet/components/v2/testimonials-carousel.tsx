@@ -40,6 +40,7 @@ export function TestimonialsCarousel() {
         </h2>
 
         <div
+          aria-live="polite"
           style={{
             background: palette.white,
             borderRadius: theme.radiusCard,
@@ -85,7 +86,7 @@ export function TestimonialsCarousel() {
                 key={d}
                 type="button"
                 aria-label={`Ir para depoimento ${d + 1}`}
-                aria-current={d === i}
+                aria-current={d === i ? "true" : undefined}
                 onClick={() => setI(d)}
                 style={{
                   width: 9,

@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   title: "MAD PET | Catálogo de fabricação própria para revenda em pet shop",
   description:
     "Mosaico de linhas, vantagens de revenda, depoimentos de lojistas e pedido pelo WhatsApp. Bandanas, laços, peitorais e coleiras MAD PET de fabricação própria.",
+  robots: { index: false, follow: false },
 };
 
 export default function HomeV2() {
@@ -33,7 +34,7 @@ export default function HomeV2() {
   );
 
   return (
-    <div id="topo" style={{ background: palette.white, minHeight: "100vh" }}>
+    <div id="topo" className="mpv2-page" style={{ background: palette.white, minHeight: "100vh" }}>
       <AnnouncementBar />
       <SiteHeader whatsappLink={genericWhatsappLink} />
       <CategoryMosaic lines={PRODUCT_LINES} whatsappNumber={clientConfig.whatsappNumber} />
