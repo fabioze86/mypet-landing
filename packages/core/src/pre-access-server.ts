@@ -2,7 +2,14 @@ import { getHubServiceClient } from "./supabase";
 
 export type PreAccessInput = { cnpj: string; whatsapp: string; email?: string | null };
 export type NormalizedInput = { cnpj: string; whatsapp: string; email: string | null };
-export type PreAccessErrorCode = "INVALID_INPUT" | "RATE_LIMITED" | "UNAVAILABLE";
+export type PreAccessErrorCode =
+  | "INVALID_INPUT"
+  | "INVALID_CNPJ"
+  | "INVALID_WHATSAPP"
+  | "INVALID_EMAIL"
+  | "WHATSAPP_MISMATCH"
+  | "RATE_LIMITED"
+  | "UNAVAILABLE";
 
 export class PreAccessError extends Error {
   constructor(public readonly code: PreAccessErrorCode) {
@@ -22,9 +29,10 @@ function str(value: unknown): string {
 export function normalizePreAccessInput(input: unknown): NormalizedInput {
   const raw = (input ?? {}) as Record<string, unknown>;
   const email = str(raw.email).trim().toLowerCase();
+  const whatsapp = str(raw.whatsapp).replace(/\D/g, "");
   return {
     cnpj: str(raw.cnpj).replace(/\D/g, ""),
-    whatsapp: str(raw.whatsapp).replace(/\D/g, ""),
+    whatsapp: /^\d{10,11}$/.test(whatsapp) ? `55${whatsapp}` : whatsapp,
     email: email.length > 0 ? email : null,
   };
 }
@@ -53,11 +61,13 @@ function isValidEmail(email: string): boolean {
 }
 
 export function validatePreAccessInput(input: NormalizedInput): PreAccessErrorCode | null {
-  if (input.cnpj.length > MAX_FIELD_LEN || input.whatsapp.length > MAX_FIELD_LEN) return "INVALID_INPUT";
-  if ((input.email?.length ?? 0) > MAX_FIELD_LEN) return "INVALID_INPUT";
-  if (!isValidCnpj(input.cnpj)) return "INVALID_INPUT";
-  if (!/^55\d{10,11}$/.test(input.whatsapp)) return "INVALID_INPUT";
-  if (input.email !== null && !isValidEmail(input.email)) return "INVALID_INPUT";
+  if (input.cnpj.length > MAX_FIELD_LEN || !isValidCnpj(input.cnpj)) return "INVALID_CNPJ";
+  if (input.whatsapp.length > MAX_FIELD_LEN || !/^55\d{10,11}$/.test(input.whatsapp)) {
+    return "INVALID_WHATSAPP";
+  }
+  if ((input.email?.length ?? 0) > MAX_FIELD_LEN || (input.email !== null && !isValidEmail(input.email))) {
+    return "INVALID_EMAIL";
+  }
   return null;
 }
 
@@ -93,7 +103,7 @@ export async function provisionBuyer(
   if (readError) throw new PreAccessError("UNAVAILABLE");
 
   if (existing) {
-    if (existing.whatsapp !== normalized.whatsapp) throw new PreAccessError("INVALID_INPUT");
+    if (existing.whatsapp !== normalized.whatsapp) throw new PreAccessError("WHATSAPP_MISMATCH");
     const patch: Record<string, unknown> = { whatsapp: normalized.whatsapp };
     if (normalized.email !== null) patch.email = normalized.email;
     const { error: updateError } = await db.from("buyers").update(patch).eq("id", existing.id);

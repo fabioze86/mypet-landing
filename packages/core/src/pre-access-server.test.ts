@@ -77,6 +77,12 @@ describe("normalizePreAccessInput", () => {
     expect(normalizePreAccessInput({ cnpj: "1", whatsapp: "2" }).email).toBeNull();
     expect(normalizePreAccessInput({ cnpj: "1", whatsapp: "2", email: "   " }).email).toBeNull();
   });
+
+  it("aceita WhatsApp brasileiro digitado com DDD e número", () => {
+    expect(normalizePreAccessInput({ cnpj: "1", whatsapp: "(11) 99999-0000" }).whatsapp).toBe(
+      "5511999990000",
+    );
+  });
 });
 
 describe("validatePreAccessInput", () => {
@@ -86,16 +92,16 @@ describe("validatePreAccessInput", () => {
     expect(validatePreAccessInput(ok)).toBeNull();
   });
 
-  it("rejeita cnpj com dígito verificador errado", () => {
-    expect(validatePreAccessInput({ ...ok, cnpj: "12345678000100" })).toBe("INVALID_INPUT");
+  it("identifica CNPJ com dígito verificador errado", () => {
+    expect(validatePreAccessInput({ ...ok, cnpj: "12345678000100" })).toBe("INVALID_CNPJ");
   });
 
-  it("rejeita whatsapp fora do padrão 55 + 10/11 dígitos", () => {
-    expect(validatePreAccessInput({ ...ok, whatsapp: "11999990000" })).toBe("INVALID_INPUT");
+  it("identifica WhatsApp fora do padrão DDD + número", () => {
+    expect(validatePreAccessInput({ ...ok, whatsapp: "5511999900" })).toBe("INVALID_WHATSAPP");
   });
 
-  it("rejeita e-mail presente e malformado", () => {
-    expect(validatePreAccessInput({ ...ok, email: "sem-arroba" })).toBe("INVALID_INPUT");
+  it("identifica e-mail presente e malformado", () => {
+    expect(validatePreAccessInput({ ...ok, email: "sem-arroba" })).toBe("INVALID_EMAIL");
   });
 });
 
@@ -122,7 +128,7 @@ describe("provisionBuyer", () => {
 
   it("recusa quando o CNPJ existe mas o WhatsApp não confere", async () => {
     state.buyerRow = { id: "b-1", whatsapp: "5511888880000" };
-    await expect(provisionBuyer(valid)).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    await expect(provisionBuyer(valid)).rejects.toMatchObject({ code: "WHATSAPP_MISMATCH" });
     expect(state.updatedRow).toBeNull();
   });
 

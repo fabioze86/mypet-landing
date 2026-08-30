@@ -58,6 +58,9 @@ export const LANDING_STYLES = `
   .pa-panel form label { display: block; font-family: var(--pa-nunito); font-weight: 700; font-size: 13px; color: var(--pa-navy); margin: 14px 0 6px; }
   .pa-panel form input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--pa-line); border-radius: var(--pa-r-input); font-size: 15px; font-family: inherit; color: var(--pa-ink); background: #fff; }
   .pa-panel form input:focus { outline: none; border-color: var(--pa-green); box-shadow: 0 0 0 3px var(--pa-green-soft); }
+  .pa-panel form input[aria-invalid="true"] { border-color: #C0392B; }
+  .pa-panel form input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px #F9DEDB; }
+  .pa-panel form .pa-field-help { color: var(--pa-muted); font-size: 12px; line-height: 1.4; margin: 6px 0 0; }
   .pa-panel form p[role="alert"] { color: #C0392B; font-weight: 700; font-size: 13px; margin: 12px 0 0; }
   .pa-panel form > p:not([role]) { color: var(--pa-muted); font-size: 12px; line-height: 1.5; margin: 14px 0 0; }
   .pa-panel form button[type="submit"] { width: 100%; margin-top: 16px; padding: 13px; background: var(--pa-navy); color: #fff; border: 0; border-radius: var(--pa-r-pill); font-family: var(--pa-nunito); font-weight: 800; font-size: 15px; cursor: pointer; transition: background .18s ease; }

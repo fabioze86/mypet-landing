@@ -69,13 +69,25 @@ describe("POST /api/pre-acesso", () => {
     expect(JSON.stringify(await res.json())).not.toContain("loja@example.com");
   });
 
-  it("mapeia INVALID_INPUT para 400 com a mensagem fixa", async () => {
-    provisionBuyer.mockRejectedValue(new PreAccessError("INVALID_INPUT"));
+  it("mapeia CNPJ inválido para 400 com o campo e a orientação", async () => {
+    provisionBuyer.mockRejectedValue(new PreAccessError("INVALID_CNPJ"));
     const res = await POST(fakeRequest({ cnpj: "1" }));
     expect(res.status).toBe(400);
     expect((await res.json()).error).toEqual({
-      code: "INVALID_INPUT",
-      message: "Confira os dados informados e tente novamente.",
+      code: "INVALID_CNPJ",
+      field: "cnpj",
+      message: "Informe um CNPJ válido.",
+    });
+  });
+
+  it("mapeia WhatsApp inválido para o campo com o formato esperado", async () => {
+    provisionBuyer.mockRejectedValue(new PreAccessError("INVALID_WHATSAPP"));
+    const res = await POST(fakeRequest({ cnpj: "12345678000195", whatsapp: "119999" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toEqual({
+      code: "INVALID_WHATSAPP",
+      field: "whatsapp",
+      message: "Informe o WhatsApp com DDD e número.",
     });
   });
 

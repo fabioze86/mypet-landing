@@ -3,8 +3,16 @@ import type { NextRequest } from "next/server";
 import { provisionBuyer, PreAccessError } from "@mypet/core/pre-access-server";
 import { signAccessToken, ACCESS_COOKIE, ACCESS_COOKIE_OPTS } from "@mypet/core/access-session";
 
-const MESSAGES: Record<string, { status: number; message: string }> = {
+const MESSAGES: Record<string, { status: number; message: string; field?: "cnpj" | "whatsapp" | "email" }> = {
   INVALID_INPUT: { status: 400, message: "Confira os dados informados e tente novamente." },
+  INVALID_CNPJ: { status: 400, field: "cnpj", message: "Informe um CNPJ válido." },
+  INVALID_WHATSAPP: { status: 400, field: "whatsapp", message: "Informe o WhatsApp com DDD e número." },
+  INVALID_EMAIL: { status: 400, field: "email", message: "Informe um e-mail válido." },
+  WHATSAPP_MISMATCH: {
+    status: 400,
+    field: "whatsapp",
+    message: "Este WhatsApp não confere com o cadastro deste CNPJ.",
+  },
   RATE_LIMITED: { status: 429, message: "Aguarde alguns instantes antes de tentar novamente." },
   UNAVAILABLE: {
     status: 503,
@@ -45,7 +53,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     return res;
   } catch (error) {
     const code = error instanceof PreAccessError ? error.code : "UNAVAILABLE";
-    const { status, message } = MESSAGES[code] ?? MESSAGES.UNAVAILABLE;
-    return Response.json({ error: { code, message } }, { status });
+    const { status, message, field } = MESSAGES[code] ?? MESSAGES.UNAVAILABLE;
+    return Response.json({ error: { code, message, ...(field ? { field } : {}) } }, { status });
   }
 }

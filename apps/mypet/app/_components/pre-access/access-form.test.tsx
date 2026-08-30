@@ -59,10 +59,16 @@ describe("AccessForm", () => {
     );
   });
 
-  it("mostra a mensagem de erro do servidor e não navega", async () => {
+  it("mostra o erro de WhatsApp no campo com DDD + número e não navega", async () => {
     (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: false,
-      json: async () => ({ error: { code: "INVALID_INPUT", message: "Confira os dados informados e tente novamente." } }),
+      json: async () => ({
+        error: {
+          code: "INVALID_WHATSAPP",
+          field: "whatsapp",
+          message: "Informe o WhatsApp com DDD e número.",
+        },
+      }),
     });
     const user = userEvent.setup();
     render(<AccessForm />);
@@ -71,7 +77,10 @@ describe("AccessForm", () => {
     await user.type(screen.getByLabelText("WhatsApp"), "2");
     await user.click(screen.getByRole("button", { name: "Criar acesso à loja" }));
 
-    expect(await screen.findByText("Confira os dados informados e tente novamente.")).toBeInTheDocument();
+    const whatsapp = screen.getByLabelText("WhatsApp");
+    expect(await screen.findByText("Informe o WhatsApp com DDD e número.")).toBeInTheDocument();
+    expect(whatsapp).toHaveAttribute("aria-invalid", "true");
+    expect(whatsapp).toHaveAttribute("aria-describedby", "pa-whatsapp-help pa-whatsapp-error");
     expect(assign).not.toHaveBeenCalled();
   });
 });
