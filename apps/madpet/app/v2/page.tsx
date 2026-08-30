@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { madPetPalette as palette } from "@/client-theme";
+import { AnnouncementBar } from "@/components/v2/announcement-bar";
 
 export const metadata: Metadata = {
   title: "MAD PET | Catálogo de fabricação própria para revenda em pet shop",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function HomeV2() {
   return (
     <div id="topo" style={{ background: palette.white, minHeight: "100vh" }}>
-      {/* seções entram nas próximas tasks */}
+      <AnnouncementBar />
     </div>
   );
 }
