@@ -8,6 +8,7 @@ import { CatalogSection } from "@/components/catalog-section";
 import { LineSection } from "@/components/line-section";
 import { AboutBlock } from "@/components/v2/about-block";
 import { TestimonialsCarousel } from "@/components/v2/testimonials-carousel";
+import { NewsletterBlock } from "@/components/v2/newsletter-block";
 import { buildWhatsAppLink } from "@mypet/core/whatsapp";
 import { clientConfig } from "@/client.config";
 import { PRODUCT_LINES } from "@/lib/product-lines";
@@ -49,6 +50,7 @@ export default function HomeV2() {
       </CatalogSection>
       <AboutBlock whatsappLink={atacadistaLink} />
       <TestimonialsCarousel />
+      <NewsletterBlock />
     </div>
   );
 }
