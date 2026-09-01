@@ -10,6 +10,7 @@
     "./access-session": "./src/access-session.ts",
     "./auth-server": "./src/auth-server.ts",
     "./balcao": "./src/balcao.ts",
+    "./balcao-server": "./src/balcao-server.ts",
     "./banners": "./src/banners.ts",
     "./buyers-server": "./src/buyers-server.ts",
     "./catalog": "./src/catalog.ts",
