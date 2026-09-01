@@ -35,6 +35,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
           >
             Banners
           </Link>
+          <div className="mt-2 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Balcão de Negócios
+          </div>
+          <Link
+            href="/balcao"
+            className="rounded-lg px-3 py-2 pl-6 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Regras
+          </Link>
+          <Link
+            href="/balcao/solicitacoes"
+            className="rounded-lg px-3 py-2 pl-6 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Solicitações
+          </Link>
         </nav>
 
         <form action={logout} className="mt-8 border-t border-slate-200 pt-4">
