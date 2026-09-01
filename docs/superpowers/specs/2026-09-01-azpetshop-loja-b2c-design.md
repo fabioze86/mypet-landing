@@ -18,9 +18,11 @@ dependência da tabela `buyers`.
 
 ## Decisões de escopo
 
-- **Modelo comercial:** cotação (`features.commerce: "quote"`). Carrinho no
-  navegador → mini-formulário (nome + WhatsApp) → link `wa.me` com o pedido
-  consolidado. Zero pagamento online.
+- **Modelo comercial:** carrinho + cotação (`features.commerce: "cart"`).
+  Carrinho no navegador → mini-formulário (nome + WhatsApp) → link `wa.me` com
+  o pedido consolidado. Zero pagamento online. Esta é a primeira implementação
+  do modo `cart` do `FEATURE_REGISTRY` (hoje marcado "não implementado ainda");
+  os apps B2B seguem em `quote`, sem mudança de comportamento.
 - **Onde mora:** novo app `apps/azpetshop` no monorepo pnpm. Deploy Vercel
   próprio, subdomínio `loja.azpetshop.com.br`. O blog Astro fica intocado em
   `azpetshop.com.br` (Cloudflare).
@@ -58,7 +60,7 @@ apps/azpetshop/
     layout.tsx            ClientConfigProvider + fontes; sem PWA
     globals.css
     page.tsx              home: nav + catálogo (sem LeadGateProvider)
-    produtos/             PDP (reaproveita category-listing / product-card do core)
+    produtos/             PDP (reaproveita product-variant-panel do core)
     categoria/            listagem por categoria
     cotacao/
       page.tsx            revisão do carrinho + mini-formulário
@@ -73,16 +75,28 @@ Rotas **removidas** em relação à distribuidora: `entrar/`, `pedidos/`,
 
 ### Mudanças em `packages/core`
 
-Mínimas e aditivas:
+Aditivas, com o comportamento atual preservado como default:
 
 - `src/channels.ts`: `"azpetshop"` em `ALL_CHANNEL_KINDS` e `CHANNEL_LABELS`
   (`"AZ Pet Shop"`).
 - `src/features.ts`: `"azpetshop"` no tipo `SiteId` e no mapa `SITES`
-  (`{ name: "AZ Pet Shop", features: { commerce: "quote" } }`).
-- `src/whatsapp.ts`: `buildQuoteMessage` hoje fixa o texto "cotação de atacado".
-  Adicionar um parâmetro opcional de texto de abertura (default mantém o atual)
-  ou uma variante `buildRetailQuoteMessage`, para a loja B2C dizer algo como
-  "Gostaria de finalizar este pedido:".
+  (`{ name: "AZ Pet Shop", features: { commerce: "cart" } }`); no
+  `FEATURE_REGISTRY`, tirar o "(não implementado ainda)" da opção `cart`.
+- `src/whatsapp.ts`: adicionar `buildRetailQuoteMessage(items, { nome, whatsapp })`
+  com texto de consumidor ("Gostaria de finalizar este pedido:"), sem
+  empresa/CNPJ. `buildQuoteMessage` (usado por mypet/distribuidora/madpet) fica
+  intocado.
+- `src/leads-server.ts`: adicionar `createRetailLead({ channel, nome, whatsapp })`
+  que insere em `leads` com `empresa: null`, `cnpj: null`. `createLeadsPostHandler`
+  fica intocado.
+- `src/components/product-card.tsx`: passa a ler `features.commerce` de
+  `useClientConfig()`. Em `"cart"`, renderiza o preço direto (`priceLabel`, sem
+  o rótulo "Atacado B2B" do `PriceLockSlot`); em `"quote"` (default), mantém o
+  `PriceLockSlot` atual. `assistant-search` e as listagens herdam o
+  comportamento automaticamente.
+- `src/components/site-nav.tsx`: nova prop opcional `audienceLabel?: string | null`.
+  `undefined` mantém "Exclusivo para lojistas"; `null` esconde o texto; string
+  substitui. azpetshop passa `null` (ou um rótulo B2C).
 - Nenhuma mudança em `catalog.ts` / `catalog-utils.ts`: `queryCatalog` já aceita
   `channel: string` e filtra por `product_channel_links!inner(channel)` +
   `product_channel_prices.channel`. Com as linhas de canal e de preço no
@@ -107,30 +121,33 @@ Mínimas e aditivas:
 2. Adiciona itens ao carrinho (`cart-provider` do core, estado no navegador).
 3. Em `/cotacao`, revisa itens e preenche **nome + WhatsApp** (sem empresa, sem
    CNPJ).
-4. Server action `apps/azpetshop/app/cotacao/actions.ts`:
-   - monta a mensagem com o helper do core
-     (`buildQuoteMessage(items, { nome, empresa: "", whatsapp })` ou a variante
-     de varejo);
-   - grava um registro leve em `leads` do `hub_catalogo` com
-     `channel = 'azpetshop'` (reaproveita `leads-server`), para histórico;
-   - devolve o link `buildWhatsAppLink(NEXT_PUBLIC_WHATSAPP_NUMBER, msg)`.
-5. Cliente redireciona para o `wa.me`.
+4. Server action `apps/azpetshop/app/cotacao/actions.ts` → `finalizeQuote({ nome, whatsapp })`:
+   - grava um registro leve com
+     `createRetailLead({ channel: "azpetshop", nome, whatsapp })`, para
+     histórico. Falha na gravação **não** bloqueia o fluxo (loga e segue).
+   - devolve `{ ok: true }` (a montagem da mensagem e o `window.open` acontecem
+     no client, com `buildRetailQuoteMessage` + `buildWhatsAppLink`).
+5. Cliente monta a mensagem, abre `wa.me` em nova aba, limpa o carrinho e mostra
+   a tela de confirmação.
 
 Diferença deliberada em relação a `mypet`/`distribuidora`: aqui o
 `finalizeQuote` **não** exige `buyer`/auth e **não** grava `order` — não há
-`buyers` nem `orders` para este canal na v1.
+`buyers` nem `orders` para este canal na v1. Sem rota `/api/leads` neste app.
 
 ## Importação de preços por planilha
 
 Preço de varejo do canal `azpetshop` vive em `product_channel_prices`
 (`channel = 'azpetshop'`, `sale_price`, `sale_updated_at`).
 
-- Fonte: planilha (CSV/XLSX) com, no mínimo, **referência do produto** e
-  **preço de varejo**.
-- Mecanismo: script Node em `scripts/` (raiz do monorepo ou `apps/azpetshop/`),
-  no mesmo espírito do `scripts/migrate.mjs` do blog: lê a planilha, resolve
-  `product_id` pela referência e faz `upsert` em `product_channel_prices` com
-  `channel = 'azpetshop'`. Usa a service key do Supabase (server-only).
+- Fonte: planilha exportada como **CSV** (`;` ou `,`), com, no mínimo, as
+  colunas **referência do produto** e **preço de varejo** (ex.: `reference`,
+  `price`).
+- Mecanismo: script Node `scripts/azpetshop-import-precos.ts` na raiz do
+  monorepo, rodado com `tsx` (já é devDependency da raiz), no mesmo espírito do
+  `scripts/migrate.mjs` do blog: lê o CSV, casa `reference` → `products.id`,
+  e faz `upsert` em `product_channel_prices` (`channel = 'azpetshop'`,
+  `onConflict: "product_id,channel"`). Usa `SUPABASE_SERVICE_ROLE_KEY`
+  (server-only), carregada via `dotenv`.
 - Idempotente: reexecutar com a mesma planilha não duplica linhas.
 - Fora do fluxo de request; roda manualmente quando há atualização de preço.
 - As linhas de `product_channel_links` (quais produtos a loja mostra) podem ser
