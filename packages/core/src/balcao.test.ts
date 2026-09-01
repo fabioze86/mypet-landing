@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   LOGISTICS_DISCOUNT_PCT,
   round2,
@@ -9,6 +9,8 @@ import {
   type BalcaoRule,
   mapRulesFromRows,
   isRuleLiveAt,
+  buildEstimate,
+  type BalcaoEligibleProduct,
 } from "./balcao";
 
 const catRule: BalcaoRule = {
@@ -193,5 +195,143 @@ describe("mapRulesFromRows", () => {
         ],
       },
     ]);
+  });
+});
+
+const prodA: BalcaoEligibleProduct = {
+  id: "pa",
+  name: "Ração A 15kg",
+  sku: "SKU-A",
+  brand: "Marca",
+  img: "/a.png",
+  categoryId: "cat-1",
+  basePrice: 100,
+  rule: {
+    id: "r1",
+    scope: "categoria",
+    categoryId: "cat-1",
+    productReference: null,
+    excluded: false,
+    tiers: [
+      { minQty: 10, discountPct: 10 },
+      { minQty: 25, discountPct: 15 },
+    ],
+  },
+};
+
+const prodB: BalcaoEligibleProduct = {
+  ...prodA,
+  id: "pb",
+  name: "Ração B 15kg",
+  sku: "SKU-B",
+  basePrice: 200,
+};
+
+describe("buildEstimate", () => {
+  it("calcula cada linha por SKU com logística aplicada", () => {
+    const r = buildEstimate({
+      products: [prodA, prodB],
+      selections: [
+        { productId: "pa", qty: 12 },
+        { productId: "pb", qty: 8 },
+      ],
+      logistics: "retirada",
+    });
+
+    // linha A: faixa 10 (10%) + 5% => 100 * 0.9 * 0.95 = 85.5, total 1026
+    expect(r.lines[0]).toMatchObject({ qty: 12, volumePct: 10, logisticsPct: 5, unitPrice: 85.5, lineTotal: 1026 });
+    // linha B: sem faixa (qty 8), só 5% => 200 * 0.95 = 190, total 1520
+    expect(r.lines[1]).toMatchObject({ qty: 8, tier: null, volumePct: 0, unitPrice: 190, lineTotal: 1520 });
+    expect(r.totalEstimated).toBe(2546);
+    expect(r.qualifies).toBe(true);
+  });
+
+  it("qualifies false quando nenhuma linha atinge faixa", () => {
+    const r = buildEstimate({
+      products: [prodA],
+      selections: [{ productId: "pa", qty: 3 }],
+      logistics: "frete_proprio",
+    });
+    expect(r.qualifies).toBe(false);
+  });
+
+  it("descarta selection sem produto e qty < 1", () => {
+    const r = buildEstimate({
+      products: [prodA],
+      selections: [
+        { productId: "zzz", qty: 10 },
+        { productId: "pa", qty: 0 },
+      ],
+      logistics: "retirada",
+    });
+    expect(r.lines).toEqual([]);
+    expect(r.totalEstimated).toBe(0);
+  });
+});
+
+describe("getBalcaoEligibleProducts", () => {
+  it("resolve preço do ERP, aplica a regra e descarta produto sem preço", async () => {
+    vi.resetModules();
+    vi.doMock("next/cache", () => ({ cacheLife: () => {}, cacheTag: () => {} }));
+    vi.doMock("./supabase", () => ({
+      getHubClient: () => ({
+        from: (table: string) => {
+          if (table === "balcao_rules") {
+            return {
+              select: () => ({
+                eq: () =>
+                  Promise.resolve({
+                    data: [
+                      {
+                        id: "r1",
+                        scope: "categoria",
+                        category_id: "cat-1",
+                        product_reference: null,
+                        excluded: false,
+                        active: true,
+                        starts_at: null,
+                        ends_at: null,
+                        balcao_rule_tiers: [{ min_qty: 10, discount_pct: "10" }],
+                      },
+                    ],
+                    error: null,
+                  }),
+              }),
+            };
+          }
+          if (table === "products") {
+            const chain = {
+              select: () => chain,
+              eq: () => chain,
+              neq: () => chain,
+              or: () => chain,
+              order: () =>
+                Promise.resolve({
+                  data: [
+                    { id: "pa", name: "A", reference: "SKU-A", brand: null, category_id: "cat-1", product_assets: [], product_channel_prices: [] },
+                    { id: "pb", name: "B", reference: "SKU-B", brand: null, category_id: "cat-1", product_assets: [], product_channel_prices: [] },
+                  ],
+                  error: null,
+                }),
+            };
+            return chain;
+          }
+          // v_precos_erp
+          return {
+            select: () => ({
+              in: () => Promise.resolve({ data: [{ reference: "SKU-A", preco: "100.00" }], error: null }),
+            }),
+          };
+        },
+      }),
+    }));
+
+    const mod = await import("./balcao");
+    const result = await mod.getBalcaoEligibleProducts("mypetbrasil");
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ id: "pa", sku: "SKU-A", basePrice: 100, categoryId: "cat-1" });
+    expect(result[0].rule.tiers).toEqual([{ minQty: 10, discountPct: 10 }]);
+    vi.doUnmock("next/cache");
+    vi.doUnmock("./supabase");
   });
 });
