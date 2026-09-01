@@ -8,7 +8,7 @@
 
 import { cacheLife, cacheTag } from "next/cache";
 import { getHubClient } from "./supabase";
-import { channelUsesErpPrice } from "./catalog-utils";
+import { channelUsesErpPrice, mainImage } from "./catalog-utils";
 
 export const LOGISTICS_DISCOUNT_PCT = 5;
 
@@ -297,9 +297,7 @@ export async function getBalcaoEligibleProducts(
       name: row.name,
       sku: row.reference ?? "",
       brand: row.brand,
-      img: row.product_assets?.find((a) => a.type === "image")?.url
-        ?? row.product_assets?.[0]?.url
-        ?? "/placeholder-produto.svg",
+      img: mainImage(row.product_assets),
       categoryId: row.category_id,
       basePrice,
       rule,
