@@ -153,6 +153,16 @@ describe("isRuleLiveAt", () => {
       isRuleLiveAt({ active: true, starts_at: null, ends_at: "2026-08-01T00:00:00Z" }, now),
     ).toBe(false);
   });
+  it("true no limite exato de starts_at (boundary de início)", () => {
+    expect(
+      isRuleLiveAt({ active: true, starts_at: "2026-08-30T12:00:00Z", ends_at: null }, now),
+    ).toBe(true);
+  });
+  it("true no limite exato de ends_at (boundary de fim)", () => {
+    expect(
+      isRuleLiveAt({ active: true, starts_at: null, ends_at: "2026-08-30T12:00:00Z" }, now),
+    ).toBe(true);
+  });
 });
 
 describe("mapRulesFromRows", () => {
