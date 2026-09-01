@@ -7,6 +7,8 @@ import {
   computeLine,
   qualifiesForSubmit,
   type BalcaoRule,
+  mapRulesFromRows,
+  isRuleLiveAt,
 } from "./balcao";
 
 const catRule: BalcaoRule = {
@@ -130,5 +132,56 @@ describe("qualifiesForSubmit", () => {
 
   it("false para lista vazia", () => {
     expect(qualifiesForSubmit([])).toBe(false);
+  });
+});
+
+describe("isRuleLiveAt", () => {
+  const now = new Date("2026-08-30T12:00:00Z");
+  it("true quando active e sem janela de vigência", () => {
+    expect(isRuleLiveAt({ active: true, starts_at: null, ends_at: null }, now)).toBe(true);
+  });
+  it("false quando inactive", () => {
+    expect(isRuleLiveAt({ active: false, starts_at: null, ends_at: null }, now)).toBe(false);
+  });
+  it("false antes de starts_at", () => {
+    expect(
+      isRuleLiveAt({ active: true, starts_at: "2026-09-01T00:00:00Z", ends_at: null }, now),
+    ).toBe(false);
+  });
+  it("false depois de ends_at", () => {
+    expect(
+      isRuleLiveAt({ active: true, starts_at: null, ends_at: "2026-08-01T00:00:00Z" }, now),
+    ).toBe(false);
+  });
+});
+
+describe("mapRulesFromRows", () => {
+  it("mapeia colunas snake_case e ordena as faixas asc", () => {
+    const rules = mapRulesFromRows([
+      {
+        id: "r1",
+        scope: "categoria",
+        category_id: "c1",
+        product_reference: null,
+        excluded: false,
+        balcao_rule_tiers: [
+          { min_qty: 25, discount_pct: "12.00" },
+          { min_qty: 10, discount_pct: "8" },
+        ],
+      },
+    ]);
+    expect(rules).toEqual([
+      {
+        id: "r1",
+        scope: "categoria",
+        categoryId: "c1",
+        productReference: null,
+        excluded: false,
+        tiers: [
+          { minQty: 10, discountPct: 8 },
+          { minQty: 25, discountPct: 12 },
+        ],
+      },
+    ]);
   });
 });
