@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createBalcaoRequest, type CreateBalcaoRequestInput } from "./balcao-server";
+import { createBalcaoRequest, getBalcaoRequests, updateBalcaoRequestStatus, type CreateBalcaoRequestInput } from "./balcao-server";
 
 const baseInput: CreateBalcaoRequestInput = {
   buyerId: "b1",
@@ -85,5 +85,66 @@ describe("createBalcaoRequest", () => {
     const r = await createBalcaoRequest(supabase, baseInput);
     expect(r.requestId).toBeNull();
     expect(r.error).toBe("Não foi possível registrar sua solicitação. Tente novamente em instantes.");
+  });
+});
+
+describe("getBalcaoRequests", () => {
+  it("mapeia linhas e aplica filtro de status", async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: "req1",
+          buyer_snapshot: { nome: "F", empresa: "X", whatsapp: "11", cnpj: null },
+          logistics: "retirada",
+          status: "enviada",
+          total_estimated: "1026.00",
+          created_at: "2026-08-30T10:00:00Z",
+        },
+      ],
+      error: null,
+    });
+    const eq = vi.fn().mockReturnValue({ order });
+    const select = vi.fn().mockReturnValue({ eq, order });
+    const supabase = { from: vi.fn(() => ({ select })) } as unknown as SupabaseClient;
+
+    const rows = await getBalcaoRequests(supabase, { status: "enviada" });
+    expect(eq).toHaveBeenCalledWith("status", "enviada");
+    expect(rows[0]).toEqual({
+      id: "req1",
+      buyer: { nome: "F", empresa: "X", whatsapp: "11", cnpj: null },
+      logistics: "retirada",
+      status: "enviada",
+      totalEstimated: 1026,
+      createdAt: "2026-08-30T10:00:00Z",
+    });
+  });
+});
+
+describe("updateBalcaoRequestStatus", () => {
+  it("atualiza status e grava evento com actor e payload", async () => {
+    const updateEq = vi.fn().mockResolvedValue({ error: null });
+    const eventInsert = vi.fn().mockResolvedValue({ error: null });
+    const supabase = {
+      from: vi.fn((table: string) => {
+        if (table === "balcao_requests") {
+          return { update: vi.fn().mockReturnValue({ eq: updateEq }) };
+        }
+        return { insert: eventInsert };
+      }),
+    } as unknown as SupabaseClient;
+
+    const r = await updateBalcaoRequestStatus(supabase, {
+      id: "req1",
+      actorId: "admin-1",
+      action: "aprovada",
+      payload: { nota: "ok" },
+    });
+    expect(r).toEqual({ error: null });
+    expect(eventInsert).toHaveBeenCalledWith({
+      request_id: "req1",
+      actor: "admin-1",
+      action: "aprovada",
+      payload: { nota: "ok" },
+    });
   });
 });
