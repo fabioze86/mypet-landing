@@ -11,7 +11,7 @@ export const clientConfig: ClientConfig = {
   name: "MadPet",
   tagline: "MyPet Fábrica agora é MadPet",
   domain: "www.distribuidorapetshop.com.br",
-  catalogChannel: "distribuidora",
+  catalogChannel: "ffa_fabrica",
   palette: {
     pink: "#7144A4", // Roxo Mad — cor principal / assinatura
     pinkDark: "#523078", // Roxo Profundo — hover, fim de gradiente
