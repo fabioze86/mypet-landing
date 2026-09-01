@@ -204,7 +204,7 @@ type RawEligibleRow = {
   reference: string | null;
   brand: string | null;
   category_id: string | null;
-  product_assets: { url: string; type: string | null }[] | null;
+  product_assets: { url: string; type: string }[] | null;
   product_channel_prices: { sale_price: number | string | null }[] | null;
 };
 

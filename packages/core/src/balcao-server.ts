@@ -195,7 +195,7 @@ export async function getBalcaoRequestById(
     return null;
   }
 
-  const row = data as Record<string, unknown> & {
+  const row = data as unknown as Record<string, unknown> & {
     balcao_request_items: Record<string, unknown>[] | null;
     balcao_request_events: Record<string, unknown>[] | null;
   };
