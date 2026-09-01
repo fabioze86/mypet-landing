@@ -72,8 +72,7 @@ export async function BalcaoPageBody() {
         }
       `}</style>
 
-      {/* TODO(task-9): balcaoHref — SiteNav ainda não aceita essa prop */}
-      <SiteNav categories={categories} />
+      <SiteNav categories={categories} balcaoHref="/balcao" />
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 80px" }}>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 6 }}>

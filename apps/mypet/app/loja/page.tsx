@@ -302,7 +302,7 @@ export async function LojaContent({
       <>
 
         {/* NAV */}
-        <SiteNav categories={categories} />
+        <SiteNav categories={categories} balcaoHref="/balcao" />
 
         {/* CATEGORY CHIPS */}
         <CategoryChips categories={categories} />

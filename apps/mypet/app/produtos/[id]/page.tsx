@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getProductById, getCategories } from "@mypet/core/catalog";
+import { getBalcaoRules, resolveRuleForProduct } from "@mypet/core/balcao";
 import { getCategoryPath } from "@mypet/core/catalog-utils";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
@@ -164,7 +165,7 @@ export default async function ProductPage({
 
       <LeadGateProvider>
         {/* NAV */}
-        <SiteNav categories={categories} />
+        <SiteNav categories={categories} balcaoHref="/balcao" />
 
         {/* CONTAINER */}
         <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
@@ -215,6 +216,14 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     notFound();
   }
 
+  const balcaoRules = await getBalcaoRules(clientConfig.catalogChannel);
+  const balcaoEligible =
+    product.salePrice != null &&
+    resolveRuleForProduct(balcaoRules, {
+      productReference: product.sku || null,
+      categoryId: product.categoryId ?? null,
+    }) !== null;
+
   const categoryPath = product.categoryId ? getCategoryPath(categories, product.categoryId) : [];
   const breadcrumbItems = [
     { name: "Início", path: "/" },
@@ -247,6 +256,15 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
 
       {jsonLd && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
+      )}
+
+      {balcaoEligible && (
+        <Link
+          href="/balcao"
+          style={{ display: "inline-block", background: PALETTE.pinkLight, color: PALETTE.pink, fontSize: 12, fontWeight: 800, padding: "4px 10px", borderRadius: 100, textDecoration: "none", marginBottom: 8 }}
+        >
+          Disponível no Balcão de Negócios →
+        </Link>
       )}
 
       <ProductVariantPanel product={product} />

@@ -162,7 +162,7 @@ export default async function CategoriaPage({
       `}</style>
 
       <LeadGateProvider>
-        <SiteNav categories={categories} />
+        <SiteNav categories={categories} balcaoHref="/balcao" />
 
         <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
           <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando categoria…</p>}>

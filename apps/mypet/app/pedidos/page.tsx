@@ -72,7 +72,7 @@ export default async function PedidosPage() {
       `}</style>
 
       <LeadGateProvider>
-        <SiteNav categories={categories} />
+        <SiteNav categories={categories} balcaoHref="/balcao" />
         <Suspense fallback={null}>
           <PedidosContent />
         </Suspense>

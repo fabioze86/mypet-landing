@@ -7,7 +7,13 @@ import { MegaMenu } from "./mega-menu";
 import { MobileMenu } from "./mobile-menu";
 import { buildCategoryTree, type CategoryNode } from "../catalog-utils";
 
-export function SiteNav({ categories }: { categories: CategoryNode[] }) {
+export function SiteNav({
+  categories,
+  balcaoHref,
+}: {
+  categories: CategoryNode[];
+  balcaoHref?: string;
+}) {
   const { name, tagline, palette, logo } = useClientConfig();
   const tree = buildCategoryTree(categories);
 
@@ -30,6 +36,14 @@ export function SiteNav({ categories }: { categories: CategoryNode[] }) {
         </div>
         <div className="site-nav-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <span className="site-nav-audience" style={{ fontSize: 13, color: palette.gray600, fontWeight: 600 }}>Exclusivo para lojistas</span>
+          {balcaoHref && (
+            <Link
+              href={balcaoHref}
+              style={{ fontSize: 13, fontWeight: 800, color: palette.pink, textDecoration: "none", whiteSpace: "nowrap" }}
+            >
+              Balcão de Negócios
+            </Link>
+          )}
           <CartBadge />
         </div>
       </div>
