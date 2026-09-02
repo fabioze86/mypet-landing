@@ -12,7 +12,7 @@
     "dev:all": "concurrently -n mypet,distribuidora,madpet,admin,hub,azpetshop -c blue,green,yellow,magenta,cyan,red \"pnpm --filter mypet dev\" \"pnpm --filter distribuidora dev\" \"pnpm --filter madpet dev\" \"pnpm --filter admin dev\" \"pnpm --filter hub dev\" \"pnpm --filter azpetshop dev\"",
     "build": "pnpm -r build",
     "lint": "eslint",
-    "test": "pnpm --filter @mypet/core test",
+    "test": "pnpm --filter @mypet/core test && pnpm --filter azpetshop test",
     "push:send": "tsx scripts/push-send.ts",
     "azpetshop:import-precos": "tsx scripts/azpetshop-import-precos.ts"
   },
