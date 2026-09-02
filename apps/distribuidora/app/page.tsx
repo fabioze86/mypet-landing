@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Palette } from "@mypet/core/theme";
-import type { Channel } from "@mypet/core/channels";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { getProductCount, getCategories } from "@mypet/core/catalog";
@@ -292,9 +291,9 @@ export default async function Home({
         {/* CATEGORY CHIPS */}
         <CategoryChips categories={categories} />
 
-        {/* COMPACT BANNER */}
+        {/* COMPACT BANNER — canal de banner é por site, desacoplado do catálogo (ffa_fabrica) */}
         <Suspense fallback={<div style={{ height: 150, margin: "0 16px" }} />}>
-          <CompactBanner channel={clientConfig.catalogChannel as Channel} palette={PALETTE} />
+          <CompactBanner channel="distribuidora" palette={PALETTE} />
         </Suspense>
 
         {/* QUICK NAV ICONS */}
@@ -302,7 +301,7 @@ export default async function Home({
 
         {/* MINI BANNER STRIP */}
         <Suspense fallback={null}>
-          <MiniBannerStrip channel={clientConfig.catalogChannel as Channel} />
+          <MiniBannerStrip channel="distribuidora" />
         </Suspense>
 
         {/* CATALOG */}

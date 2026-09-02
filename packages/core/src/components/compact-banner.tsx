@@ -15,23 +15,37 @@ export async function CompactBanner({ channel, palette }: { channel: Channel; pa
 
 function FallbackBanner({ palette }: { palette: Palette }) {
   return (
-    <div className="banner-row">
-      <div
-        className="banner-row-item"
-        style={{
-          height: 150,
-          minWidth: 280,
-          borderRadius: 14,
-          background: `linear-gradient(135deg, ${palette.navyDark} 0%, ${palette.navy} 60%, #1e4d8a 100%)`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0 24px",
-        }}
-      >
-        <p style={{ color: palette.white, fontSize: 15, fontWeight: 800, textAlign: "center", lineHeight: 1.4 }}>
-          Atacado exclusivo para pet shops. Preços sob consulta.
-        </p>
+    <div className="bc-fallback-wrap">
+      <style>{`
+        .bc-fallback-wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+        .bc-fallback {
+          height: 150px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, ${palette.navyDark} 0%, ${palette.navy} 60%, #1e4d8a 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 24px;
+        }
+        .bc-fallback p {
+          color: ${palette.white};
+          font-size: 15px;
+          font-weight: 800;
+          text-align: center;
+          line-height: 1.4;
+        }
+        @media (min-width: 641px) {
+          .bc-fallback-wrap { padding: 0 24px; }
+          .bc-fallback {
+            height: clamp(380px, 42vw, 520px);
+            border-radius: 20px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+          }
+          .bc-fallback p { font-size: 22px; }
+        }
+      `}</style>
+      <div className="bc-fallback">
+        <p>Atacado exclusivo para pet shops. Preços sob consulta.</p>
       </div>
     </div>
   );
