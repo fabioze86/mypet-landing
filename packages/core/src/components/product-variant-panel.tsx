@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import { badgeStyle, useClientConfig } from "../theme";
+import { showsListPrice } from "../features";
 import { AddToCartControl } from "./add-to-cart-control";
 import { VariantSelector, hasAxisData, useSelectedVariant } from "./variant-selector";
 import { VariantTable } from "./variant-table";
@@ -75,7 +76,7 @@ function PurchaseGrid({
   selected: ProductVariant;
   onSelect: (id: string) => void;
 }) {
-  const { palette: PALETTE } = useClientConfig();
+  const { palette: PALETTE, features } = useClientConfig();
   const hasVariants = product.variants.length > 0;
   const useTable = hasVariants && !hasAxisData(product.variants);
 
@@ -164,26 +165,34 @@ function PurchaseGrid({
                 marginTop: 16,
               }}
             >
-              <div style={{ marginBottom: 20 }}>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: PALETTE.gray600,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: 4,
-                  }}
-                >
-                  Atacado B2B
+              {showsListPrice(features) ? (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
+                    {priceLabel ?? "Preço indisponível"}
+                  </div>
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
-                  {priceLabel ?? "Preço sob consulta"}
+              ) : (
+                <div style={{ marginBottom: 20 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: PALETTE.gray600,
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                      marginBottom: 4,
+                    }}
+                  >
+                    Atacado B2B
+                  </div>
+                  <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
+                    {priceLabel ?? "Preço sob consulta"}
+                  </div>
+                  <p style={{ fontSize: 13, color: PALETTE.gray600, marginTop: 4 }}>
+                    Venda exclusiva para CNPJ de pet shops e revendedores.
+                  </p>
                 </div>
-                <p style={{ fontSize: 13, color: PALETTE.gray600, marginTop: 4 }}>
-                  Venda exclusiva para CNPJ de pet shops e revendedores.
-                </p>
-              </div>
+              )}
 
               <AddToCartControl product={{ id: cartId, name: cartName, sku, brand: product.brand, img }} />
             </div>
