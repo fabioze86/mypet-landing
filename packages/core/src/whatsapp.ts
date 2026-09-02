@@ -39,3 +39,25 @@ export function buildWhatsAppLink(phoneNumber: string, message: string): string 
 export function buildProductInterestMessage(productName: string): string {
   return `Olá! Tenho interesse no produto: ${productName}`;
 }
+
+export function buildRetailQuoteMessage(
+  items: CartItem[],
+  customer: { nome: string; whatsapp: string },
+): string {
+  const itemLines = items
+    .map((item) => {
+      const skuPart = item.sku ? ` (SKU ${item.sku})` : "";
+      return `- ${item.name}${skuPart} — Qtd: ${item.qty}`;
+    })
+    .join("\n");
+
+  return [
+    "Olá! Gostaria de finalizar este pedido:",
+    "",
+    itemLines,
+    "",
+    "Meus dados:",
+    `Nome: ${customer.nome}`,
+    `WhatsApp: ${customer.whatsapp}`,
+  ].join("\n");
+}

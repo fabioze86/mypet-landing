@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildQuoteMessage, buildWhatsAppLink, buildProductInterestMessage } from "./whatsapp";
+import { buildQuoteMessage, buildWhatsAppLink, buildProductInterestMessage, buildRetailQuoteMessage } from "./whatsapp";
 import type { CartItem } from "./cart";
 
 const customer = { nome: "João", empresa: "Pet Shop X", whatsapp: "11999999999" };
@@ -57,5 +57,23 @@ describe("buildProductInterestMessage", () => {
   it("monta a mensagem de interesse com o nome do produto", () => {
     const message = buildProductInterestMessage("Bandana Xadrez Verde");
     expect(message).toBe("Olá! Tenho interesse no produto: Bandana Xadrez Verde");
+  });
+});
+
+describe("buildRetailQuoteMessage", () => {
+  const items = [
+    { id: "1", name: "Ração Golden 15kg", sku: "GOLD15", brand: "Golden", img: "", qty: 2 },
+    { id: "2", name: "Coleira antipulgas", sku: "", brand: null, img: "", qty: 1 },
+  ];
+
+  it("lista itens e dados do cliente sem empresa/CNPJ", () => {
+    const msg = buildRetailQuoteMessage(items, { nome: "Maria", whatsapp: "11988887777" });
+    expect(msg).toContain("Gostaria de finalizar este pedido:");
+    expect(msg).toContain("- Ração Golden 15kg (SKU GOLD15) — Qtd: 2");
+    expect(msg).toContain("- Coleira antipulgas — Qtd: 1");
+    expect(msg).toContain("Nome: Maria");
+    expect(msg).toContain("WhatsApp: 11988887777");
+    expect(msg).not.toContain("Empresa:");
+    expect(msg).not.toContain("CNPJ:");
   });
 });
