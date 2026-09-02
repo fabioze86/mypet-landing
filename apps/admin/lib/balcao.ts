@@ -1,4 +1,4 @@
-import { computeLine, resolveTier, type BalcaoTier } from "@mypet/core/balcao";
+import { computeLine, resolveTier, type BalcaoTier } from "@mypet/core/balcao-calc";
 
 export function parseTiersInput(
   raw: { minQty: unknown; discountPct: unknown }[],

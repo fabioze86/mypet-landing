@@ -109,7 +109,10 @@ create policy "admins update balcao requests" on public.balcao_requests
   with check (auth.uid() in (select id from public.admin_users));
 create policy "admins read balcao request items" on public.balcao_request_items
   for select to authenticated using (auth.uid() in (select id from public.admin_users));
-create policy "admins manage balcao request events" on public.balcao_request_events
-  for all to authenticated
-  using (auth.uid() in (select id from public.admin_users))
+-- Auditoria append-only: admin lê e adiciona histórico, mas não altera nem apaga.
+create policy "admins read balcao request events" on public.balcao_request_events
+  for select to authenticated
+  using (auth.uid() in (select id from public.admin_users));
+create policy "admins insert balcao request events" on public.balcao_request_events
+  for insert to authenticated
   with check (auth.uid() in (select id from public.admin_users));

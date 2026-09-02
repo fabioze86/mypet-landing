@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { getHubServiceClient } from "@mypet/core/supabase";
 import {
   getBalcaoEligibleProducts,
@@ -21,7 +22,16 @@ export type SubmitBalcaoResult =
   | { ok: true }
   | { ok: false; error: string; needsAuth?: boolean };
 
-const VALID_LOGISTICS: BalcaoLogistics[] = ["retirada", "frete_proprio"];
+const submitBalcaoSchema = z.object({
+  selections: z.array(
+    z.object({
+      productId: z.string(),
+      qty: z.number().finite(),
+    }),
+  ),
+  logistics: z.enum(["retirada", "frete_proprio"]),
+  note: z.string().catch(""),
+});
 
 export async function submitBalcaoRequest(
   input: SubmitBalcaoInput,
@@ -35,9 +45,11 @@ export async function submitBalcaoRequest(
     };
   }
 
-  if (!VALID_LOGISTICS.includes(input.logistics)) {
-    return { ok: false, error: "Escolha retirada ou frete por conta própria." };
+  const parsed = submitBalcaoSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Dados da solicitação inválidos." };
   }
+  input = parsed.data;
 
   const channel = clientConfig.catalogChannel as Channel;
   const products = await getBalcaoEligibleProducts(channel);

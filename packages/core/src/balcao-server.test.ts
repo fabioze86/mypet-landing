@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createBalcaoRequest, getBalcaoRequests, updateBalcaoRequestStatus, type CreateBalcaoRequestInput } from "./balcao-server";
+import {
+  createBalcaoRequest,
+  getBalcaoRequests,
+  getBalcaoRequestById,
+  updateBalcaoRequestStatus,
+  type CreateBalcaoRequestInput,
+} from "./balcao-server";
 
 const baseInput: CreateBalcaoRequestInput = {
   buyerId: "b1",
@@ -74,6 +80,53 @@ describe("createBalcaoRequest", () => {
     });
   });
 
+  it("grava o cabeçalho com o payload snake_case esperado", async () => {
+    const reqInsert = vi.fn().mockReturnThis();
+    const reqChain = {
+      insert: reqInsert,
+      select: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: { id: "req1" }, error: null }),
+    };
+    const supabase = {
+      from: vi.fn((table: string) => {
+        if (table === "balcao_requests") return reqChain;
+        return { insert: vi.fn().mockResolvedValue({ error: null }) };
+      }),
+    } as unknown as SupabaseClient;
+
+    await createBalcaoRequest(supabase, baseInput);
+
+    expect(reqInsert).toHaveBeenCalledWith({
+      buyer_id: "b1",
+      channel: "mypetbrasil",
+      logistics: "retirada",
+      note: "sem pressa",
+      status: "enviada",
+      buyer_snapshot: { nome: "Fulano", empresa: "Pet X", whatsapp: "11999", cnpj: "123" },
+      total_estimated: 1026,
+    });
+  });
+
+  it("não falha a solicitação quando o insert de evento falha", async () => {
+    const supabase = {
+      from: vi.fn((table: string) => {
+        if (table === "balcao_requests") {
+          return {
+            insert: vi.fn().mockReturnThis(),
+            select: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: { id: "req1" }, error: null }),
+          };
+        }
+        if (table === "balcao_request_items") return { insert: vi.fn().mockResolvedValue({ error: null }) };
+        return { insert: vi.fn().mockResolvedValue({ error: { message: "boom" } }) };
+      }),
+    } as unknown as SupabaseClient;
+
+    const r = await createBalcaoRequest(supabase, baseInput);
+
+    expect(r).toEqual({ requestId: "req1", error: null });
+  });
+
   it("devolve erro genérico quando o cabeçalho falha", async () => {
     const supabase = {
       from: vi.fn(() => ({
@@ -116,6 +169,83 @@ describe("getBalcaoRequests", () => {
       status: "enviada",
       totalEstimated: 1026,
       createdAt: "2026-08-30T10:00:00Z",
+    });
+  });
+});
+
+describe("getBalcaoRequestById", () => {
+  it("coage numéricos, mapeia itens snake→camel e ordena eventos por createdAt asc", async () => {
+    const row = {
+      id: "req9",
+      buyer_snapshot: { nome: "Ciclana", empresa: "Pet Z", whatsapp: "1188", cnpj: null },
+      logistics: "frete_proprio",
+      status: "em_analise",
+      total_estimated: "1500.50",
+      note: "urgente",
+      created_at: "2026-08-30T12:00:00Z",
+      balcao_request_items: [
+        {
+          product_id: "pz",
+          product_reference: "SKU-Z",
+          product_name_snapshot: "Ração Z",
+          qty: 5,
+          base_price_snapshot: "200.00",
+          tier_min_qty_snapshot: 4,
+          volume_discount_pct_snapshot: "12.5",
+          logistics_discount_pct_snapshot: "5",
+          unit_price_estimated: "166.25",
+          line_total_estimated: "831.25",
+        },
+      ],
+      balcao_request_events: [
+        {
+          actor: "admin-2",
+          action: "em_analise",
+          payload: { nota: "checando" },
+          created_at: "2026-08-30T13:00:00Z",
+        },
+        { actor: null, action: "criada", payload: null, created_at: "2026-08-30T12:00:00Z" },
+      ],
+    };
+    const single = vi.fn().mockResolvedValue({ data: row, error: null });
+    const eq = vi.fn().mockReturnValue({ single });
+    const select = vi.fn().mockReturnValue({ eq });
+    const supabase = { from: vi.fn(() => ({ select })) } as unknown as SupabaseClient;
+
+    const detail = await getBalcaoRequestById(supabase, "req9");
+
+    expect(eq).toHaveBeenCalledWith("id", "req9");
+    expect(detail).toEqual({
+      id: "req9",
+      buyer: { nome: "Ciclana", empresa: "Pet Z", whatsapp: "1188", cnpj: null },
+      logistics: "frete_proprio",
+      status: "em_analise",
+      totalEstimated: 1500.5,
+      createdAt: "2026-08-30T12:00:00Z",
+      note: "urgente",
+      items: [
+        {
+          productId: "pz",
+          productReference: "SKU-Z",
+          productName: "Ração Z",
+          qty: 5,
+          basePrice: 200,
+          tierMinQty: 4,
+          volumeDiscountPct: 12.5,
+          logisticsDiscountPct: 5,
+          unitPrice: 166.25,
+          lineTotal: 831.25,
+        },
+      ],
+      events: [
+        { actor: null, action: "criada", payload: null, createdAt: "2026-08-30T12:00:00Z" },
+        {
+          actor: "admin-2",
+          action: "em_analise",
+          payload: { nota: "checando" },
+          createdAt: "2026-08-30T13:00:00Z",
+        },
+      ],
     });
   });
 });

@@ -81,7 +81,14 @@ export function BalcaoContent({
   const handleSubmit = async () => {
     setSubmitting(true);
     setError("");
-    const result = await submitBalcaoRequest({ selections, logistics, note });
+    let result: Awaited<ReturnType<typeof submitBalcaoRequest>>;
+    try {
+      result = await submitBalcaoRequest({ selections, logistics, note });
+    } catch {
+      setError("Não foi possível enviar agora. Tente novamente.");
+      setSubmitting(false);
+      return;
+    }
     if (!result.ok) {
       if (result.needsAuth) {
         router.push("/entrar");

@@ -55,7 +55,8 @@ export function mapRulesFromRows(rows: RawRule[]): BalcaoRule[] {
 
 export async function getBalcaoRules(channel: string): Promise<BalcaoRule[]> {
   "use cache";
-  cacheLife("days");
+  // "hours": transições de starts_at/ends_at das regras chegam ao site em até 1h.
+  cacheLife("hours");
   cacheTag("balcao");
 
   const supabase = getHubClient();
@@ -91,7 +92,8 @@ export async function getBalcaoEligibleProducts(
   channel: string,
 ): Promise<BalcaoEligibleProduct[]> {
   "use cache";
-  cacheLife("days");
+  // "hours": mesma vigência das regras — evita atraso de ~1 dia na elegibilidade.
+  cacheLife("hours");
   cacheTag("balcao");
 
   const rules = await getBalcaoRules(channel);
