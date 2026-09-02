@@ -71,7 +71,7 @@ export async function CatalogSection({
       {catalog.totalPages > 1 && (
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 36 }}>
           {page > 1 ? (
-            <a href={buildCatalogQuery({ q, brand, page: page - 1 })} className="cat-btn">← Anterior</a>
+            <a href={buildCatalogQuery({ q, brand, page: page - 1 }) || "?"} className="cat-btn">← Anterior</a>
           ) : (
             <span className="cat-btn" style={{ opacity: 0.4, pointerEvents: "none" }} aria-disabled="true">← Anterior</span>
           )}
