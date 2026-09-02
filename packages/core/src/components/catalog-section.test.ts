@@ -33,6 +33,6 @@ describe("CatalogSection", () => {
 
     const markup = renderToStaticMarkup(await CatalogSection({ q: "bandana", channel: "distribuidora", palette }));
 
-    expect(markup).toMatch(/grid-template-columns:repeat\(auto-fill, minmax\(min\(100%, 280px\), 280px\)\)/);
+    expect(markup).toMatch(/grid-template-columns:repeat\(auto-fill, minmax\(min\(100%, 260px\), 260px\)\)/);
   });
 });
