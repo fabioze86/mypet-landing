@@ -1,6 +1,9 @@
 import type { ClientConfig } from "@mypet/core/theme";
 import { SITES } from "@mypet/core/features";
 
+// Liga/desliga visual: não altera o catálogo nem as categorias do Admin.
+export const SHOW_ONLY_CATEGORIES_WITH_PRODUCTS = true;
+
 // Identidade MadPet — Brand Guide 2026 (ref.: apps/madpet/client-theme.ts).
 // Papeis do guia mapeados nos slots da paleta semantica do core:
 //  pink*  -> Roxo Mad      (assinatura, CTAs, grandes areas)

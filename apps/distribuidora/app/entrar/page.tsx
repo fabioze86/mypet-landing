@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { getCategories } from "@mypet/core/catalog";
+import { getCategories, getCategoriesWithProducts } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { LoginForm } from "@mypet/core/components/login-form";
-import { clientConfig } from "@/client.config";
+import { clientConfig, SHOW_ONLY_CATEGORIES_WITH_PRODUCTS } from "@/client.config";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -31,7 +31,9 @@ export default async function EntrarPage({
 }: {
   searchParams: Promise<{ next?: string; erro?: string }>;
 }) {
-  const categories = await getCategories();
+  const categories = SHOW_ONLY_CATEGORIES_WITH_PRODUCTS
+    ? await getCategoriesWithProducts(clientConfig.catalogChannel)
+    : await getCategories();
 
   return (
     <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>

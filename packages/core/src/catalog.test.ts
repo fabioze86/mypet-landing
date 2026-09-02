@@ -107,6 +107,7 @@ vi.mock("./supabase", () => {
 });
 
 import { queryCatalog, getCategories, getProductById } from "./catalog";
+import * as catalog from "./catalog";
 
 beforeEach(() => {
   for (const k of Object.keys(calls)) delete calls[k];
@@ -142,6 +143,7 @@ describe("preço inicial de produto-pai", () => {
     variantRows = [
       {
         id: "v1",
+        parent_product_id: "p1",
         name: "Ração X 2 kg",
         reference: "100-2",
         brand: "NAPI",
@@ -152,6 +154,7 @@ describe("preço inicial de produto-pai", () => {
       },
       {
         id: "v2",
+        parent_product_id: "p1",
         name: "Ração X 10 kg",
         reference: "100-10",
         brand: "NAPI",
@@ -225,5 +228,32 @@ describe("getCategories", () => {
       { id: "cat-1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
       { id: "cat-2", parentId: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sortOrder: 1 },
     ]);
+  });
+});
+
+describe("getProductCategoryIds", () => {
+  it("retorna as categorias distintas dos produtos ativos disponíveis no canal", async () => {
+    variantRows = [{ category_id: "cat-1" }, { category_id: "cat-1" }, { category_id: null }];
+    const getProductCategoryIds = (catalog as Record<string, unknown>).getProductCategoryIds as
+      | ((channel: string) => Promise<string[]>)
+      | undefined;
+    const categoryIds = await (getProductCategoryIds?.("ffa_fabrica") ?? Promise.resolve([]));
+
+    expect(categoryIds).toEqual(["cat-1"]);
+    expect(calls["from"]).toEqual(["products"]);
+    expect(calls["eq"]).toContainEqual(["status", "active"]);
+    expect(calls["eq"]).toContainEqual(["product_channel_links.channel", "ffa_fabrica"]);
+  });
+});
+
+describe("getCategoriesWithProducts", () => {
+  it("mantém uma categoria pai visível quando o produto está em sua subcategoria", async () => {
+    variantRows = [{ category_id: "cat-2" }];
+    const getCategoriesWithProducts = (catalog as Record<string, unknown>).getCategoriesWithProducts as
+      | ((channel: string) => Promise<{ id: string }[]>)
+      | undefined;
+    const categories = await (getCategoriesWithProducts?.("ffa_fabrica") ?? Promise.resolve([]));
+
+    expect(categories.map((category) => category.id)).toEqual(["cat-1", "cat-2"]);
   });
 });

@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { getCategories } from "@mypet/core/catalog";
+import { getCategories, getCategoriesWithProducts } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
-import { clientConfig } from "@/client.config";
+import { clientConfig, SHOW_ONLY_CATEGORIES_WITH_PRODUCTS } from "@/client.config";
 import { CotacaoContent } from "./cotacao-content";
 
 const { palette: PALETTE } = clientConfig;
 
 export default async function CotacaoPage() {
-  const categories = await getCategories();
+  const categories = SHOW_ONLY_CATEGORIES_WITH_PRODUCTS
+    ? await getCategoriesWithProducts(clientConfig.catalogChannel)
+    : await getCategories();
 
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>

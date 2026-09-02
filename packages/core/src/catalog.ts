@@ -11,6 +11,7 @@ import {
   totalPages,
   mainImage,
   pickActiveBadge,
+  filterCategoriesWithProducts,
   type CatalogResult,
   type RawProductRow,
   type RawVariantRow,
@@ -50,6 +51,64 @@ async function fetchErpPrices(references: (string | null | undefined)[]): Promis
     if (Number.isFinite(value)) map.set(row.reference, value);
   }
   return map;
+}
+
+type RawCatalogVariantPriceRow = {
+  parent_product_id: string | null;
+  reference: string | null;
+  product_channel_prices: { sale_price: number | string | null }[] | null;
+};
+
+/**
+ * Produtos-pai não têm necessariamente preço próprio. Para a listagem, eles
+ * representam as variações pelo menor preço disponível ("A partir de").
+ */
+async function applyStartingVariantPrices(items: CatalogResult["items"], channel: string) {
+  if (items.length === 0) return items;
+
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("parent_product_id, reference, product_channel_prices(sale_price), product_channel_links!inner(channel)")
+    .eq("status", "active")
+    .eq("product_role", "variant")
+    .in("parent_product_id", items.map((item) => item.id))
+    .eq("product_channel_links.channel", channel)
+    .eq("product_channel_prices.channel", channel);
+
+  if (error || !data) {
+    if (error) console.error("[catalog] erro ao buscar preços das variações:", error.message);
+    return items;
+  }
+
+  const variants = data as unknown as RawCatalogVariantPriceRow[];
+  const erpPrices = channelUsesErpPrice(channel)
+    ? await fetchErpPrices(variants.map((variant) => variant.reference))
+    : null;
+  const lowestPriceByParent = new Map<string, number>();
+
+  for (const variant of variants) {
+    if (!variant.parent_product_id) continue;
+    const rawPrice = erpPrices
+      ? (variant.reference ? erpPrices.get(variant.reference) : null)
+      : (() => {
+          const raw = variant.product_channel_prices?.find((price) => price.sale_price != null)?.sale_price;
+          return raw == null ? null : Number(raw);
+        })();
+    if (rawPrice == null || !Number.isFinite(rawPrice)) continue;
+
+    const currentLowest = lowestPriceByParent.get(variant.parent_product_id);
+    if (currentLowest == null || rawPrice < currentLowest) {
+      lowestPriceByParent.set(variant.parent_product_id, rawPrice);
+    }
+  }
+
+  return items.map((item) => {
+    const lowestPrice = lowestPriceByParent.get(item.id);
+    return lowestPrice == null
+      ? item
+      : { ...item, salePrice: lowestPrice, priceLabel: `A partir de ${formatPrice(lowestPrice)}` };
+  });
 }
 
 export async function queryCatalog(params: {
@@ -93,6 +152,8 @@ export async function queryCatalog(params: {
     const erpPrices = await fetchErpPrices(items.map((item) => item.sku));
     items = items.map((item) => applyErpPrice(item, erpPrices));
   }
+
+  items = await applyStartingVariantPrices(items, channel);
 
   const total = count ?? 0;
   return { items, total, page, totalPages: totalPages(total) };
@@ -150,6 +211,40 @@ export async function getProductCount(channel: string): Promise<number> {
     return 0;
   }
   return count ?? 0;
+}
+
+export async function getProductCategoryIds(channel: string): Promise<string[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("catalog");
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("category_id, product_channel_links!inner(channel), product_channel_prices!inner(channel)")
+    .eq("status", "active")
+    .neq("product_role", "variant")
+    .eq("product_channel_links.channel", channel)
+    .eq("product_channel_prices.channel", channel)
+    .not("category_id", "is", null);
+
+  if (error) {
+    console.error("[catalog] erro ao consultar categorias com produtos:", error.message);
+    return [];
+  }
+
+  return [...new Set(
+    ((data as { category_id: string | null }[]) ?? [])
+      .map((row) => row.category_id)
+      .filter((categoryId): categoryId is string => Boolean(categoryId)),
+  )];
+}
+
+export async function getCategoriesWithProducts(channel: string): Promise<CategoryNode[]> {
+  const [categories, productCategoryIds] = await Promise.all([
+    getCategories(),
+    getProductCategoryIds(channel),
+  ]);
+  return filterCategoriesWithProducts(categories, productCategoryIds);
 }
 
 export async function getProductById(id: string, channel: string) {
