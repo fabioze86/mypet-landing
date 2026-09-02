@@ -1,4 +1,4 @@
-export const ALL_CHANNEL_KINDS = ["mypetbrasil", "distribuidora", "ffa_fabrica"] as const;
+export const ALL_CHANNEL_KINDS = ["mypetbrasil", "distribuidora", "ffa_fabrica", "azpetshop"] as const;
 
 export const CHANNELS = ALL_CHANNEL_KINDS;
 
@@ -8,6 +8,7 @@ export const CHANNEL_LABELS: Record<Channel, string> = {
   mypetbrasil: "My Pet Brasil",
   distribuidora: "Distribuidora",
   ffa_fabrica: "FFA Fábrica",
+  azpetshop: "AZ Pet Shop",
 };
 
 export function isChannel(value: unknown): value is Channel {

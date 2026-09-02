@@ -19,12 +19,12 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
       "Como o site apresenta preço e converte o visitante em contato/venda.",
     options: [
       { value: "quote", label: "Cotação (preço fechado + WhatsApp)" },
-      { value: "cart", label: "Preço + carrinho (não implementado ainda)" },
+      { value: "cart", label: "Preço + carrinho (loja de consumidor)" },
     ],
   },
 ];
 
-export type SiteId = "mypet" | "distribuidora" | "madpet";
+export type SiteId = "mypet" | "distribuidora" | "madpet" | "azpetshop";
 
 export const SITES: Record<SiteId, { name: string; features: Features }> = {
   mypet: {
@@ -38,5 +38,9 @@ export const SITES: Record<SiteId, { name: string; features: Features }> = {
   madpet: {
     name: "MAD PET",
     features: { commerce: "quote" },
+  },
+  azpetshop: {
+    name: "AZ Pet Shop",
+    features: { commerce: "cart" },
   },
 };
