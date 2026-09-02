@@ -30,3 +30,31 @@ export function createLeadsPostHandler(channel: Channel) {
     return Response.json({ ok: true });
   };
 }
+
+export async function createRetailLead(input: {
+  channel: Channel;
+  nome: string;
+  whatsapp: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const nome = input.nome?.trim();
+  const whatsapp = input.whatsapp?.trim();
+  if (!nome || !whatsapp) {
+    return { ok: false, error: "Nome e WhatsApp são obrigatórios." };
+  }
+
+  const supabase = getHubClient();
+  const { error } = await supabase.from("leads").insert({
+    nome,
+    empresa: null,
+    whatsapp,
+    cnpj: null,
+    channel: input.channel,
+  });
+
+  if (error) {
+    console.error("[leads] erro ao gravar lead de varejo:", error.message);
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true };
+}

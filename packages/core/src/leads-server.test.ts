@@ -13,7 +13,7 @@ vi.mock("./supabase", () => ({
   }),
 }));
 
-import { createLeadsPostHandler } from "./leads-server";
+import { createLeadsPostHandler, createRetailLead } from "./leads-server";
 
 function fakeRequest(body: unknown): NextRequest {
   return { json: async () => body } as unknown as NextRequest;
@@ -56,5 +56,35 @@ describe("createLeadsPostHandler", () => {
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.error).toBe("Não foi possível salvar seu cadastro. Tente novamente em instantes.");
+  });
+});
+
+describe("createRetailLead", () => {
+  it("insere lead de varejo com empresa e cnpj nulos", async () => {
+    insertMock.mockResolvedValue({ error: null });
+
+    const res = await createRetailLead({ channel: "azpetshop", nome: "Maria", whatsapp: "11988887777" });
+
+    expect(calls["from"]).toBe("leads");
+    expect(insertMock).toHaveBeenCalledWith({
+      nome: "Maria",
+      empresa: null,
+      whatsapp: "11988887777",
+      cnpj: null,
+      channel: "azpetshop",
+    });
+    expect(res).toEqual({ ok: true });
+  });
+
+  it("retorna erro quando o Supabase falha", async () => {
+    insertMock.mockResolvedValue({ error: { message: "boom" } });
+    const res = await createRetailLead({ channel: "azpetshop", nome: "Maria", whatsapp: "11988887777" });
+    expect(res).toEqual({ ok: false, error: "boom" });
+  });
+
+  it("retorna erro de validação quando falta nome ou whatsapp", async () => {
+    const res = await createRetailLead({ channel: "azpetshop", nome: "", whatsapp: "" });
+    expect(res).toEqual({ ok: false, error: "Nome e WhatsApp são obrigatórios." });
+    expect(insertMock).not.toHaveBeenCalled();
   });
 });
