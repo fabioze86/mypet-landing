@@ -131,3 +131,56 @@ export async function setExcluded(formData: FormData): Promise<void> {
   updateTag("balcao");
   redirect("/balcao");
 }
+
+const UpdateRuleSchema = z.object({
+  active: z.boolean(),
+  startsAt: z.string().nullable(),
+  endsAt: z.string().nullable(),
+});
+
+export async function updateRule(id: string, formData: FormData): Promise<void> {
+  const { supabase } = await requireAdminSession();
+
+  const parsed = UpdateRuleSchema.safeParse({
+    active: formData.get("active") === "on",
+    startsAt: formData.get("startsAt") ? String(formData.get("startsAt")) : null,
+    endsAt: formData.get("endsAt") ? String(formData.get("endsAt")) : null,
+  });
+  if (!parsed.success) redirect(`/balcao/${id}?error=dados_invalidos`);
+
+  let rawTiers: { minQty: unknown; discountPct: unknown }[] = [];
+  try {
+    rawTiers = JSON.parse(String(formData.get("tiers") ?? "[]"));
+  } catch {
+    redirect(`/balcao/${id}?error=faixas_invalidas`);
+  }
+  const tiersResult = parseTiersInput(rawTiers);
+  if ("error" in tiersResult) redirect(`/balcao/${id}?error=faixas_invalidas`);
+  if (tiersResult.tiers.length === 0) redirect(`/balcao/${id}?error=sem_faixas`);
+
+  const { error: updError } = await supabase
+    .from("balcao_rules")
+    .update({
+      active: parsed.data.active,
+      starts_at: parsed.data.startsAt || null,
+      ends_at: parsed.data.endsAt || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+  if (updError) {
+    console.error("[admin/balcao] erro ao atualizar regra:", updError.message);
+    redirect(`/balcao/${id}?error=falha_ao_salvar`);
+  }
+
+  await supabase.from("balcao_rule_tiers").delete().eq("rule_id", id);
+  const { error: tiersError } = await supabase.from("balcao_rule_tiers").insert(
+    tiersResult.tiers.map((t) => ({ rule_id: id, min_qty: t.minQty, discount_pct: t.discountPct })),
+  );
+  if (tiersError) {
+    console.error("[admin/balcao] erro ao regravar faixas:", tiersError.message);
+    redirect(`/balcao/${id}?error=falha_ao_salvar`);
+  }
+
+  updateTag("balcao");
+  redirect("/balcao");
+}
