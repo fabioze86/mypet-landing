@@ -8,8 +8,8 @@ export function Hero() {
           <p className="pa-eyebrow">Atacado para pet shops</p>
           <h1 id="hero-title">Abasteça sua loja com condições de atacado claras</h1>
           <p className="pa-hero-lead">
-            Pedido mínimo, desconto por volume e prazos ficam à vista antes de você entrar. Cadastro
-            com CNPJ e WhatsApp, acesso imediato.
+            Pedido mínimo, formas de pagamento e prazos de entrega ficam à vista antes de você
+            entrar. Cadastro com CNPJ e WhatsApp, acesso imediato.
           </p>
           <div className="pa-hero-actions">
             <a href="#condicoes" className="pa-btn pa-btn-primary">Ver condições</a>
