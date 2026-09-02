@@ -10,9 +10,11 @@ import { buildCategoryTree, type CategoryNode } from "../catalog-utils";
 export function SiteNav({
   categories,
   balcaoHref,
+  audienceLabel,
 }: {
   categories: CategoryNode[];
   balcaoHref?: string;
+  audienceLabel?: string | null;
 }) {
   const { name, tagline, palette, logo } = useClientConfig();
   const tree = buildCategoryTree(categories);
@@ -35,7 +37,11 @@ export function SiteNav({
           </Link>
         </div>
         <div className="site-nav-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span className="site-nav-audience" style={{ fontSize: 13, color: palette.gray600, fontWeight: 600 }}>Exclusivo para lojistas</span>
+          {audienceLabel !== null && (
+            <span className="site-nav-audience" style={{ fontSize: 13, color: palette.gray600, fontWeight: 600 }}>
+              {audienceLabel ?? "Exclusivo para lojistas"}
+            </span>
+          )}
           {balcaoHref && (
             <Link
               href={balcaoHref}
