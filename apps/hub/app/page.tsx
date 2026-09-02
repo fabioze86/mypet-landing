@@ -25,6 +25,11 @@ const SITES: SiteLink[] = [
     description: "Painel administrativo",
     port: 4103,
   },
+  {
+    name: "AZ Pet Shop",
+    description: "Loja de consumidor final — cotação por WhatsApp",
+    port: 4105,
+  },
 ];
 
 export default function HubPage() {
