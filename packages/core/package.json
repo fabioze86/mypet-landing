@@ -15,6 +15,7 @@
     "./banners": "./src/banners.ts",
     "./buyers-server": "./src/buyers-server.ts",
     "./catalog": "./src/catalog.ts",
+    "./catalog-revalidation": "./src/catalog-revalidation.ts",
     "./catalog-utils": "./src/catalog-utils.ts",
     "./cart": "./src/cart.ts",
     "./channels": "./src/channels.ts",

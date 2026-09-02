@@ -77,6 +77,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         )}
         <AddToCartControl
           product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img }}
+          compact
         />
       </div>
     </div>

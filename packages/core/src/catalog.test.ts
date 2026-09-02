@@ -6,6 +6,7 @@ vi.mock("next/cache", () => ({
 }));
 
 const calls: Record<string, unknown> = {};
+let variantRows: unknown[] = [];
 
 type QueryBuilder = {
   select: (...args: unknown[]) => QueryBuilder;
@@ -86,7 +87,7 @@ vi.mock("./supabase", () => {
           currentTable === "v_precos_erp"
             ? [{ reference: "100", preco: "42.90" }] // numeric chega como string via PostgREST
             : currentTable === "products"
-              ? [] // variantes
+              ? variantRows
               : [
                   { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1, sort_order: 0 },
                   { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sort_order: 1 },
@@ -109,6 +110,7 @@ import { queryCatalog, getCategories, getProductById } from "./catalog";
 
 beforeEach(() => {
   for (const k of Object.keys(calls)) delete calls[k];
+  variantRows = [];
 });
 
 const selectContains = (needle: string) =>
@@ -131,6 +133,40 @@ describe("queryCatalog", () => {
       sku: "100",
       img: "https://img/1",
       category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
+    });
+  });
+});
+
+describe("preço inicial de produto-pai", () => {
+  it("usa a variação mais barata e identifica o valor como inicial", async () => {
+    variantRows = [
+      {
+        id: "v1",
+        name: "Ração X 2 kg",
+        reference: "100-2",
+        brand: "NAPI",
+        category_id: "cat-1",
+        product_assets: [],
+        product_badges: null,
+        product_channel_prices: [{ channel: "ffa_fabrica", sale_price: "59.90" }],
+      },
+      {
+        id: "v2",
+        name: "Ração X 10 kg",
+        reference: "100-10",
+        brand: "NAPI",
+        category_id: "cat-1",
+        product_assets: [],
+        product_badges: null,
+        product_channel_prices: [{ channel: "ffa_fabrica", sale_price: "119.90" }],
+      },
+    ];
+
+    const result = await queryCatalog({ page: 1, channel: "ffa_fabrica" });
+
+    expect(result.items[0]).toMatchObject({
+      salePrice: 59.9,
+      priceLabel: "A partir de R$ 59,90",
     });
   });
 });

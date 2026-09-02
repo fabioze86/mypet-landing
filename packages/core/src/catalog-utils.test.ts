@@ -17,6 +17,7 @@ import {
   type RawProductRow,
   type CategoryNode,
 } from "./catalog-utils";
+import * as catalogUtils from "./catalog-utils";
 
 describe("parsePage", () => {
   it("retorna 1 para indefinido ou inválido", () => {
@@ -224,5 +225,16 @@ describe("topLevelCategories", () => {
       { id: "x1", parentId: "root", slug: "x1", name: "X1", level: 2, sortOrder: 0 },
     ];
     expect(topLevelCategories(onlyChildren)).toEqual([]);
+  });
+});
+
+describe("filterCategoriesWithProducts", () => {
+  it("mantém apenas categorias com produtos e seus ancestrais", () => {
+    const filter = (catalogUtils as Record<string, unknown>).filterCategoriesWithProducts as
+      | ((categories: CategoryNode[], productCategoryIds: Iterable<string>) => CategoryNode[])
+      | undefined;
+    const visible = filter?.(SAMPLE_CATEGORIES, ["c3"]) ?? SAMPLE_CATEGORIES;
+
+    expect(visible.map((category) => category.id)).toEqual(["c1", "c2", "c3"]);
   });
 });

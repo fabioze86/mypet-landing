@@ -5,7 +5,13 @@ import { useClientConfig } from "../theme";
 import { useCart } from "./cart-provider";
 import type { CartItem } from "../cart";
 
-export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }) {
+export function AddToCartControl({
+  product,
+  compact = false,
+}: {
+  product: Omit<CartItem, "qty">;
+  compact?: boolean;
+}) {
   const { addItem } = useCart();
   const { palette } = useClientConfig();
   const [qty, setQty] = useState(1);
@@ -43,7 +49,9 @@ export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }
         type="button"
         onClick={handleAdd}
         style={{
-          flex: 1,
+          flex: compact ? "0 0 34px" : 1,
+          width: compact ? 34 : undefined,
+          height: compact ? 34 : undefined,
           padding: "8px 0",
           background: added ? palette.green : palette.gray100,
           color: added ? palette.white : palette.navy,
@@ -55,8 +63,9 @@ export function AddToCartControl({ product }: { product: Omit<CartItem, "qty"> }
           cursor: "pointer",
           transition: "background 0.2s, color 0.2s",
         }}
+        aria-label="Adicionar ao carrinho"
       >
-        {added ? "Adicionado ✓" : "+Adicionar"}
+        {added ? "✓" : compact ? "🛒" : "+Adicionar"}
       </button>
     </div>
   );

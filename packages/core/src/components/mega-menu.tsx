@@ -125,7 +125,7 @@ export function MegaMenu({ tree }: { tree: CategoryTreeNode[] }) {
         .mega-menu-content {
           animation: megaMenuFadeOut 0.15s ease forwards;
         }
-        .mega-menu-content[data-state="open"] {
+        .mega-menu-viewport[data-state="open"] .mega-menu-content {
           animation: megaMenuFadeIn 0.2s ease forwards;
         }
         @keyframes megaMenuFadeIn {

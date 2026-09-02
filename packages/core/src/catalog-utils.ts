@@ -233,3 +233,25 @@ export function getCategoryPath(categories: CategoryNode[], nodeId: string): Cat
   }
   return path;
 }
+
+/**
+ * Mantém as categorias que têm produtos e todos os seus ancestrais, para que
+ * a navegação continue exibindo uma árvore válida.
+ */
+export function filterCategoriesWithProducts(
+  categories: CategoryNode[],
+  productCategoryIds: Iterable<string>,
+): CategoryNode[] {
+  const categoriesById = new Map(categories.map((category) => [category.id, category]));
+  const visibleIds = new Set<string>();
+
+  for (const categoryId of productCategoryIds) {
+    let category = categoriesById.get(categoryId);
+    while (category && !visibleIds.has(category.id)) {
+      visibleIds.add(category.id);
+      category = category.parentId ? categoriesById.get(category.parentId) : undefined;
+    }
+  }
+
+  return categories.filter((category) => visibleIds.has(category.id));
+}
