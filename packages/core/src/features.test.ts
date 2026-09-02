@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SITES, FEATURE_REGISTRY, type SiteId, type Features } from "./features";
+import { SITES, FEATURE_REGISTRY, showsListPrice, type SiteId, type Features } from "./features";
 
 describe("features registry", () => {
   it("declara os 4 sites esperados", () => {
@@ -33,5 +33,14 @@ describe("features registry", () => {
     expect(SITES.distribuidora.features.commerce).toBe("quote");
     expect(SITES.madpet.features.commerce).toBe("quote");
     expect(SITES.azpetshop.features.commerce).toBe("cart");
+  });
+});
+
+describe("showsListPrice", () => {
+  it("true no modo carrinho", () => {
+    expect(showsListPrice({ commerce: "cart" })).toBe(true);
+  });
+  it("false no modo cotação", () => {
+    expect(showsListPrice({ commerce: "quote" })).toBe(false);
   });
 });

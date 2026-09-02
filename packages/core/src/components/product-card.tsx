@@ -3,12 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { badgeStyle, useClientConfig } from "../theme";
+import { showsListPrice } from "../features";
 import { PriceLockSlot } from "./lead-gate";
 import { AddToCartControl } from "./add-to-cart-control";
 import type { CatalogProduct } from "../catalog-utils";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
-  const { palette } = useClientConfig();
+  const { palette, features } = useClientConfig();
   const style = product.badge ? badgeStyle(product.badge.code, palette) : null;
   return (
     <div className="product-card">
@@ -65,7 +66,15 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         </div>
       </Link>
       <div style={{ padding: "0 12px 12px" }}>
-        <PriceLockSlot priceLabel={product.priceLabel} />
+        {showsListPrice(features) ? (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: palette.navy }}>
+              {product.priceLabel ?? "Preço indisponível"}
+            </div>
+          </div>
+        ) : (
+          <PriceLockSlot priceLabel={product.priceLabel} />
+        )}
         <AddToCartControl
           product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img }}
         />

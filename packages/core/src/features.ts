@@ -4,6 +4,11 @@ export type Features = {
   commerce: CommerceMode;
 };
 
+/** No modo "cart" o preço aparece direto no card; no "quote" ele passa pelo PriceLockSlot (B2B). */
+export function showsListPrice(features: Features): boolean {
+  return features.commerce === "cart";
+}
+
 export type FeatureDefinition = {
   id: keyof Features;
   label: string;
