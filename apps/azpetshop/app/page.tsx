@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import type { Palette } from "@mypet/core/theme";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { getCategories } from "@mypet/core/catalog";
