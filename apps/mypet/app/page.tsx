@@ -4,18 +4,21 @@ import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { getCategoryThumbs } from "./_data/category-thumbs";
 import { Hero } from "./_components/pre-access/hero";
+import { MetricsBar } from "./_components/pre-access/metrics-bar";
 import { CommercialConditions } from "./_components/pre-access/commercial-conditions";
 import { HowItWorks } from "./_components/pre-access/how-it-works";
 import { CatalogPreview } from "./_components/pre-access/catalog-preview";
+import { Testimonials } from "./_components/pre-access/testimonials";
 import { CommercialFaq } from "./_components/pre-access/commercial-faq";
 import { InstitutionalTrust } from "./_components/pre-access/institutional-trust";
+import { ClosingCta } from "./_components/pre-access/closing-cta";
 import { LANDING_STYLES } from "./_components/pre-access/styles";
 
 const { name: SITE_NAME, tagline: TAGLINE, logo } = clientConfig;
 
 export function generateMetadata(): Metadata {
   return {
-    title: `${SITE_NAME} — atacado para pet shops`,
+    title: `${SITE_NAME} - atacado para pet shops`,
     description:
       "Atacado para pet shops: veja condições de compra, pedido mínimo e categorias antes de acessar a loja.",
     alternates: { canonical: canonicalUrl(clientConfig.domain, "/") },
@@ -39,6 +42,7 @@ export default async function LandingPage() {
           </div>
           <nav className="pa-nav" aria-label="Seções da página">
             <a href="#condicoes">Condições</a>
+            <a href="#como-funciona">Como funciona</a>
             <a href="#categorias">Categorias</a>
             <a href="#faq">Dúvidas</a>
             <a href="#acesso" className="pa-nav-cta">Criar acesso</a>
@@ -48,18 +52,21 @@ export default async function LandingPage() {
 
       <main>
         <Hero />
+        <MetricsBar />
         <CommercialConditions />
         <HowItWorks />
         <CatalogPreview categories={topCategories} thumbs={thumbs} />
+        <Testimonials />
         <CommercialFaq />
         <InstitutionalTrust categoryCount={topCategories.length} />
+        <ClosingCta />
       </main>
 
       <footer className="pa-footer">
         <div className="pa-wrap pa-footer-row">
           <div className="pa-footer-brand">
             <span aria-hidden>{logo.emoji}</span>
-            <span>{SITE_NAME} — {TAGLINE}</span>
+            <span>{SITE_NAME} - {TAGLINE}</span>
           </div>
           <small>
             © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberação da loja.

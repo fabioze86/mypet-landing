@@ -15,26 +15,36 @@ vi.mock("./_data/category-thumbs", () => ({
 import LandingPage from "./page";
 
 describe("LandingPage", () => {
-  it("renderiza as três condições comerciais e o FAQ da central de ajuda", async () => {
+  it("renderiza condições, como funciona, depoimentos, FAQ e CTA final", async () => {
     render(await LandingPage());
     expect(screen.getByText("Pedido mínimo")).toBeInTheDocument();
-    expect(screen.getByText("Formas de pagamento")).toBeInTheDocument();
-    expect(screen.getByText("Entrega, frete e prazo")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /como funciona/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "O que dizem os lojistas" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Números da operação" })).toBeInTheDocument();
     expect(screen.getAllByRole("group").length).toBeGreaterThanOrEqual(8); // <details> do FAQ
   });
 
-  it("mostra nomes de categoria sem qualquer preço", async () => {
+  it("a vitrine do catálogo mostra categorias sem qualquer preço", async () => {
     render(await LandingPage());
-    const categorias = screen.getByRole("region", { name: "Vitrine do catálogo" });
-    expect(within(categorias).getByText("Ração")).toBeInTheDocument();
-    // regras comerciais (pedido mínimo, parcelamento) podem citar R$ no FAQ/condições;
-    // a grade de categorias nunca mostra preço de produto.
-    expect(within(categorias).queryByText(/Preço do canal distribuidora/)).toBeNull();
-    expect(within(categorias).queryByText(/R\$\s?\d/)).toBeNull();
+    const vitrine = screen.getByRole("region", { name: "Vitrine do catálogo" });
+    expect(within(vitrine).getByText("Ração")).toBeInTheDocument();
+    expect(within(vitrine).queryByText(/R\$\s?\d/)).toBeNull();
+    expect(within(vitrine).queryByText(/\bSKU\b/i)).toBeNull();
   });
 
   it("tem um único h1", async () => {
     render(await LandingPage());
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  });
+
+  it("usa o mesmo rótulo de CTA de conversão no header, hero e faixa final", async () => {
+    const { container } = render(await LandingPage());
+    const acessoLinks = Array.from(container.querySelectorAll('a[href="#acesso"]'));
+    expect(acessoLinks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("não tem em-dash na copy visível da página", async () => {
+    const { container } = render(await LandingPage());
+    expect(container.textContent ?? "").not.toMatch(/[–—]/);
   });
 });
