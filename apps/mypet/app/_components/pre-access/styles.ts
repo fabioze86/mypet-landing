@@ -135,7 +135,7 @@ export const LANDING_STYLES = `
   /* institutional */
   .pa-inst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 24px; }
   .pa-inst-item { padding-top: 20px; border-top: 2px solid var(--pa-navy); }
-  .pa-inst-icon { display: inline-flex; color: var(--pa-green-dark); margin-bottom: 10px; }
+  .pa-inst-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--pa-r-pill); background: var(--pa-green-soft); color: var(--pa-green-dark); margin-bottom: 10px; }
   .pa-inst-item strong { display: block; font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 15px; margin-bottom: 6px; }
   .pa-inst-item p { margin: 0; color: var(--pa-muted); font-size: 14px; line-height: 1.55; }
   @media (max-width: 900px) { .pa-inst-grid { grid-template-columns: 1fr; } }
