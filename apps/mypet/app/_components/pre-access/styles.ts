@@ -1,47 +1,36 @@
-// Estilo da landing pública. Paleta da campanha atual (arte anexada): amarelo-ouro
-// + navy + verde + creme + branco. Fonte Nunito (layout.tsx, next/font:
-// --font-nunito / --font-nunito-sans). Um único bloco <style>, renderizado uma
-// vez em page.tsx. Sem dependência nova.
+// Estilo da landing pública de pré-acesso (canal mypetbrasil). Um único bloco
+// <style>, renderizado uma vez em page.tsx. Paleta: navy âncora + verde como
+// único acento. Fonte Geist (layout.tsx, next/font: --font-geist /
+// --font-geist-mono). Sem dependência de estilo nova.
 export const LANDING_STYLES = `
   :root {
-    --pa-yellow: #FBC01D; --pa-yellow-deep: #EFAE12;
-    --pa-navy: #12296B; --pa-navy-dark: #0E2050; --pa-navy-soft: #E7EBF5;
-    --pa-green: #4CAF3E; --pa-green-dark: #3E9433; --pa-green-soft: #E7F3E4;
-    --pa-cream: #F6E7A6; --pa-cream-line: #E6D28A;
-    --pa-ink: #12296B; --pa-muted: #4C5578; --pa-line: #E2E4EC;
-    --pa-bg-soft: #FBFBF8;
-    --pa-r-card: 18px; --pa-r-input: 10px; --pa-r-pill: 999px;
-    --pa-nunito: var(--font-nunito), "Nunito", system-ui, sans-serif;
-    --pa-sans: var(--font-nunito-sans), "Nunito Sans", system-ui, sans-serif;
+    --pa-navy: #1A3472; --pa-navy-dark: #0F1F45; --pa-navy-soft: #EDF0F8;
+    --pa-green: #00A651; --pa-green-dark: #068A47; --pa-green-soft: #E3F5EC;
+    --pa-ink: #0F1F45; --pa-muted: #5A6580; --pa-line: #DDE2EC;
+    --pa-bg-soft: #F8F9FB;
+    --pa-r-card: 16px; --pa-r-input: 10px; --pa-r-pill: 999px;
+    --pa-geist: var(--font-geist), system-ui, sans-serif;
+    --pa-mono: var(--font-geist-mono), ui-monospace, monospace;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; background: #fff; color: var(--pa-ink); font-family: var(--pa-sans); }
+  body { margin: 0; background: #fff; color: var(--pa-ink); font-family: var(--pa-geist); }
   main { display: block; }
 
-  .pa-wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
-  .pa-h2 { font-family: var(--pa-nunito); font-weight: 900; letter-spacing: -0.02em; color: var(--pa-navy); font-size: clamp(25px, 3.4vw, 33px); margin: 0 0 10px; }
-  .pa-sec-lead { color: var(--pa-muted); font-size: 15px; line-height: 1.6; max-width: 58ch; margin: 0; }
-
-  /* header */
-  .pa-header { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.92); backdrop-filter: saturate(180%) blur(8px); border-bottom: 1px solid var(--pa-line); }
-  .pa-header-row { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-  .pa-brand { display: flex; align-items: center; gap: 8px; font-family: var(--pa-nunito); font-weight: 900; color: var(--pa-navy); font-size: 17px; }
-  .pa-brand span:first-child { font-size: 20px; }
-  .pa-nav { display: flex; align-items: center; gap: 22px; }
-  .pa-nav a { color: var(--pa-muted); text-decoration: none; font-weight: 700; font-size: 14px; }
-  .pa-nav a:hover { color: var(--pa-navy); }
-  .pa-nav a.pa-nav-cta { color: var(--pa-green-dark); }
+  .pa-wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .pa-h2 { font-family: var(--pa-geist); font-weight: 700; letter-spacing: -0.02em; color: var(--pa-navy); font-size: clamp(26px, 3.4vw, 36px); line-height: 1.15; margin: 0 0 12px; }
+  .pa-sec-lead { color: var(--pa-muted); font-size: 16px; line-height: 1.6; max-width: 60ch; margin: 0; }
 
   /* buttons */
-  .pa-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--pa-r-pill); font-family: var(--pa-nunito); font-weight: 800; font-size: 15px; padding: 12px 26px; cursor: pointer; text-decoration: none; border: 2px solid transparent; transition: background .18s ease, border-color .18s ease, color .18s ease, transform .12s ease; }
-  .pa-btn-primary { background: var(--pa-navy); color: #fff; }
-  .pa-btn-primary:hover { background: var(--pa-navy-dark); }
-  .pa-btn-ghost { background: transparent; color: var(--pa-navy); border-color: var(--pa-navy); }
-  .pa-btn-ghost:hover { background: var(--pa-navy); color: #fff; }
-  /* on the yellow hero band, the primary CTA is the white pill from the campaign art */
-  .pa-hero .pa-btn-primary { background: #fff; color: var(--pa-navy); }
-  .pa-hero .pa-btn-primary:hover { background: var(--pa-navy); color: #fff; }
+  .pa-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--pa-r-pill); font-family: var(--pa-geist); font-weight: 600; font-size: 15px; padding: 12px 24px; cursor: pointer; text-decoration: none; border: 1.5px solid transparent; transition: background .18s ease, border-color .18s ease, color .18s ease, transform .12s ease; }
+  .pa-btn-primary { background: var(--pa-green); color: #fff; }
+  .pa-btn-primary:hover { background: var(--pa-green-dark); }
+  .pa-btn-ghost { background: transparent; color: var(--pa-navy); border-color: var(--pa-line); }
+  .pa-btn-ghost:hover { border-color: var(--pa-navy); }
+
+  /* sections */
+  .pa-section { padding: 96px 0; }
+  .pa-section--soft { background: var(--pa-bg-soft); }
 
   /* hero */
   .pa-hero { background: var(--pa-yellow); padding: 52px 0 44px; }
