@@ -133,10 +133,12 @@ export const LANDING_STYLES = `
   .pa-faq details p { margin: 0; padding: 0 4px 18px; color: var(--pa-muted); font-size: 14px; line-height: 1.6; }
 
   /* institutional */
-  .pa-inst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 20px; }
-  .pa-inst-item { padding: 20px 20px 20px 0; border-top: 2px solid var(--pa-navy); }
-  .pa-inst-item strong { display: block; font-family: var(--pa-nunito); color: var(--pa-navy); font-size: 15px; margin-bottom: 6px; }
-  .pa-inst-item p { margin: 0; color: var(--pa-ink); font-size: 14px; line-height: 1.55; }
+  .pa-inst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 24px; }
+  .pa-inst-item { padding-top: 20px; border-top: 2px solid var(--pa-navy); }
+  .pa-inst-icon { display: inline-flex; color: var(--pa-green-dark); margin-bottom: 10px; }
+  .pa-inst-item strong { display: block; font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 15px; margin-bottom: 6px; }
+  .pa-inst-item p { margin: 0; color: var(--pa-muted); font-size: 14px; line-height: 1.55; }
+  @media (max-width: 900px) { .pa-inst-grid { grid-template-columns: 1fr; } }
 
   /* footer */
   .pa-footer { background: var(--pa-navy-dark); color: rgba(255,255,255,0.82); padding: 28px 0 calc(28px + env(safe-area-inset-bottom)); }
