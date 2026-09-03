@@ -113,6 +113,15 @@ export const LANDING_STYLES = `
   .pa-cat-name { padding: 12px 14px; font-family: var(--pa-geist); font-weight: 600; font-size: 13px; color: var(--pa-navy); }
   .pa-cat-note { margin: 22px 0 0; font-size: 13px; color: var(--pa-muted); }
 
+  /* testimonials */
+  .pa-quote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 28px; }
+  .pa-quote { margin: 0; background: var(--pa-navy-soft); border-radius: var(--pa-r-card); padding: 24px; }
+  .pa-quote-stars { display: flex; gap: 2px; color: var(--pa-green); margin-bottom: 12px; }
+  .pa-quote blockquote { margin: 0 0 16px; font-size: 15px; line-height: 1.6; color: var(--pa-ink); }
+  .pa-quote figcaption strong { display: block; font-family: var(--pa-geist); font-weight: 600; font-size: 14px; color: var(--pa-navy); }
+  .pa-quote figcaption span { display: block; margin-top: 2px; font-size: 13px; color: var(--pa-muted); }
+  @media (max-width: 900px) { .pa-quote-grid { grid-template-columns: 1fr; } }
+
   /* faq */
   .pa-faq { background: var(--pa-cream); }
   .pa-faq-list { margin-top: 20px; border-top: 1px solid var(--pa-cream-line); }
