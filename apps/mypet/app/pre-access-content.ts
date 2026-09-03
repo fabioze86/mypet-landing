@@ -7,11 +7,12 @@
 //
 // O que aparece aqui são REGRAS comerciais públicas (pedido mínimo, parcelamento),
 // não preço de item. Preço, estoque e carrinho continuam só em /loja (storefront
-// protegido) — nada de valor de produto/catálogo nesta página.
+// protegido); nada de valor de produto/catálogo nesta página.
 
 export const commercialConditions = [
   {
     id: "pedido-minimo",
+    icon: "CurrencyCircleDollar",
     title: "Pedido mínimo",
     value: "R$ 250 na capital de SP · R$ 400 nos demais estados",
     detail:
@@ -19,6 +20,7 @@ export const commercialConditions = [
   },
   {
     id: "pagamento",
+    icon: "CreditCard",
     title: "Formas de pagamento",
     value: "Cartão em até 3x sem juros · 5% à vista",
     detail:
@@ -26,6 +28,7 @@ export const commercialConditions = [
   },
   {
     id: "entrega",
+    icon: "Truck",
     title: "Entrega, frete e prazo",
     value: "3 a 7 dias úteis no Sul e Sudeste",
     detail:
@@ -33,37 +36,73 @@ export const commercialConditions = [
   },
 ] as const;
 
-export const educationCards = [
+export const metrics = [
+  { id: "itens", value: "~5 mil", label: "itens no catálogo, com preço de atacado" },
+  { id: "categorias", value: "12+", label: "categorias em destaque nesta página" },
+  { id: "cobertura", value: "Brasil", label: "entrega por transportadora para todas as regiões" },
+  { id: "prazo", value: "3 a 7 dias", label: "úteis no Sul e Sudeste após o despacho" },
+] as const;
+
+export const steps = [
   {
-    id: "como-comprar",
-    title: "Como funciona a compra",
-    body: "Cadastro, acesso à loja e pedido pelo carrinho.",
-    href: "#condicoes",
+    id: "cadastro",
+    icon: "IdentificationCard",
+    title: "Cadastro com CNPJ e WhatsApp",
+    body: "Sem cotação por WhatsApp. Você preenche o formulário desta página.",
   },
   {
-    id: "condicoes",
-    title: "Condições de compra",
-    body: "Pedido mínimo, descontos e formas de pagamento.",
-    href: "#condicoes",
+    id: "acesso",
+    icon: "LockKeyOpen",
+    title: "Acesso liberado na hora",
+    body: "A loja com preço, estoque e carrinho abre assim que o cadastro é enviado.",
   },
   {
-    id: "categorias",
-    title: "Categorias disponíveis",
-    body: "Veja se o mix atende sua loja.",
-    href: "#categorias",
+    id: "pedido",
+    icon: "ShoppingCart",
+    title: "Monta o pedido no carrinho",
+    body: "Você escolhe os itens e fecha o pedido sozinho, no seu tempo.",
   },
   {
-    id: "entrega-pagamento",
-    title: "Entrega e pagamento",
-    body: "Prazos, regiões e meios de pagamento.",
-    href: "#faq",
+    id: "entrega",
+    icon: "Package",
+    title: "Recebe no endereço do CNPJ",
+    body: "Entrega por transportadora no mesmo endereço do cadastro, em horário comercial.",
+  },
+] as const;
+
+// TODO: substituir por depoimentos reais de lojistas (texto + nome + cidade +
+// loja). Os três abaixo são fictícios e existem só para o layout não quebrar.
+export const testimonials = [
+  {
+    id: "t1",
+    quote:
+      "Comecei comprando pouco para testar o mix. Hoje faço pedido toda semana e a margem do balcão melhorou.",
+    name: "Renata Alcântara",
+    city: "Sorocaba, SP",
+    store: "Pet Vida",
+  },
+  {
+    id: "t2",
+    quote:
+      "O que pesou foi ver pedido mínimo e prazo antes de entrar. Cadastrei o CNPJ e já estava comprando no mesmo dia.",
+    name: "Marcos Beltrão",
+    city: "Contagem, MG",
+    store: "Mundo Animal Contagem",
+  },
+  {
+    id: "t3",
+    quote:
+      "Recebo dentro do prazo que aparece na loja e o frete fecha certo pelo CEP. Parou de ser aposta.",
+    name: "Juliana Prates",
+    city: "Londrina, PR",
+    store: "Casa do Bicho",
   },
 ] as const;
 
 export const commercialFaq = [
   {
     q: "Preciso de CNPJ para comprar?",
-    a: "A My Pet vende para lojistas e revendedores do ramo pet. Você pode criar o acesso com CNPJ ou com CPF — os preços são os mesmos. O documento identifica a sua loja quando você entra na loja.",
+    a: "A My Pet vende para lojistas e revendedores do ramo pet. Você pode criar o acesso com CNPJ ou com CPF; os preços são os mesmos. O documento identifica a sua loja quando você entra na loja.",
   },
   {
     q: "A My Pet vende para consumidor final?",
@@ -103,7 +142,7 @@ export const commercialFaq = [
   },
   {
     q: "Há outras regras de entrega que eu devo saber?",
-    a: "A entrega é feita no mesmo endereço do CNPJ do cadastro, dentro do horário comercial (7h às 18h) — avise se a sua loja tem restrição. Em alguns estados a entrega gera taxa estadual (DAE), paga pelo cliente. Todos os itens dependem de disponibilidade em estoque no momento da separação.",
+    a: "A entrega é feita no mesmo endereço do CNPJ do cadastro, dentro do horário comercial (7h às 18h); avise se a sua loja tem restrição. Em alguns estados a entrega gera taxa estadual (DAE), paga pelo cliente. Todos os itens dependem de disponibilidade em estoque no momento da separação.",
   },
   {
     q: "Posso ver o catálogo antes de criar o acesso?",
