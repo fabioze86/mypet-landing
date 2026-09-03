@@ -82,11 +82,12 @@ export const LANDING_STYLES = `
   .pa-section--soft { background: var(--pa-bg-soft); }
 
   /* condition cards */
-  .pa-cond-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 24px; }
-  .pa-card { background: #fff; border: 1px solid var(--pa-line); border-radius: var(--pa-r-card); padding: 22px; transition: transform .18s ease, box-shadow .18s ease; }
+  .pa-cond-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 28px; }
+  .pa-card { background: #fff; border: 1px solid var(--pa-line); border-radius: var(--pa-r-card); padding: 24px; transition: transform .18s ease, box-shadow .18s ease; }
   .pa-cond-card { border-top: 3px solid var(--pa-green); }
-  .pa-cond-card h3 { font-family: var(--pa-nunito); color: var(--pa-navy); font-size: 15px; margin: 0 0 6px; }
-  .pa-cond-value { font-family: var(--pa-nunito); font-weight: 900; color: var(--pa-green-dark); font-size: 18px; line-height: 1.28; margin: 0 0 8px; }
+  .pa-cond-icon { display: inline-flex; color: var(--pa-green-dark); margin-bottom: 12px; }
+  .pa-cond-card h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 15px; margin: 0 0 6px; }
+  .pa-cond-value { font-family: var(--pa-mono); font-weight: 600; color: var(--pa-green-dark); font-size: 17px; line-height: 1.3; margin: 0 0 8px; }
   .pa-cond-detail { color: var(--pa-muted); font-size: 13px; line-height: 1.55; margin: 0; }
 
   /* education scroller */

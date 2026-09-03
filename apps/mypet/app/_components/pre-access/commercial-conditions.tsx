@@ -1,4 +1,5 @@
 import { commercialConditions } from "../../pre-access-content";
+import { PaIcon } from "./icon";
 
 export function CommercialConditions() {
   return (
@@ -11,6 +12,9 @@ export function CommercialConditions() {
         <ul className="pa-cond-grid" style={{ listStyle: "none", padding: 0 }}>
           {commercialConditions.map((c) => (
             <li key={c.id} className="pa-card pa-cond-card">
+              <span className="pa-cond-icon">
+                <PaIcon name={c.icon} size={26} />
+              </span>
               <h3>{c.title}</h3>
               <p className="pa-cond-value">{c.value}</p>
               <p className="pa-cond-detail">{c.detail}</p>
