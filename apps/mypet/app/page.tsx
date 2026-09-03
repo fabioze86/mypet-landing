@@ -6,7 +6,7 @@ import { getCategoryThumbs } from "./_data/category-thumbs";
 import { Hero } from "./_components/pre-access/hero";
 import { CommercialConditions } from "./_components/pre-access/commercial-conditions";
 import { HowItWorks } from "./_components/pre-access/how-it-works";
-import { PopularCategories } from "./_components/pre-access/popular-categories";
+import { CatalogPreview } from "./_components/pre-access/catalog-preview";
 import { CommercialFaq } from "./_components/pre-access/commercial-faq";
 import { InstitutionalTrust } from "./_components/pre-access/institutional-trust";
 import { LANDING_STYLES } from "./_components/pre-access/styles";
@@ -50,7 +50,7 @@ export default async function LandingPage() {
         <Hero />
         <CommercialConditions />
         <HowItWorks />
-        <PopularCategories categories={topCategories} thumbs={thumbs} />
+        <CatalogPreview categories={topCategories} thumbs={thumbs} />
         <CommercialFaq />
         <InstitutionalTrust categoryCount={topCategories.length} />
       </main>

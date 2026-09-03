@@ -1,6 +1,5 @@
-// Server component. Recebe as categorias e um mapa opcional de imagens
-// (id -> url) montado em page.tsx via getCategoryThumbs. Só nome + foto de
-// categoria — nenhum preço, nenhum ProductCard.
+// Server component. Recebe categorias + mapa opcional de imagens (id -> url).
+// Só nome e foto. NENHUM preço, NENHUM SKU, NENHUM ProductCard nesta página.
 
 type Category = { id: string; slug: string; name: string };
 
@@ -13,7 +12,7 @@ function initials(name: string): string {
     .join("");
 }
 
-export function PopularCategories({
+export function CatalogPreview({
   categories,
   thumbs = {},
 }: {
@@ -23,10 +22,11 @@ export function PopularCategories({
   return (
     <section id="categorias" className="pa-section" aria-labelledby="categorias-title">
       <div className="pa-wrap">
-        <h2 id="categorias-title" className="pa-h2">Categorias mais procuradas</h2>
+        <h2 id="categorias-title" className="pa-h2">Vitrine do catálogo</h2>
         <p className="pa-sec-lead">
-          Reconheça o mix da sua loja. O catálogo completo abre depois do acesso.
+          Reconheça o mix da sua loja. Preço, estoque e carrinho só na loja, depois do acesso.
         </p>
+
         <ul className="pa-cat-grid" style={{ listStyle: "none", padding: 0 }}>
           {categories.map((category) => {
             const src = thumbs[category.id];
@@ -48,6 +48,10 @@ export function PopularCategories({
             );
           })}
         </ul>
+
+        <p className="pa-cat-note">
+          Catálogo completo com quase 5 mil itens abre assim que você cria o acesso.
+        </p>
       </div>
     </section>
   );

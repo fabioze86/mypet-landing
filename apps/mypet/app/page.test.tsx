@@ -25,7 +25,7 @@ describe("LandingPage", () => {
 
   it("mostra nomes de categoria sem qualquer preço", async () => {
     render(await LandingPage());
-    const categorias = screen.getByRole("region", { name: "Categorias mais procuradas" });
+    const categorias = screen.getByRole("region", { name: "Vitrine do catálogo" });
     expect(within(categorias).getByText("Ração")).toBeInTheDocument();
     // regras comerciais (pedido mínimo, parcelamento) podem citar R$ no FAQ/condições;
     // a grade de categorias nunca mostra preço de produto.

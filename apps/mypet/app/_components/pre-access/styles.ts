@@ -103,14 +103,15 @@ export const LANDING_STYLES = `
     .pa-steps::before { top: 0; bottom: 0; left: 18px; right: auto; width: 2px; height: auto; }
   }
 
-  /* category tiles */
-  .pa-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 22px; }
+  /* catalog preview */
+  .pa-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; margin-top: 28px; }
   .pa-cat-tile { display: flex; flex-direction: column; border: 1px solid var(--pa-line); border-radius: var(--pa-r-card); overflow: hidden; text-decoration: none; background: #fff; transition: transform .18s ease, box-shadow .18s ease; }
-  .pa-cat-tile:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(18,41,107,0.14); }
+  .pa-cat-tile:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(15,31,69,0.12); }
   .pa-cat-media { aspect-ratio: 4 / 3; background: var(--pa-navy-soft); display: flex; align-items: center; justify-content: center; }
   .pa-cat-media img { width: 100%; height: 100%; object-fit: cover; }
-  .pa-cat-fallback { font-family: var(--pa-nunito); font-weight: 900; font-size: 26px; color: var(--pa-navy); opacity: .45; }
-  .pa-cat-name { padding: 12px 14px; font-family: var(--pa-nunito); font-weight: 700; font-size: 13px; color: var(--pa-navy); }
+  .pa-cat-fallback { font-family: var(--pa-geist); font-weight: 700; font-size: 24px; color: var(--pa-navy); opacity: .4; }
+  .pa-cat-name { padding: 12px 14px; font-family: var(--pa-geist); font-weight: 600; font-size: 13px; color: var(--pa-navy); }
+  .pa-cat-note { margin: 22px 0 0; font-size: 13px; color: var(--pa-muted); }
 
   /* faq */
   .pa-faq { background: var(--pa-cream); }
