@@ -38,7 +38,7 @@ export const LANDING_STYLES = `
   .pa-hero-overlay { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(15,31,69,.72), rgba(15,31,69,.94)); }
   .pa-hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: start; }
   .pa-eyebrow { display: inline-block; font-family: var(--pa-geist); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; font-size: 12px; color: #fff; background: var(--pa-green); padding: 6px 14px; border-radius: var(--pa-r-pill); margin: 0 0 18px; }
-  .pa-hero h1 { font-family: var(--pa-geist); font-weight: 700; letter-spacing: -0.025em; color: #fff; font-size: clamp(32px, 4.6vw, 48px); line-height: 1.08; margin: 0 0 16px; max-width: 18ch; }
+  .pa-hero h1 { font-family: var(--pa-geist); font-weight: 700; letter-spacing: -0.025em; color: #fff; font-size: clamp(30px, 4.2vw, 44px); line-height: 1.08; margin: 0 0 16px; max-width: 22ch; }
   .pa-hero h1 .pa-hl { color: #4ADE80; }
   .pa-hero-lead { color: rgba(255,255,255,0.82); font-size: 18px; line-height: 1.55; max-width: 46ch; margin: 0 0 24px; }
   .pa-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }

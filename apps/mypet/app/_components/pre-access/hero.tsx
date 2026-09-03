@@ -19,7 +19,7 @@ export function Hero() {
         <div>
           <p className="pa-eyebrow">Atacado para pet shops</p>
           <h1 id="hero-title">
-            Abasteça sua loja com condições de atacado{" "}
+            Compre no atacado com condições{" "}
             <span className="pa-hl">claras</span>
           </h1>
           <p className="pa-hero-lead">
