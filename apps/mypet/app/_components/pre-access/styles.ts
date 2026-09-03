@@ -140,6 +140,12 @@ export const LANDING_STYLES = `
   .pa-inst-item p { margin: 0; color: var(--pa-muted); font-size: 14px; line-height: 1.55; }
   @media (max-width: 900px) { .pa-inst-grid { grid-template-columns: 1fr; } }
 
+  /* closing cta */
+  .pa-closing { background: var(--pa-navy-dark); padding: 80px 0; }
+  .pa-closing-inner { text-align: center; }
+  .pa-closing h2 { font-family: var(--pa-geist); font-weight: 700; letter-spacing: -0.02em; color: #fff; font-size: clamp(24px, 3.2vw, 34px); margin: 0 0 12px; }
+  .pa-closing p { color: rgba(255,255,255,0.8); font-size: 16px; line-height: 1.6; margin: 0 auto 24px; max-width: 52ch; }
+
   /* footer */
   .pa-footer { background: var(--pa-navy-dark); color: rgba(255,255,255,0.82); padding: 28px 0 calc(28px + env(safe-area-inset-bottom)); }
   .pa-footer-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
