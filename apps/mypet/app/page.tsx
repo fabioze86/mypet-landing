@@ -5,7 +5,7 @@ import { clientConfig } from "@/client.config";
 import { getCategoryThumbs } from "./_data/category-thumbs";
 import { Hero } from "./_components/pre-access/hero";
 import { CommercialConditions } from "./_components/pre-access/commercial-conditions";
-import { EducationCards } from "./_components/pre-access/education-cards";
+import { HowItWorks } from "./_components/pre-access/how-it-works";
 import { PopularCategories } from "./_components/pre-access/popular-categories";
 import { CommercialFaq } from "./_components/pre-access/commercial-faq";
 import { InstitutionalTrust } from "./_components/pre-access/institutional-trust";
@@ -49,7 +49,7 @@ export default async function LandingPage() {
       <main>
         <Hero />
         <CommercialConditions />
-        <EducationCards />
+        <HowItWorks />
         <PopularCategories categories={topCategories} thumbs={thumbs} />
         <CommercialFaq />
         <InstitutionalTrust categoryCount={topCategories.length} />

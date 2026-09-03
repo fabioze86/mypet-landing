@@ -90,13 +90,18 @@ export const LANDING_STYLES = `
   .pa-cond-value { font-family: var(--pa-mono); font-weight: 600; color: var(--pa-green-dark); font-size: 17px; line-height: 1.3; margin: 0 0 8px; }
   .pa-cond-detail { color: var(--pa-muted); font-size: 13px; line-height: 1.55; margin: 0; }
 
-  /* education scroller */
-  .pa-edu-row { display: flex; gap: 14px; overflow-x: auto; padding: 22px 0 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .pa-edu-row::-webkit-scrollbar { display: none; }
-  .pa-edu-card { scroll-snap-align: start; flex: 0 0 260px; text-decoration: none; }
-  .pa-edu-card h3 { font-family: var(--pa-nunito); color: var(--pa-navy); font-size: 16px; margin: 0 0 6px; }
-  .pa-edu-card p { color: var(--pa-muted); font-size: 13px; line-height: 1.55; margin: 0; }
-  .pa-edu-mark { display: block; width: 34px; height: 34px; border-radius: 10px; background: var(--pa-green-soft); margin-bottom: 12px; }
+  /* steps */
+  .pa-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 32px; position: relative; }
+  .pa-steps::before { content: ""; position: absolute; top: 18px; left: 6%; right: 6%; height: 2px; background: var(--pa-line); z-index: 0; }
+  .pa-step { position: relative; z-index: 1; }
+  .pa-step-num { display: grid; place-items: center; width: 38px; height: 38px; border-radius: var(--pa-r-pill); background: var(--pa-navy); color: #fff; font-family: var(--pa-mono); font-weight: 600; font-size: 15px; }
+  .pa-step-icon { display: inline-flex; color: var(--pa-green-dark); margin: 14px 0 8px; }
+  .pa-step h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 15px; margin: 0 0 6px; }
+  .pa-step p { color: var(--pa-muted); font-size: 13px; line-height: 1.55; margin: 0; }
+  @media (max-width: 900px) {
+    .pa-steps { grid-template-columns: 1fr; gap: 22px; }
+    .pa-steps::before { top: 0; bottom: 0; left: 18px; right: auto; width: 2px; height: auto; }
+  }
 
   /* category tiles */
   .pa-cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; margin-top: 22px; }
