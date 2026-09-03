@@ -142,7 +142,7 @@ export const commercialFaq = [
   },
   {
     q: "Há outras regras de entrega que eu devo saber?",
-    a: "A entrega é feita no mesmo endereço do CNPJ do cadastro, dentro do horário comercial (7h às 18h); avise se a sua loja tem restrição. Em alguns estados a entrega gera taxa estadual (DAE), paga pelo cliente. Todos os itens dependem de disponibilidade em estoque no momento da separação.",
+    a: "A entrega é feita no mesmo endereço do CNPJ do cadastro, dentro do horário comercial (7h às 18h). Avise se a sua loja tem restrição. Em alguns estados a entrega gera taxa estadual (DAE), paga pelo cliente. Todos os itens dependem de disponibilidade em estoque no momento da separação.",
   },
   {
     q: "Posso ver o catálogo antes de criar o acesso?",
