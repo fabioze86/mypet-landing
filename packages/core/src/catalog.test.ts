@@ -238,8 +238,8 @@ describe("getChannelCategories", () => {
     expect(calls["from"]).toEqual(["channel_categories"]);
     expect(calls["eq"]).toContainEqual(["channel", "ffa_fabrica"]);
     expect(categories).toEqual([
-      { id: "cat-1", parentId: null, slug: "caes", name: "CÃ£es", level: 1, sortOrder: 0 },
-      { id: "cat-2", parentId: null, slug: "caes-racao", name: "RaÃ§Ã£o", level: 1, sortOrder: 1 },
+      { id: "cat-1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
+      { id: "cat-2", parentId: null, slug: "caes-racao", name: "Ração", level: 1, sortOrder: 1 },
     ]);
   });
 });
