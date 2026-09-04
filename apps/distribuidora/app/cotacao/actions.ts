@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { createServerSupabaseClient } from "@mypet/core/supabase-server";
 import { getBuyerById } from "@mypet/core/buyers-server";
 import { createOrder } from "@mypet/core/orders-server";
@@ -26,15 +27,21 @@ export async function finalizeQuote(items: CartItem[]): Promise<FinalizeQuoteRes
     return { ok: false, error: "Cadastro incompleto. Complete seu cadastro para continuar.", needsProfile: true };
   }
 
-  const { error } = await createOrder(supabase, {
-    buyerId: user.id,
-    channel: clientConfig.catalogChannel as Channel,
-    items,
+  after(async () => {
+    try {
+      const { error } = await createOrder(supabase, {
+        buyerId: user.id,
+        channel: clientConfig.catalogChannel as Channel,
+        items,
+      });
+      if (error) console.error("[quote] falha ao registrar pedido:", error);
+    } catch (error) {
+      console.error(
+        "[quote] erro inesperado ao registrar pedido:",
+        error instanceof Error ? error.message : "erro desconhecido",
+      );
+    }
   });
-
-  if (error) {
-    return { ok: false, error };
-  }
 
   return { ok: true, buyer: { nome: buyer.nome ?? "", empresa: buyer.empresa ?? "", whatsapp: buyer.whatsapp, cnpj: buyer.cnpj } };
 }

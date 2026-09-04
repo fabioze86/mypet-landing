@@ -64,22 +64,24 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     setSubmitting(true);
     setSubmitError("");
 
-    const whatsappWindow = window.open("", "_blank");
-
-    const result = await finalizeQuote(cart.items);
+    let result: Awaited<ReturnType<typeof finalizeQuote>>;
+    try {
+      result = await finalizeQuote(cart.items);
+    } catch {
+      setSubmitError("Não foi possível enviar agora. Tente novamente.");
+      setSubmitting(false);
+      return;
+    }
 
     if (!result.ok) {
       if (result.needsProfile) {
-        whatsappWindow?.close();
         router.push(`/completar-cadastro?next=${encodeURIComponent("/cotacao")}`);
         return;
       }
       if (result.needsAuth) {
-        whatsappWindow?.close();
         router.push(`/entrar?next=${encodeURIComponent("/cotacao")}`);
         return;
       }
-      whatsappWindow?.close();
       setSubmitError(result.error);
       setSubmitting(false);
       return;
@@ -87,11 +89,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
 
     const message = buildQuoteMessage(cart.items, { ...result.buyer, cnpj: result.buyer.cnpj ?? undefined });
     const whatsappLink = buildWhatsAppLink(WHATSAPP_NUMBER, message);
-    if (whatsappWindow) {
-      whatsappWindow.location.href = whatsappLink;
-    } else {
-      window.location.assign(whatsappLink);
-    }
+    window.location.assign(whatsappLink);
 
     clear();
     setSubmitted(true);
