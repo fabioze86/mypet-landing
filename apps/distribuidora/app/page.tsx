@@ -6,8 +6,6 @@ import { getProductCount, getCategories, getCategoriesWithProducts } from "@mype
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { AssistantSearch } from "@mypet/core/components/assistant-search";
 import { CategoryChips } from "@mypet/core/components/category-chips";
-import { CompactBanner } from "@mypet/core/components/compact-banner";
-import { MiniBannerStrip } from "@mypet/core/components/mini-banner-strip";
 import { clientConfig, SHOW_ONLY_CATEGORIES_WITH_PRODUCTS } from "@/client.config";
 import { canonicalUrl } from "@mypet/core/seo";
 
@@ -293,14 +291,8 @@ export default async function Home({
         <CategoryChips categories={categories} />
 
         {/* COMPACT BANNER — canal de banner é por site, desacoplado do catálogo (ffa_fabrica) */}
-        <Suspense fallback={<div style={{ height: 150, margin: "0 16px" }} />}>
-          <CompactBanner channel="distribuidora" palette={PALETTE} />
-        </Suspense>
 
         {/* MINI BANNER STRIP */}
-        <Suspense fallback={null}>
-          <MiniBannerStrip channel="distribuidora" />
-        </Suspense>
 
         {/* CATALOG */}
         <Suspense fallback={
