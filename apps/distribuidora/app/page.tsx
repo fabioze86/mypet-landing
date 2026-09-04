@@ -2,14 +2,14 @@ import { Suspense } from "react";
 import type { Palette } from "@mypet/core/theme";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
-import { getProductCount, getCategories, getCategoriesWithProducts } from "@mypet/core/catalog";
+import { getProductCount, getChannelCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { AssistantSearch } from "@mypet/core/components/assistant-search";
 import { CategoryChips } from "@mypet/core/components/category-chips";
 import { CompactBanner } from "@mypet/core/components/compact-banner";
 import { QuickNavIcons } from "@mypet/core/components/quick-nav-icons";
 import { MiniBannerStrip } from "@mypet/core/components/mini-banner-strip";
-import { clientConfig, SHOW_ONLY_CATEGORIES_WITH_PRODUCTS } from "@/client.config";
+import { clientConfig } from "@/client.config";
 import { canonicalUrl } from "@mypet/core/seo";
 
 const { palette: PALETTE } = clientConfig;
@@ -101,9 +101,7 @@ export default async function Home({
 }: {
   searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
 }) {
-  const categories = SHOW_ONLY_CATEGORIES_WITH_PRODUCTS
-    ? await getCategoriesWithProducts(clientConfig.catalogChannel)
-    : await getCategories();
+  const categories = await getChannelCategories(clientConfig.catalogChannel);
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
 

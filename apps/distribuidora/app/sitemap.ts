@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
-import { getSitemapProducts, getCategories } from "@mypet/core/catalog";
+import { getSitemapProducts, getChannelCategories } from "@mypet/core/catalog";
 import { clientConfig } from "@/client.config";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([
     getSitemapProducts(clientConfig.catalogChannel),
-    getCategories(),
+    getChannelCategories(clientConfig.catalogChannel),
   ]);
 
   const base = `https://${clientConfig.domain}`;

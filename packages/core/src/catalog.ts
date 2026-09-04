@@ -385,3 +385,58 @@ export async function getCategories(): Promise<CategoryNode[]> {
     sortOrder: row.sort_order,
   }));
 }
+
+/** Categorias de navegaÃ§Ã£o exclusivas de um canal, sem afetar a taxonomia global. */
+export async function getChannelCategories(channel: string): Promise<CategoryNode[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("catalog");
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("channel_categories")
+    .select("id, name, slug, sort_order")
+    .eq("channel", channel)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("[catalog] erro ao consultar categorias do canal:", error.message);
+    return [];
+  }
+
+  return ((data as { id: string; name: string; slug: string; sort_order: number }[]) ?? []).map((row) => ({
+    id: row.id,
+    parentId: null,
+    name: row.name,
+    slug: row.slug,
+    level: 1,
+    sortOrder: row.sort_order,
+  }));
+}
+
+export async function queryCatalogByChannelCategory(params: {
+  channel: string;
+  categoryId: string;
+  page: number;
+}): Promise<CatalogResult> {
+  const { channel, categoryId, page } = params;
+  const supabase = getHubClient();
+  const { from, to } = pageRange(page);
+  const { data, count, error } = await supabase
+    .from("products")
+    .select(`${CATALOG_SELECT}, product_channel_links!inner(channel), product_channel_categories!inner(channel, category_id)`, { count: "exact" })
+    .eq("status", "active")
+    .neq("product_role", "variant")
+    .eq("product_channel_links.channel", channel)
+    .eq("product_channel_prices.channel", channel)
+    .eq("product_channel_categories.channel", channel)
+    .eq("product_channel_categories.category_id", categoryId)
+    .order("name", { ascending: true })
+    .range(from, to);
+
+  if (error) {
+    console.error("[catalog] erro ao consultar categoria do canal:", error.message);
+    return { items: [], total: 0, page, totalPages: 1 };
+  }
+  const items = ((data as unknown as RawProductRow[]) ?? []).map(mapProduct);
+  return { items, total: count ?? 0, page, totalPages: totalPages(count ?? 0) };
+}

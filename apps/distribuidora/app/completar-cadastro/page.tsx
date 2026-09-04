@@ -3,11 +3,11 @@ import { redirect } from "next/navigation";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { CompleteSignupForm } from "@mypet/core/components/complete-signup-form";
-import { getCategories, getCategoriesWithProducts } from "@mypet/core/catalog";
+import { getChannelCategories } from "@mypet/core/catalog";
 import { createServerSupabaseClient } from "@mypet/core/supabase-server";
 import { getBuyerById } from "@mypet/core/buyers-server";
 import { safeNextPath } from "@mypet/core/auth-server";
-import { clientConfig, SHOW_ONLY_CATEGORIES_WITH_PRODUCTS } from "@/client.config";
+import { clientConfig } from "@/client.config";
 import { completeSignup } from "./actions";
 
 const { palette: PALETTE } = clientConfig;
@@ -40,9 +40,7 @@ export default async function CompletarCadastroPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const categories = SHOW_ONLY_CATEGORIES_WITH_PRODUCTS
-    ? await getCategoriesWithProducts(clientConfig.catalogChannel)
-    : await getCategories();
+  const categories = await getChannelCategories(clientConfig.catalogChannel);
 
   return (
     <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>

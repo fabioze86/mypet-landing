@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { getCategories, getCategoriesWithProducts } from "@mypet/core/catalog";
+import { getChannelCategories } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CategoryListing } from "@mypet/core/components/category-listing";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import type { Palette } from "@mypet/core/theme";
-import { clientConfig, SHOW_ONLY_CATEGORIES_WITH_PRODUCTS } from "@/client.config";
+import { clientConfig } from "@/client.config";
 import { canonicalUrl } from "@mypet/core/seo";
 
 const { palette: PALETTE } = clientConfig;
@@ -15,7 +15,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const categories = await getCategories();
+  const categories = await getChannelCategories(clientConfig.catalogChannel);
   const node = categories.find((c) => c.slug === slug);
   if (!node) return { title: `Categoria não encontrada — ${clientConfig.name}` };
 
@@ -37,9 +37,7 @@ export default async function CategoriaPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const categories = SHOW_ONLY_CATEGORIES_WITH_PRODUCTS
-    ? await getCategoriesWithProducts(clientConfig.catalogChannel)
-    : await getCategories();
+  const categories = await getChannelCategories(clientConfig.catalogChannel);
 
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
@@ -173,6 +171,7 @@ export default async function CategoriaPage({
               searchParams={searchParams}
               channel={clientConfig.catalogChannel}
               palette={PALETTE}
+              useChannelCategories
             />
           </Suspense>
         </main>
