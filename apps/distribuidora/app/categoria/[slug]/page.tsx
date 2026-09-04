@@ -195,13 +195,24 @@ async function CategoryListingResolved({
   searchParams,
   channel,
   palette,
+  useChannelCategories,
 }: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
   channel: string;
   palette: Palette;
+  useChannelCategories?: boolean;
 }) {
   const { slug } = await params;
   const { page } = await searchParams;
-  return <CategoryListing slug={slug} page={page} channel={channel} palette={palette} domain={clientConfig.domain} />;
+  return (
+    <CategoryListing
+      slug={slug}
+      page={page}
+      channel={channel}
+      palette={palette}
+      domain={clientConfig.domain}
+      useChannelCategories={useChannelCategories}
+    />
+  );
 }
