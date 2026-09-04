@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import Link from "next/link";
 import { useClientConfig } from "../theme";
 import { submitLead } from "../leads";
 
@@ -89,13 +90,25 @@ export function UnlockButton({
   );
 }
 
-export function PriceLockSlot({ priceLabel }: { priceLabel?: string | null }) {
+export function PriceLockSlot({
+  priceLabel,
+  category,
+}: {
+  priceLabel?: string | null;
+  category?: { name: string; slug: string } | null;
+}) {
   const { palette } = useClientConfig();
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 10, color: palette.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>Atacado B2B</div>
+      {category && (
+        <Link
+          href={`/categoria/${category.slug}`}
+          style={{ display: "inline-block", fontSize: 10, color: palette.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", textDecoration: "none", marginBottom: 2 }}
+        >
+          {category.name}
+        </Link>
+      )}
       <div style={{ fontSize: 18, fontWeight: 900, color: palette.pink }}>{priceLabel ?? "Preço sob consulta"}</div>
-      <div style={{ fontSize: 11, color: palette.gray400 }}>{priceLabel ? "Preço do canal distribuidora" : "Solicite sua cotação"}</div>
     </div>
   );
 }

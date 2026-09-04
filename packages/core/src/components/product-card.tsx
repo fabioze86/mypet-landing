@@ -36,11 +36,6 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
               {product.badge.label}
             </span>
           )}
-          {product.brand && (
-            <span style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,255,255,0.92)", color: palette.gray600, fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 100, letterSpacing: "0.04em" }}>
-              {product.brand.toUpperCase()}
-            </span>
-          )}
         </div>
         <div style={{ padding: "10px 12px 0" }}>
           {product.sku && (
@@ -73,7 +68,7 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
             </div>
           </div>
         ) : (
-          <PriceLockSlot priceLabel={product.priceLabel} />
+          <PriceLockSlot priceLabel={product.priceLabel} category={product.category} />
         )}
         <AddToCartControl
           product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img }}

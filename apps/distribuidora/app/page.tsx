@@ -7,7 +7,6 @@ import { SiteNav } from "@mypet/core/components/site-nav";
 import { AssistantSearch } from "@mypet/core/components/assistant-search";
 import { CategoryChips } from "@mypet/core/components/category-chips";
 import { CompactBanner } from "@mypet/core/components/compact-banner";
-import { QuickNavIcons } from "@mypet/core/components/quick-nav-icons";
 import { MiniBannerStrip } from "@mypet/core/components/mini-banner-strip";
 import { clientConfig, SHOW_ONLY_CATEGORIES_WITH_PRODUCTS } from "@/client.config";
 import { canonicalUrl } from "@mypet/core/seo";
@@ -15,20 +14,20 @@ import { canonicalUrl } from "@mypet/core/seo";
 const { palette: PALETTE } = clientConfig;
 
 const STATS_STATIC = [
-  { icon: "🏪", value: "10.000+", label: "Pet shops ativos" },
+  { icon: "🏪", value: "18 anos", label: "No Mercado Pet" },
   { icon: "📦", value: "…", label: "SKUs no catálogo" },
-  { icon: "🚚", value: "48h", label: "Entrega média SP" },
-  { icon: "✅", value: "R$0", label: "Taxa de cadastro" },
+  { icon: "🚚", value: "99,90", label: "Entrega grátis SP" },
+  { icon: "✅", value: "3x", label: "Sem Juros no Cartão" },
 ];
 
 async function StatsCount({ channel }: { channel: string }) {
   const total = await getProductCount(channel);
   const totalLabel = `${total.toLocaleString("pt-BR")}+`;
   const STATS = [
-    { icon: "🏪", value: "10.000+", label: "Pet shops ativos" },
+    { icon: "🏪", value: "18 anos", label: "No Mercado Pet" },
     { icon: "📦", value: totalLabel, label: "SKUs no catálogo" },
-    { icon: "🚚", value: "48h", label: "Entrega média SP" },
-    { icon: "✅", value: "R$0", label: "Taxa de cadastro" },
+    { icon: "🚚", value: "99,90", label: "Entrega grátis SP" },
+    { icon: "✅", value: "3x", label: "Sem Juros no Cartão" },
   ];
   return (
     <>
@@ -298,9 +297,6 @@ export default async function Home({
           <CompactBanner channel="distribuidora" palette={PALETTE} />
         </Suspense>
 
-        {/* QUICK NAV ICONS */}
-        <QuickNavIcons palette={PALETTE} />
-
         {/* MINI BANNER STRIP */}
         <Suspense fallback={null}>
           <MiniBannerStrip channel="distribuidora" />
@@ -349,7 +345,7 @@ export default async function Home({
           background: `linear-gradient(135deg, ${PALETTE.pink} 0%, ${PALETTE.pinkDark} 100%)`,
           padding: "44px 24px",
         }}>
-          <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
             <div style={{
               width: 56, height: 56, borderRadius: "50%",
               background: "rgba(255,255,255,0.15)",
@@ -357,11 +353,19 @@ export default async function Home({
               fontSize: 26, margin: "0 auto 16px",
             }}>🐾</div>
             <h2 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.white, marginBottom: 12 }}>
-              Pronto para comprar no atacado?
+              Um mix pensado para a sua loja vender mais
             </h2>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.82)", marginBottom: 28, lineHeight: 1.6 }}>
-              Mais de 10.000 pet shops já compram pela My Pet Brasil. Cadastro gratuito, sem burocracia e cotações sob consulta.
-            </p>
+            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.88)", lineHeight: 1.65, textAlign: "left" }}>
+              <p style={{ marginBottom: 14 }}>
+                Reponha o estoque com praticidade: linha de fabricação própria, kits prontos para revenda e produtos de giro para pet shops, banho e tosa.
+              </p>
+              <p style={{ marginBottom: 14 }}>
+                Coleiras, peitorais, guias, laços, bandanas e camas para ampliar seu mix, manter os itens essenciais disponíveis e buscar uma margem mais saudável em cada venda.
+              </p>
+              <p style={{ marginBottom: 0 }}>
+                Conte com entrega em todo o Brasil calculada pelo CEP, campanhas de frete selecionadas, até 3x sem juros no cartão ou desconto no Pix, e atendimento profissional de segunda a sexta. Monte seu pedido com kits de entrada, reposições e itens de alta saída em um só lugar.
+              </p>
+            </div>
           </div>
         </section>
 
