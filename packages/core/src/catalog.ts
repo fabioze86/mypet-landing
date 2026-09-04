@@ -437,6 +437,6 @@ export async function queryCatalogByChannelCategory(params: {
     console.error("[catalog] erro ao consultar categoria do canal:", error.message);
     return { items: [], total: 0, page, totalPages: 1 };
   }
-  const items = ((data as unknown as RawProductRow[]) ?? []).map(mapProduct);
+  const items = ((data as unknown as RawProductRow[]) ?? []).map((row) => mapProduct(row));
   return { items, total: count ?? 0, page, totalPages: totalPages(count ?? 0) };
 }
