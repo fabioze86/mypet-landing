@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getCatalog, getCategories } from "../catalog";
+import { getCatalog, getCategories, getChannelCategories, queryCatalogByChannelCategory } from "../catalog";
 import { parsePage, collectCategorySubtreeIds, getCategoryPath } from "../catalog-utils";
 import { ProductCard } from "./product-card";
 import type { Palette } from "../theme";
@@ -15,15 +15,17 @@ export async function CategoryListing({
   channel,
   palette,
   domain,
+  useChannelCategories = false,
 }: {
   slug: string;
   page?: string;
   channel: string;
   palette: Palette;
   domain: string;
+  useChannelCategories?: boolean;
 }) {
   const page = parsePage(pageRaw);
-  const categories = await getCategories();
+  const categories = useChannelCategories ? await getChannelCategories(channel) : await getCategories();
   const node = categories.find((c) => c.slug === slug);
 
   if (!node) {
@@ -37,7 +39,9 @@ export async function CategoryListing({
   ];
   const children = categories.filter((c) => c.parentId === node.id);
   const subtreeIds = collectCategorySubtreeIds(categories, node.id);
-  const catalog = await getCatalog({ categoryId: subtreeIds, page, channel });
+  const catalog = useChannelCategories
+    ? await queryCatalogByChannelCategory({ channel, categoryId: node.id, page })
+    : await getCatalog({ categoryId: subtreeIds, page, channel });
   const [categoryBanner] = await getBanners(channel as Channel, "categoria", node.id);
 
   return (

@@ -106,7 +106,7 @@ vi.mock("./supabase", () => {
   };
 });
 
-import { queryCatalog, getCategories, getProductById } from "./catalog";
+import { queryCatalog, getCategories, getProductById, getChannelCategories, queryCatalogByChannelCategory } from "./catalog";
 import * as catalog from "./catalog";
 
 beforeEach(() => {
@@ -228,6 +228,30 @@ describe("getCategories", () => {
       { id: "cat-1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
       { id: "cat-2", parentId: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sortOrder: 1 },
     ]);
+  });
+});
+
+describe("getChannelCategories", () => {
+  it("consulta somente as categorias do canal e as mapeia como categorias principais", async () => {
+    const categories = await getChannelCategories("ffa_fabrica");
+
+    expect(calls["from"]).toEqual(["channel_categories"]);
+    expect(calls["eq"]).toContainEqual(["channel", "ffa_fabrica"]);
+    expect(categories).toEqual([
+      { id: "cat-1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
+      { id: "cat-2", parentId: null, slug: "caes-racao", name: "Ração", level: 1, sortOrder: 1 },
+    ]);
+  });
+});
+
+describe("queryCatalogByChannelCategory", () => {
+  it("restringe a consulta ao produto associado Ã  categoria e ao canal", async () => {
+    const result = await queryCatalogByChannelCategory({ channel: "ffa_fabrica", categoryId: "channel-cat-1", page: 1 });
+
+    expect(calls["eq"]).toContainEqual(["product_channel_categories.channel", "ffa_fabrica"]);
+    expect(calls["eq"]).toContainEqual(["product_channel_categories.category_id", "channel-cat-1"]);
+    expect(selectContains("product_channel_categories!inner")).toBe(true);
+    expect(result.total).toBe(50);
   });
 });
 
