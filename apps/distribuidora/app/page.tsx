@@ -4,7 +4,6 @@ import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { getProductCount, getChannelCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
-import { AssistantSearch } from "@mypet/core/components/assistant-search";
 import { CategoryChips } from "@mypet/core/components/category-chips";
 import { CompactBanner } from "@mypet/core/components/compact-banner";
 import { QuickNavIcons } from "@mypet/core/components/quick-nav-icons";
@@ -306,11 +305,6 @@ export default async function Home({
         }>
           <DynamicCatalog searchParams={searchParams} channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
         </Suspense>
-
-        {/* ASSISTENTE DE BUSCA COM IA */}
-        <div style={{ padding: "0 24px", marginTop: 8 }}>
-          <AssistantSearch channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
-        </div>
 
         {/* STATS */}
         <section style={{ background: PALETTE.white, borderBottom: `1px solid ${PALETTE.gray200}`, marginTop: 32 }}>

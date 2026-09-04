@@ -18,6 +18,12 @@ test("home da distribuidora remove atalhos e mostra os novos diferenciais", asyn
   assert.match(source, /kits.*revenda/i);
 });
 
+test("home da distribuidora não expõe temporariamente o assistente de IA", async () => {
+  const source = await readFile(new URL("apps/distribuidora/app/page.tsx", root), "utf8");
+
+  assert.doesNotMatch(source, /<AssistantSearch\b/);
+});
+
 test("a configuração de ambiente documenta o destino da cotação", async () => {
   const envExample = await readFile(new URL("apps/distribuidora/.env.example", root), "utf8");
   const quoteContent = await readFile(new URL("apps/distribuidora/app/cotacao/cotacao-content.tsx", root), "utf8");
