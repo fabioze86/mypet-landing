@@ -8,7 +8,7 @@ import { buildQuoteMessage, buildWhatsAppLink } from "@mypet/core/whatsapp";
 import type { Palette } from "@mypet/core/theme";
 import { finalizeQuote } from "./actions";
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5511981030532";
 
 export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   const { cart, removeItem, updateQty, clear } = useCart();
