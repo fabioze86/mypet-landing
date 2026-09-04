@@ -21,7 +21,6 @@ export default async function DistribuidoraCategoriasPage() {
       .eq("status", "active")
       .neq("product_role", "variant")
       .eq("product_channel_links.channel", Channel)
-      .eq("product_channel_categories.channel", Channel)
       .order("name"),
   ]);
   const categories = categoriesResult;
@@ -35,7 +34,9 @@ export default async function DistribuidoraCategoriasPage() {
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-3">Produto</th><th className="px-4 py-3">ReferÃªncia</th><th className="px-4 py-3">Categoria</th></tr></thead>
           <tbody>
-            {products.map((product) => {
+            {products.length === 0 ? (
+              <tr><td colSpan={3} className="px-4 py-8 text-center text-slate-500">Nenhum produto ativo foi encontrado no canal FFA Fábrica.</td></tr>
+            ) : products.map((product) => {
               const current = product.product_channel_categories?.[0]?.category_id ?? "";
               return <tr key={product.id} className="border-t border-slate-100"><td className="px-4 py-3 font-medium text-slate-800">{product.name}</td><td className="px-4 py-3 text-slate-500">{product.reference ?? "â€”"}</td><td className="px-4 py-3"><form action={assignDistribuidoraCategory} className="flex gap-2"><input type="hidden" name="productId" value={product.id} /><select name="categoryId" defaultValue={current} className="rounded border border-slate-300 px-2 py-1"><option value="">Sem categoria</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select><button type="submit" className="rounded bg-slate-800 px-3 py-1 text-white">Salvar</button></form></td></tr>;
             })}
