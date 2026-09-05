@@ -1,18 +1,12 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Palette } from "@mypet/core/theme";
 
 const mocks = vi.hoisted(() => ({
-  clear: vi.fn(),
-  finalizeQuote: vi.fn(),
-  push: vi.fn(),
   removeItem: vi.fn(),
   updateQty: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.push }),
-}));
 vi.mock("@mypet/core/components/cart-provider", () => ({
   useCart: () => ({
     cart: {
@@ -20,13 +14,9 @@ vi.mock("@mypet/core/components/cart-provider", () => ({
         { id: "p1", name: "Coleira", qty: 2, img: "/coleira.jpg", brand: "MadPet", sku: "COL-1" },
       ],
     },
-    clear: mocks.clear,
     removeItem: mocks.removeItem,
     updateQty: mocks.updateQty,
   }),
-}));
-vi.mock("./actions", () => ({
-  finalizeQuote: (...args: unknown[]) => mocks.finalizeQuote(...args),
 }));
 
 import { CotacaoContent } from "./cotacao-content";
@@ -49,17 +39,26 @@ beforeEach(() => {
 });
 
 describe("CotacaoContent", () => {
-  it("não abre about:blank e libera o botão quando a Server Action falha", async () => {
-    mocks.finalizeQuote.mockRejectedValue(new Error("falha de rede"));
+  it("abre diretamente o WhatsApp com a cotação em texto, sem autenticação", () => {
     const open = vi.spyOn(window, "open").mockReturnValue(null);
 
     render(<CotacaoContent palette={palette} />);
-    fireEvent.click(screen.getByRole("button", { name: /Finalizar/i }));
+    fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { value: "Fabio" } });
+    fireEvent.change(screen.getByPlaceholderText("Nome do pet shop / empresa"), { target: { value: "My Pet" } });
+    fireEvent.change(screen.getByPlaceholderText("WhatsApp com DDD"), { target: { value: "11999999999" } });
+    fireEvent.change(screen.getByPlaceholderText("CNPJ (opcional)"), { target: { value: "12.345.678/0001-90" } });
+    fireEvent.click(screen.getByRole("button", { name: /Enviar cotação pelo WhatsApp/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText("Não foi possível enviar agora. Tente novamente.")).toBeInTheDocument();
-    });
-    expect(screen.getByRole("button", { name: /Finalizar/i })).toBeEnabled();
-    expect(open).not.toHaveBeenCalled();
+    expect(open).toHaveBeenCalledOnce();
+    const [url, target] = open.mock.calls[0];
+    expect(target).toBe("_self");
+    expect(url).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
+
+    const message = decodeURIComponent(String(url).split("?text=")[1]);
+    expect(message).toContain("Coleira (SKU COL-1) — Qtd: 2");
+    expect(message).toContain("Nome: Fabio");
+    expect(message).toContain("Empresa: My Pet");
+    expect(message).toContain("WhatsApp: 11999999999");
+    expect(message).toContain("CNPJ: 12.345.678/0001-90");
   });
 });

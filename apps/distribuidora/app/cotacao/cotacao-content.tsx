@@ -2,42 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@mypet/core/components/cart-provider";
 import { buildQuoteMessage, buildWhatsAppLink } from "@mypet/core/whatsapp";
 import type { Palette } from "@mypet/core/theme";
-import { finalizeQuote } from "./actions";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5511981030532";
 
 export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
-  const { cart, removeItem, updateQty, clear } = useCart();
-  const router = useRouter();
-  const [submitting, setSubmitting] = useState(false);
+  const { cart, removeItem, updateQty } = useCart();
+  const [form, setForm] = useState({ nome: "", empresa: "", whatsapp: "", cnpj: "" });
   const [submitError, setSubmitError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-
-  if (submitted) {
-    return (
-      <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 32, textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-        <h2 style={{ fontSize: 20, fontWeight: 900, color: PALETTE.navy, marginBottom: 8 }}>
-          Cotação enviada!
-        </h2>
-        <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
-          Abrimos o WhatsApp com os itens da sua cotação. Nossa equipe vai te responder por lá.
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-          <Link href="/" className="cta-primary" style={{ textDecoration: "none", display: "inline-block" }}>
-            Voltar ao catálogo
-          </Link>
-          <Link href="/pedidos" className="back-link" style={{ display: "inline-flex", alignItems: "center" }}>
-            Ver meus pedidos →
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   if (cart.items.length === 0) {
     return (
@@ -56,44 +30,16 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     );
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     if (!WHATSAPP_NUMBER) {
       setSubmitError("Não foi possível abrir o WhatsApp agora. Tente novamente mais tarde.");
       return;
     }
-    setSubmitting(true);
     setSubmitError("");
-
-    let result: Awaited<ReturnType<typeof finalizeQuote>>;
-    try {
-      result = await finalizeQuote(cart.items);
-    } catch {
-      setSubmitError("Não foi possível enviar agora. Tente novamente.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (!result.ok) {
-      if (result.needsProfile) {
-        router.push(`/completar-cadastro?next=${encodeURIComponent("/cotacao")}`);
-        return;
-      }
-      if (result.needsAuth) {
-        router.push(`/entrar?next=${encodeURIComponent("/cotacao")}`);
-        return;
-      }
-      setSubmitError(result.error);
-      setSubmitting(false);
-      return;
-    }
-
-    const message = buildQuoteMessage(cart.items, { ...result.buyer, cnpj: result.buyer.cnpj ?? undefined });
+    const message = buildQuoteMessage(cart.items, form);
     const whatsappLink = buildWhatsAppLink(WHATSAPP_NUMBER, message);
-    window.location.assign(whatsappLink);
-
-    clear();
-    setSubmitted(true);
-    setSubmitting(false);
+    window.open(whatsappLink, "_self");
   };
 
   return (
@@ -152,12 +98,21 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       </div>
 
       <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 24 }}>
-        {submitError && (
-          <p style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 12, textAlign: "center" }}>{submitError}</p>
-        )}
-        <button type="button" className="form-submit" disabled={submitting} onClick={handleSubmit}>
-          {submitting ? "Enviando..." : "Finalizar cotação →"}
-        </button>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: PALETTE.navy, marginBottom: 16 }}>
+          Seus dados para a cotação
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <input className="form-input" placeholder="Seu nome" required value={form.nome} onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))} />
+          <input className="form-input" placeholder="Nome do pet shop / empresa" required value={form.empresa} onChange={(event) => setForm((current) => ({ ...current, empresa: event.target.value }))} />
+          <input className="form-input" placeholder="WhatsApp com DDD" required value={form.whatsapp} onChange={(event) => setForm((current) => ({ ...current, whatsapp: event.target.value }))} />
+          <input className="form-input" placeholder="CNPJ (opcional)" value={form.cnpj} onChange={(event) => setForm((current) => ({ ...current, cnpj: event.target.value }))} />
+          {submitError && (
+            <p style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 8, textAlign: "center" }}>{submitError}</p>
+          )}
+          <button type="submit" className="form-submit">
+            Enviar cotação pelo WhatsApp →
+          </button>
+        </form>
       </div>
     </>
   );

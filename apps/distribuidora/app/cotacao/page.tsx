@@ -58,6 +58,19 @@ export default async function CotacaoPage() {
           width: 100%;
           max-width: 440px;
         }
+        .form-input {
+          width: 100%;
+          padding: 12px 16px;
+          border: 1.5px solid ${PALETTE.gray200};
+          border-radius: 10px;
+          font-family: var(--font-nunito-sans), sans-serif;
+          font-size: 15px;
+          color: ${PALETTE.gray800};
+          outline: none;
+          transition: border-color 0.2s;
+          margin-bottom: 12px;
+        }
+        .form-input:focus { border-color: ${PALETTE.pink}; }
         .form-submit {
           width: 100%;
           padding: 14px;
