@@ -127,3 +127,75 @@ export async function toggleCampaignActive(formData: FormData): Promise<void> {
   }
   updateTag("offers");
 }
+
+const AddItemSchema = z.object({
+  campaignId: z.string().uuid(),
+  productReference: z.string().trim().min(1, "Informe a referência (CPRO/SKU) do produto."),
+  promotionalPrice: z.coerce.number().positive("O preço promocional precisa ser maior que zero."),
+  minQuantity: z.coerce.number().int().min(1).default(1),
+  sortOrder: z.coerce.number().int().default(0),
+});
+
+const RemoveItemSchema = z.object({ id: z.string().uuid() });
+
+export type AddItemFormState = { error?: string } | undefined;
+
+export async function addCampaignItem(_state: AddItemFormState, formData: FormData): Promise<AddItemFormState> {
+  const { supabase } = await requireAdminSession();
+
+  const parsed = AddItemSchema.safeParse({
+    campaignId: formData.get("campaignId"),
+    productReference: formData.get("productReference"),
+    promotionalPrice: formData.get("promotionalPrice"),
+    minQuantity: formData.get("minQuantity") || 1,
+    sortOrder: formData.get("sortOrder") || 0,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const { data: campaign } = await supabase
+    .from("offer_campaigns")
+    .select("channel")
+    .eq("id", parsed.data.campaignId)
+    .single();
+  if (!campaign) return { error: "Campanha não encontrada." };
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("id, product_channel_links!inner(channel)")
+    .eq("reference", parsed.data.productReference)
+    .eq("product_channel_links.channel", campaign.channel)
+    .maybeSingle();
+  if (!product) return { error: "Produto não encontrado nesse canal (confira a referência/CPRO)." };
+
+  const { error } = await supabase.from("offer_campaign_items").insert({
+    campaign_id: parsed.data.campaignId,
+    product_id: product.id,
+    promotional_price: parsed.data.promotionalPrice,
+    min_quantity: parsed.data.minQuantity,
+    sort_order: parsed.data.sortOrder,
+  });
+
+  if (error) {
+    console.error("[admin/ofertas] erro ao adicionar item:", error.message);
+    if (error.code === "23505") return { error: "Esse produto já está nessa campanha." };
+    return { error: "Não foi possível adicionar o item." };
+  }
+
+  updateTag("offers");
+  return undefined;
+}
+
+export async function removeCampaignItem(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdminSession();
+  const parsed = RemoveItemSchema.safeParse({ id: formData.get("id") });
+  if (!parsed.success) return;
+
+  const { error } = await supabase.from("offer_campaign_items").delete().eq("id", parsed.data.id);
+  if (error) {
+    console.error("[admin/ofertas] erro ao remover item:", error.message);
+    return;
+  }
+  updateTag("offers");
+}
