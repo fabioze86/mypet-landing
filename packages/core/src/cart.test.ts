@@ -55,3 +55,28 @@ describe("totalItems", () => {
     expect(totalItems(emptyCart)).toBe(0);
   });
 });
+
+it("preserva os campos opcionais de campanha ao adicionar um item", () => {
+  const cart = addItem(
+    { items: [] },
+    {
+      id: "p1",
+      name: "Kit 11 vestidos",
+      sku: "SKU-1",
+      brand: null,
+      img: "/img.jpg",
+      campaignId: "camp-1",
+      campaignSlug: "kit-11-vestidos",
+      unitPrice: 199,
+      listPrice: 299,
+    },
+    2,
+  );
+  expect(cart.items[0]).toMatchObject({
+    campaignId: "camp-1",
+    campaignSlug: "kit-11-vestidos",
+    unitPrice: 199,
+    listPrice: 299,
+    qty: 2,
+  });
+});

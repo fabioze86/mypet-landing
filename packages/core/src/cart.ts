@@ -5,6 +5,10 @@ export type CartItem = {
   brand: string | null;
   img: string;
   qty: number;
+  campaignId?: string;
+  campaignSlug?: string;
+  unitPrice?: number;
+  listPrice?: number;
 };
 
 export type Cart = { items: CartItem[] };
