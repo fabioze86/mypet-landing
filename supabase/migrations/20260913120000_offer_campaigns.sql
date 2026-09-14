@@ -4,7 +4,7 @@
 
 create table public.offer_campaigns (
   id uuid primary key default gen_random_uuid(),
-  channel public.channel not null,
+  channel public.channel_kind not null,
   slug text not null,
   title text,
   subtitle text,
