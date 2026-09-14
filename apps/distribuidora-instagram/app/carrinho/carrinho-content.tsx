@@ -27,17 +27,17 @@ export default function CarrinhoContent() {
       <h1 style={{ fontSize: 22, fontWeight: 900, color: palette.navy, marginBottom: 20 }}>Seu carrinho</h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {cart.items.map((item) => (
-          <div key={item.id} style={{ background: palette.white, border: `1px solid ${palette.gray200}`, borderRadius: 12, padding: 16, display: "flex", justifyContent: "space-between", gap: 12 }}>
+          <div key={`${item.id}:${item.campaignId ?? ""}`} style={{ background: palette.white, border: `1px solid ${palette.gray200}`, borderRadius: 12, padding: 16, display: "flex", justifyContent: "space-between", gap: 12 }}>
             <div>
               <p style={{ fontSize: 14, fontWeight: 800, color: palette.navy }}>{item.name}</p>
               <p style={{ fontSize: 13, color: palette.gray600 }}>
                 {item.unitPrice != null ? formatPrice(item.unitPrice) : "Preço sob consulta"} × {item.qty}
               </p>
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                <button type="button" onClick={() => updateQty(item.id, item.qty - 1)} style={{ border: `1px solid ${palette.gray200}`, borderRadius: 6, background: "transparent", cursor: "pointer" }}>−</button>
+                <button type="button" onClick={() => updateQty(item.id, item.qty - 1, item.campaignId)} style={{ border: `1px solid ${palette.gray200}`, borderRadius: 6, background: "transparent", cursor: "pointer" }}>−</button>
                 <span style={{ fontSize: 13, fontWeight: 700 }}>{item.qty}</span>
-                <button type="button" onClick={() => updateQty(item.id, item.qty + 1)} style={{ border: `1px solid ${palette.gray200}`, borderRadius: 6, background: "transparent", cursor: "pointer" }}>+</button>
-                <button type="button" onClick={() => removeItem(item.id)} style={{ marginLeft: 12, border: "none", background: "transparent", color: palette.orange, cursor: "pointer", fontSize: 13 }}>Remover</button>
+                <button type="button" onClick={() => updateQty(item.id, item.qty + 1, item.campaignId)} style={{ border: `1px solid ${palette.gray200}`, borderRadius: 6, background: "transparent", cursor: "pointer" }}>+</button>
+                <button type="button" onClick={() => removeItem(item.id, item.campaignId)} style={{ marginLeft: 12, border: "none", background: "transparent", color: palette.orange, cursor: "pointer", fontSize: 13 }}>Remover</button>
               </div>
             </div>
           </div>

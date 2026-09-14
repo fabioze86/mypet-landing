@@ -100,6 +100,45 @@ describe("addItem com campanhas diferentes", () => {
   });
 });
 
+describe("removeItem/updateQty com campanhas diferentes (mesmo id, campaignId distintos)", () => {
+  const cartComDuasLinhas: Cart = {
+    items: [
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-1", campaignSlug: "camp-1-slug", unitPrice: 199, listPrice: 299, qty: 2 },
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-2", campaignSlug: "camp-2-slug", unitPrice: 249, listPrice: 299, qty: 5 },
+    ],
+  };
+
+  it("removeItem com campaignId remove só a linha daquela campanha, mantendo a linha irmã intacta", () => {
+    const cart = removeItem(cartComDuasLinhas, "p1", "camp-1");
+    expect(cart.items).toHaveLength(1);
+    expect(cart.items[0]).toMatchObject({ campaignId: "camp-2", qty: 5 });
+  });
+
+  it("updateQty com campaignId altera só a linha daquela campanha, preservando a qty da linha irmã", () => {
+    const cart = updateQty(cartComDuasLinhas, "p1", 9, "camp-1");
+    expect(cart.items).toHaveLength(2);
+    expect(cart.items.find((i) => i.campaignId === "camp-1")).toMatchObject({ qty: 9 });
+    expect(cart.items.find((i) => i.campaignId === "camp-2")).toMatchObject({ qty: 5 });
+  });
+
+  it("updateQty com campaignId e qty <= 0 remove só a linha daquela campanha", () => {
+    const cart = updateQty(cartComDuasLinhas, "p1", 0, "camp-1");
+    expect(cart.items).toHaveLength(1);
+    expect(cart.items[0]).toMatchObject({ campaignId: "camp-2" });
+  });
+
+  it("removeItem sem campaignId continua removendo todas as linhas com aquele id (comportamento existente)", () => {
+    const cart = removeItem(cartComDuasLinhas, "p1");
+    expect(cart.items).toEqual([]);
+  });
+
+  it("updateQty sem campaignId continua sobrescrevendo a qty de todas as linhas com aquele id (comportamento existente)", () => {
+    const cart = updateQty(cartComDuasLinhas, "p1", 7);
+    expect(cart.items).toHaveLength(2);
+    expect(cart.items.every((i) => i.qty === 7)).toBe(true);
+  });
+});
+
 it("preserva os campos opcionais de campanha ao adicionar um item", () => {
   const cart = addItem(
     { items: [] },

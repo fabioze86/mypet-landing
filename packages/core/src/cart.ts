@@ -37,14 +37,25 @@ export function addItem(cart: Cart, product: Omit<CartItem, "qty">, qty: number)
   return { items: [...cart.items, { ...product, qty }] };
 }
 
-export function removeItem(cart: Cart, id: string): Cart {
-  return { items: cart.items.filter((item) => item.id !== id) };
+// `campaignId` é opcional: quando informado, a operação afeta só a linha
+// que bate `id` E `campaignId` (mesma regra de `sameCartLine`); quando
+// omitido, mantém o comportamento histórico de afetar todas as linhas com
+// aquele `id` (compatível com chamadores que não conhecem campanhas, ex.
+// apps/mypet/app/cotacao/cotacao-content.tsx).
+export function removeItem(cart: Cart, id: string, campaignId?: string): Cart {
+  return {
+    items: cart.items.filter((item) =>
+      campaignId !== undefined ? !sameCartLine(item, id, campaignId) : item.id !== id
+    ),
+  };
 }
 
-export function updateQty(cart: Cart, id: string, qty: number): Cart {
-  if (qty <= 0) return removeItem(cart, id);
+export function updateQty(cart: Cart, id: string, qty: number, campaignId?: string): Cart {
+  if (qty <= 0) return removeItem(cart, id, campaignId);
   return {
-    items: cart.items.map((item) => (item.id === id ? { ...item, qty } : item)),
+    items: cart.items.map((item) =>
+      (campaignId !== undefined ? sameCartLine(item, id, campaignId) : item.id === id) ? { ...item, qty } : item
+    ),
   };
 }
 

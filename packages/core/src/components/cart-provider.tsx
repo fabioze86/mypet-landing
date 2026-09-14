@@ -55,8 +55,8 @@ function getServerSnapshot(): Cart {
 type CartContextValue = {
   cart: Cart;
   addItem: (product: Omit<CartItem, "qty">, qty: number) => void;
-  removeItem: (id: string) => void;
-  updateQty: (id: string, qty: number) => void;
+  removeItem: (id: string, campaignId?: string) => void;
+  updateQty: (id: string, qty: number, campaignId?: string) => void;
   totalItems: number;
   clear: () => void;
 };
@@ -76,12 +76,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     writeCart(addItemPure(readCart(), product, qty));
   }, []);
 
-  const removeItemFn = useCallback((id: string) => {
-    writeCart(removeItemPure(readCart(), id));
+  const removeItemFn = useCallback((id: string, campaignId?: string) => {
+    writeCart(removeItemPure(readCart(), id, campaignId));
   }, []);
 
-  const updateQtyFn = useCallback((id: string, qty: number) => {
-    writeCart(updateQtyPure(readCart(), id, qty));
+  const updateQtyFn = useCallback((id: string, qty: number, campaignId?: string) => {
+    writeCart(updateQtyPure(readCart(), id, qty, campaignId));
   }, []);
 
   const clearFn = useCallback(() => {
