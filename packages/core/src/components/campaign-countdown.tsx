@@ -36,6 +36,15 @@ function tick() {
 function subscribeToClock(listener: Listener) {
   listeners.add(listener);
   if (!intervalId) {
+    // Sem isso, o primeiro subscriber depois de um período sem nenhum
+    // countdown ativo herda o `currentNow` congelado desde a última vez que
+    // o intervalo rodou, e só vê um valor atualizado no próximo tick (até
+    // 1s depois). Atualiza o valor compartilhado já aqui, na assinatura —
+    // `useSyncExternalStore` detecta sozinho a mudança de snapshot logo
+    // após `subscribe` e re-renderiza se preciso, sem precisar notificar os
+    // listeners manualmente — em vez de esperar o primeiro tick do novo
+    // `setInterval`.
+    currentNow = Date.now();
     intervalId = setInterval(tick, 1000);
   }
   return () => {
