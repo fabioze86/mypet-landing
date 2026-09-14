@@ -29,7 +29,7 @@ export const FEATURE_REGISTRY: FeatureDefinition[] = [
   },
 ];
 
-export type SiteId = "mypet" | "distribuidora" | "madpet" | "azpetshop";
+export type SiteId = "mypet" | "distribuidora" | "madpet" | "azpetshop" | "distribuidoraInstagram";
 
 export const SITES: Record<SiteId, { name: string; features: Features }> = {
   mypet: {
@@ -46,6 +46,10 @@ export const SITES: Record<SiteId, { name: string; features: Features }> = {
   },
   azpetshop: {
     name: "AZ Pet Shop",
+    features: { commerce: "cart" },
+  },
+  distribuidoraInstagram: {
+    name: "Distribuidora Pet Shop",
     features: { commerce: "cart" },
   },
 };
