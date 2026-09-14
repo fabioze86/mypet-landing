@@ -2,9 +2,9 @@ import { describe, it, expect } from "vitest";
 import { SITES, FEATURE_REGISTRY, showsListPrice, type SiteId, type Features } from "./features";
 
 describe("features registry", () => {
-  it("declara os 4 sites esperados", () => {
+  it("declara os 5 sites esperados", () => {
     const ids = Object.keys(SITES).sort();
-    expect(ids).toEqual(["azpetshop", "distribuidora", "madpet", "mypet"]);
+    expect(ids).toEqual(["azpetshop", "distribuidora", "distribuidoraInstagram", "madpet", "mypet"]);
   });
 
   it("cada site preenche todas as chaves de Features", () => {
@@ -28,11 +28,12 @@ describe("features registry", () => {
     }
   });
 
-  it("apps B2B em cotação; azpetshop em carrinho", () => {
+  it("apps B2B em cotação; azpetshop e distribuidoraInstagram em carrinho", () => {
     expect(SITES.mypet.features.commerce).toBe("quote");
     expect(SITES.distribuidora.features.commerce).toBe("quote");
     expect(SITES.madpet.features.commerce).toBe("quote");
     expect(SITES.azpetshop.features.commerce).toBe("cart");
+    expect(SITES.distribuidoraInstagram.features.commerce).toBe("cart");
   });
 });
 
