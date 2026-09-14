@@ -91,10 +91,12 @@ export default function OfertasPageClient({ campaigns }: { campaigns: CampaignRo
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-500">Início da vigência</label>
             <input name="startsAt" type="datetime-local" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            <p className="mt-1 text-[11px] text-slate-400">Horário de Brasília (UTC-3)</p>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-500">Fim da vigência</label>
             <input name="endsAt" type="datetime-local" className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            <p className="mt-1 text-[11px] text-slate-400">Horário de Brasília (UTC-3)</p>
           </div>
           <div className="flex items-end gap-2">
             <input id="flashOffer" name="flashOffer" type="checkbox" />

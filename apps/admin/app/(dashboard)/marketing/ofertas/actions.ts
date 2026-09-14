@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { updateTag } from "next/cache";
 import { requireAdminSession } from "@/lib/auth";
+import { localDateTimeToIsoUtc } from "@mypet/core/datetime";
 
 const CampaignSchema = z.object({
   channel: z.enum(["ffa_fabrica"]),
@@ -81,8 +82,12 @@ export async function createCampaign(_state: CampaignFormState, formData: FormDa
     hero_priority: parsed.data.heroPriority,
     flash_offer: parsed.data.flashOffer,
     active: parsed.data.active,
-    starts_at: parsed.data.startsAt,
-    ends_at: parsed.data.endsAt,
+    // startsAt/endsAt vêm de <input type="datetime-local"> (sem fuso) — o
+    // operador preenche no horário de Brasília, fixo em UTC-3 (sem horário
+    // de verão desde 2019). Sem essa conversão, o Postgres interpretaria o
+    // valor cru como UTC e a campanha entraria/sairia do ar 3h adiantada.
+    starts_at: localDateTimeToIsoUtc(parsed.data.startsAt ?? ""),
+    ends_at: localDateTimeToIsoUtc(parsed.data.endsAt ?? ""),
   });
 
   if (error) {
