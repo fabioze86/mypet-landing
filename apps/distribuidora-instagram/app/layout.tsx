@@ -5,6 +5,7 @@ import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
+import { HotsiteHeader } from "./hotsite-header";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -38,7 +39,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           dangerouslySetInnerHTML={{ __html: jsonLdScript(organizationJsonLd(clientConfig)) }}
         />
         <ClientConfigProvider config={clientConfig}>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            <HotsiteHeader />
+            {children}
+          </CartProvider>
           <Analytics />
         </ClientConfigProvider>
       </body>
