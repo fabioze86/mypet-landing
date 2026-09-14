@@ -117,6 +117,12 @@ async function resolveRealPrices(
  * cruas já filtradas no banco, resolve produtos/preços reais e monta as
  * campanhas. Extraída para não duplicar essa lógica entre as duas queries
  * (que usam filtros `.eq()` diferentes e por isso não compartilham o builder).
+ *
+ * Sub-consultas de produto/preço (`resolveProducts`/`resolveRealPrices`)
+ * continuam best-effort: um erro nelas apenas exclui os itens sem preço
+ * válido (regra de negócio já existente — campanha sem item válido nunca é
+ * exibida com preço fictício), não é o mesmo tipo de falha que "não
+ * conseguimos nem perguntar ao Hub se existe campanha".
  */
 async function finishQuery(channel: string, rows: RawOfferCampaignRow[]): Promise<OfferCampaign[]> {
   const productIds = [...new Set(rows.flatMap((r) => (r.offer_campaign_items ?? []).map((i) => i.product_id)))];
@@ -129,12 +135,15 @@ async function finishQuery(channel: string, rows: RawOfferCampaignRow[]): Promis
     .filter((c): c is OfferCampaign => c !== null);
 }
 
-export async function getActiveCampaigns(channel: string): Promise<OfferCampaign[]> {
-  "use cache";
-  // "hours": transições de starts_at/ends_at chegam ao site em até 1h, igual ao Balcão.
-  cacheLife("hours");
-  cacheTag("offers");
+type CampaignRowsResult = { ok: true; rows: RawOfferCampaignRow[] } | { ok: false };
 
+/**
+ * Consulta principal a `offer_campaigns` — a única cujo erro sinaliza "o Hub
+ * falhou de verdade" (distinto de "zero campanhas"), por isso é a única que
+ * retorna um resultado tipado `{ ok }` em vez de engolir o erro num array
+ * vazio.
+ */
+async function fetchActiveCampaignRows(channel: string): Promise<CampaignRowsResult> {
   const supabase = getHubClient();
   const { data, error } = await supabase
     .from("offer_campaigns")
@@ -144,19 +153,12 @@ export async function getActiveCampaigns(channel: string): Promise<OfferCampaign
 
   if (error) {
     console.error("[offers] erro ao consultar campanhas ativas:", error.message);
-    return [];
+    return { ok: false };
   }
-
-  const rows = (data as unknown as RawOfferCampaignRow[]) ?? [];
-  const campaigns = await finishQuery(channel, rows);
-  return campaigns.filter((c) => c.status === "active").sort((a, b) => b.heroPriority - a.heroPriority);
+  return { ok: true, rows: (data as unknown as RawOfferCampaignRow[]) ?? [] };
 }
 
-export async function getCampaignBySlug(channel: string, slug: string): Promise<OfferCampaign | null> {
-  "use cache";
-  cacheLife("hours");
-  cacheTag("offers");
-
+async function fetchCampaignRowsBySlug(channel: string, slug: string): Promise<CampaignRowsResult> {
   const supabase = getHubClient();
   const { data, error } = await supabase
     .from("offer_campaigns")
@@ -166,10 +168,73 @@ export async function getCampaignBySlug(channel: string, slug: string): Promise<
 
   if (error) {
     console.error("[offers] erro ao consultar campanha por slug:", error.message);
-    return null;
+    return { ok: false };
   }
+  return { ok: true, rows: (data as unknown as RawOfferCampaignRow[]) ?? [] };
+}
 
-  const rows = (data as unknown as RawOfferCampaignRow[]) ?? [];
-  const campaigns = await finishQuery(channel, rows);
+export async function getActiveCampaigns(channel: string): Promise<OfferCampaign[]> {
+  "use cache";
+  // "hours": transições de starts_at/ends_at chegam ao site em até 1h, igual ao Balcão.
+  cacheLife("hours");
+  cacheTag("offers");
+
+  const result = await fetchActiveCampaignRows(channel);
+  if (!result.ok) return [];
+
+  const campaigns = await finishQuery(channel, result.rows);
+  return campaigns.filter((c) => c.status === "active").sort((a, b) => b.heroPriority - a.heroPriority);
+}
+
+/**
+ * Mesma consulta de `getActiveCampaigns`, mas distinguindo "consulta
+ * principal falhou" (`{ ok: false }`) de "consulta funcionou e não há
+ * campanha ativa" (`{ ok: true, campaigns: [] }`) — as duas situações eram
+ * indistinguíveis antes (ambas viravam array vazio + `console.error`),
+ * impedindo a página de mostrar um estado de erro real em vez de "nenhuma
+ * oferta no momento".
+ */
+export async function getActiveCampaignsSafe(
+  channel: string,
+): Promise<{ ok: true; campaigns: OfferCampaign[] } | { ok: false }> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("offers");
+
+  const result = await fetchActiveCampaignRows(channel);
+  if (!result.ok) return { ok: false };
+
+  const campaigns = await finishQuery(channel, result.rows);
+  return {
+    ok: true,
+    campaigns: campaigns.filter((c) => c.status === "active").sort((a, b) => b.heroPriority - a.heroPriority),
+  };
+}
+
+export async function getCampaignBySlug(channel: string, slug: string): Promise<OfferCampaign | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("offers");
+
+  const result = await fetchCampaignRowsBySlug(channel, slug);
+  if (!result.ok) return null;
+
+  const campaigns = await finishQuery(channel, result.rows);
   return campaigns[0] ?? null;
+}
+
+/** Ver nota de `getActiveCampaignsSafe` — mesma distinção de falha vs. vazio. */
+export async function getCampaignBySlugSafe(
+  channel: string,
+  slug: string,
+): Promise<{ ok: true; campaign: OfferCampaign | null } | { ok: false }> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("offers");
+
+  const result = await fetchCampaignRowsBySlug(channel, slug);
+  if (!result.ok) return { ok: false };
+
+  const campaigns = await finishQuery(channel, result.rows);
+  return { ok: true, campaign: campaigns[0] ?? null };
 }

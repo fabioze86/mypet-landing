@@ -15,6 +15,7 @@ test("landing de campanha trata status expired sem permitir compra", async () =>
 
 test("landing de campanha trata falha do Hub com estado de erro", async () => {
   const src = await readFile(new URL("./page.tsx", import.meta.url), "utf8");
-  assert.match(src, /catch/);
+  assert.match(src, /getCampaignBySlugSafe/);
+  assert.match(src, /!result\.ok/);
   assert.match(src, /OffersErrorState/);
 });

@@ -4,7 +4,8 @@ import { readFile } from "node:fs/promises";
 
 test("home de ofertas trata falha do Hub com estado de erro, sem preço em cache exibido como atual", async () => {
   const src = await readFile(new URL("./page.tsx", import.meta.url), "utf8");
-  assert.match(src, /catch/);
+  assert.match(src, /getActiveCampaignsSafe/);
+  assert.match(src, /!result\.ok/);
   assert.match(src, /OffersErrorState/);
 });
 

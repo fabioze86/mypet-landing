@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getActiveCampaigns } from "@mypet/core/offers";
+import { getActiveCampaignsSafe } from "@mypet/core/offers";
 import { OfferCard } from "@mypet/core/components/offer-card";
 import { CampaignCountdown } from "@mypet/core/components/campaign-countdown";
 import { OffersErrorState } from "@mypet/core/components/offers-error-state";
@@ -13,17 +13,15 @@ export const metadata = {
 };
 
 export default async function OfertasParaLojistasPage() {
-  let campaigns;
-  try {
-    campaigns = await getActiveCampaigns(clientConfig.catalogChannel);
-  } catch (err) {
-    console.error("[ofertas-para-lojistas] erro ao carregar campanhas:", err);
+  const result = await getActiveCampaignsSafe(clientConfig.catalogChannel);
+  if (!result.ok) {
     return (
       <div style={{ background: PALETTE.gray50, minHeight: "100vh" }}>
         <OffersErrorState message="Não foi possível carregar as ofertas agora." />
       </div>
     );
   }
+  const campaigns = result.campaigns;
 
   const flashCampaigns = campaigns.filter((c) => c.flashOffer && c.endsAt);
   const regularCampaigns = campaigns.filter((c) => !c.flashOffer || !c.endsAt);
