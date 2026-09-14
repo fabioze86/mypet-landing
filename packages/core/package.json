@@ -36,7 +36,8 @@
     "./supabase-server": "./src/supabase-server.ts",
     "./theme": "./src/theme.tsx",
     "./whatsapp": "./src/whatsapp.ts",
-    "./components/*": "./src/components/*.tsx"
+    "./components/*": "./src/components/*.tsx",
+    "./test-utils/*": "./src/test-utils/*.ts"
   },
   "scripts": {
     "test": "vitest run"
