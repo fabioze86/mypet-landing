@@ -56,6 +56,50 @@ describe("totalItems", () => {
   });
 });
 
+describe("addItem com campanhas diferentes", () => {
+  it("mantém linhas distintas para o mesmo id de produto em campanhas diferentes", () => {
+    const withFirst = addItem(
+      emptyCart,
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-1", campaignSlug: "camp-1-slug", unitPrice: 199, listPrice: 299 },
+      2,
+    );
+    const withBoth = addItem(
+      withFirst,
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-2", campaignSlug: "camp-2-slug", unitPrice: 249, listPrice: 299 },
+      1,
+    );
+
+    expect(withBoth.items).toHaveLength(2);
+    expect(withBoth.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ campaignId: "camp-1", campaignSlug: "camp-1-slug", unitPrice: 199, qty: 2 }),
+        expect.objectContaining({ campaignId: "camp-2", campaignSlug: "camp-2-slug", unitPrice: 249, qty: 1 }),
+      ]),
+    );
+  });
+
+  it("soma a quantidade quando o mesmo id e o mesmo campaignId são adicionados de novo", () => {
+    const withFirst = addItem(
+      emptyCart,
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-1", campaignSlug: "camp-1-slug", unitPrice: 199, listPrice: 299 },
+      2,
+    );
+    const withMore = addItem(
+      withFirst,
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-1", campaignSlug: "camp-1-slug", unitPrice: 199, listPrice: 299 },
+      3,
+    );
+
+    expect(withMore.items).toHaveLength(1);
+    expect(withMore.items[0]).toMatchObject({ campaignId: "camp-1", qty: 5 });
+  });
+
+  it("continua mesclando itens sem campanha entre si (comportamento existente preservado)", () => {
+    const cart = addItem(addItem(emptyCart, product, 2), product, 3);
+    expect(cart.items).toEqual([{ ...product, qty: 5 }]);
+  });
+});
+
 it("preserva os campos opcionais de campanha ao adicionar um item", () => {
   const cart = addItem(
     { items: [] },
