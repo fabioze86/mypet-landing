@@ -8,18 +8,21 @@ import type { CartItem } from "../cart";
 export function AddToCartControl({
   product,
   compact = false,
+  minQty = 1,
 }: {
   product: Omit<CartItem, "qty">;
   compact?: boolean;
+  /** Quantidade mínima (ex: `min_quantity` da oferta) — piso do decremento e valor inicial. Default 1. */
+  minQty?: number;
 }) {
   const { addItem } = useCart();
   const { palette } = useClientConfig();
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(minQty);
   const [added, setAdded] = useState(false);
 
   const handleAdd = () => {
     addItem(product, qty);
-    setQty(1);
+    setQty(minQty);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -29,7 +32,7 @@ export function AddToCartControl({
       <div style={{ display: "flex", alignItems: "center", border: `1.5px solid ${palette.gray200}`, borderRadius: 8 }}>
         <button
           type="button"
-          onClick={() => setQty((q) => Math.max(1, q - 1))}
+          onClick={() => setQty((q) => Math.max(minQty, q - 1))}
           aria-label="Diminuir quantidade"
           style={{ width: 28, height: 28, border: "none", background: "transparent", cursor: "pointer", fontSize: 16, color: palette.gray600 }}
         >

@@ -55,6 +55,7 @@ export function OfferCard({
             unitPrice: item.promotionalPrice,
             listPrice: item.listPrice,
           }}
+          minQty={item.minQuantity}
         />
       </div>
     </div>

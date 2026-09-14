@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getCampaignBySlug } from "@mypet/core/offers";
+import { getCampaignBySlugSafe } from "@mypet/core/offers";
 import { OfferPrice } from "@mypet/core/components/offer-price";
 import { CouponCard } from "@mypet/core/components/coupon-card";
 import { CampaignCountdown } from "@mypet/core/components/campaign-countdown";
@@ -26,17 +26,15 @@ export default function CampanhaPage({ params }: { params: Promise<{ slug: strin
 async function CampanhaContent({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
-  let campaign;
-  try {
-    campaign = await getCampaignBySlug(clientConfig.catalogChannel, slug);
-  } catch (err) {
-    console.error("[ofertas-para-lojistas/slug] erro ao carregar campanha:", err);
+  const result = await getCampaignBySlugSafe(clientConfig.catalogChannel, slug);
+  if (!result.ok) {
     return (
       <div style={{ background: PALETTE.gray50, minHeight: "100vh" }}>
         <OffersErrorState message="Não foi possível carregar esta oferta agora." />
       </div>
     );
   }
+  const campaign = result.campaign;
 
   if (campaign === null) {
     return (
@@ -121,6 +119,7 @@ async function CampanhaContent({ params }: { params: Promise<{ slug: string }> }
                   unitPrice: item.promotionalPrice,
                   listPrice: item.listPrice,
                 }}
+                minQty={item.minQuantity}
               />
             ) : (
               <p style={{ fontSize: 13, color: PALETTE.gray400, marginTop: 8 }}>Compra indisponível para esta oferta.</p>
