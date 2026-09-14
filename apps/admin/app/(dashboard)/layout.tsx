@@ -37,6 +37,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
           >
             Banners
           </Link>
+          <Link
+            href="/marketing/ofertas"
+            className="rounded-lg px-3 py-2 pl-6 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Ofertas
+          </Link>
           <div className="mt-2 px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
             Balcão de Negócios
           </div>
