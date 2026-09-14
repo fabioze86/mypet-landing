@@ -14,8 +14,8 @@
 -- comprador logado (buyers, plano 2) precisa conseguir ler campanhas
 -- publicadas do mesmo jeito que um visitante anônimo.
 
-drop policy "anon reads offer campaigns" on public.offer_campaigns;
-drop policy "anon reads offer campaign items" on public.offer_campaign_items;
+drop policy if exists "anon reads offer campaigns" on public.offer_campaigns;
+drop policy if exists "anon reads offer campaign items" on public.offer_campaign_items;
 
 create policy "public reads publishable offer campaigns" on public.offer_campaigns
   for select to anon, authenticated
