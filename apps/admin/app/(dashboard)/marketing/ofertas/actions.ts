@@ -28,6 +28,28 @@ const CampaignSchema = z.object({
   endsAt: z.string().trim().nullable(),
 });
 
+// Mesmos campos editáveis de CampaignSchema, exceto `channel`/`slug`: depois
+// de criada, a campanha mantém canal e slug fixos (o slug já pode estar
+// linkado em posts/anúncios; trocá-lo quebraria URLs publicadas). O formulário
+// de edição exibe esses dois campos como somente leitura e não os envia.
+const UpdateCampaignSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().trim().nullable(),
+  subtitle: z.string().trim().nullable(),
+  badge: z.string().trim().nullable(),
+  couponCode: z.string().trim().nullable(),
+  couponDescription: z.string().trim().nullable(),
+  couponDiscountPct: z.coerce.number().min(0).max(100).nullable(),
+  freightMessage: z.string().trim().nullable(),
+  primaryCtaLabel: z.string().trim().nullable(),
+  secondaryCtaLabel: z.string().trim().nullable(),
+  heroPriority: z.coerce.number().int().default(0),
+  flashOffer: z.boolean().default(false),
+  active: z.boolean().default(false),
+  startsAt: z.string().trim().nullable(),
+  endsAt: z.string().trim().nullable(),
+});
+
 const DeleteCampaignSchema = z.object({ id: z.string().uuid() });
 const ToggleCampaignActiveSchema = z.object({
   id: z.string().uuid(),
@@ -100,6 +122,61 @@ export async function createCampaign(_state: CampaignFormState, formData: FormDa
   return undefined;
 }
 
+export async function updateCampaign(_state: CampaignFormState, formData: FormData): Promise<CampaignFormState> {
+  const { supabase } = await requireAdminSession();
+
+  const parsed = UpdateCampaignSchema.safeParse({
+    id: formData.get("id"),
+    title: emptyToNull(formData.get("title")),
+    subtitle: emptyToNull(formData.get("subtitle")),
+    badge: emptyToNull(formData.get("badge")),
+    couponCode: emptyToNull(formData.get("couponCode")),
+    couponDescription: emptyToNull(formData.get("couponDescription")),
+    couponDiscountPct: formData.get("couponDiscountPct") ? formData.get("couponDiscountPct") : null,
+    freightMessage: emptyToNull(formData.get("freightMessage")),
+    primaryCtaLabel: emptyToNull(formData.get("primaryCtaLabel")),
+    secondaryCtaLabel: emptyToNull(formData.get("secondaryCtaLabel")),
+    heroPriority: formData.get("heroPriority") ?? 0,
+    flashOffer: formData.get("flashOffer") === "on",
+    active: formData.get("active") === "on",
+    startsAt: emptyToNull(formData.get("startsAt")),
+    endsAt: emptyToNull(formData.get("endsAt")),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const { error } = await supabase
+    .from("offer_campaigns")
+    .update({
+      title: parsed.data.title,
+      subtitle: parsed.data.subtitle,
+      badge: parsed.data.badge,
+      coupon_code: parsed.data.couponCode,
+      coupon_description: parsed.data.couponDescription,
+      coupon_discount_pct: parsed.data.couponDiscountPct,
+      freight_message: parsed.data.freightMessage,
+      primary_cta_label: parsed.data.primaryCtaLabel,
+      secondary_cta_label: parsed.data.secondaryCtaLabel,
+      hero_priority: parsed.data.heroPriority,
+      flash_offer: parsed.data.flashOffer,
+      active: parsed.data.active,
+      starts_at: localDateTimeToIsoUtc(parsed.data.startsAt ?? ""),
+      ends_at: localDateTimeToIsoUtc(parsed.data.endsAt ?? ""),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.data.id);
+
+  if (error) {
+    console.error("[admin/ofertas] erro ao atualizar campanha:", error.message);
+    return { error: "Não foi possível salvar as alterações da campanha." };
+  }
+
+  updateTag("offers");
+  return undefined;
+}
+
 export async function deleteCampaign(formData: FormData): Promise<void> {
   const { supabase } = await requireAdminSession();
   const parsed = DeleteCampaignSchema.safeParse({ id: formData.get("id") });
@@ -136,6 +213,13 @@ export async function toggleCampaignActive(formData: FormData): Promise<void> {
 const AddItemSchema = z.object({
   campaignId: z.string().uuid(),
   productReference: z.string().trim().min(1, "Informe a referência (CPRO/SKU) do produto."),
+  promotionalPrice: z.coerce.number().positive("O preço promocional precisa ser maior que zero."),
+  minQuantity: z.coerce.number().int().min(1).default(1),
+  sortOrder: z.coerce.number().int().default(0),
+});
+
+const UpdateItemSchema = z.object({
+  id: z.string().uuid(),
   promotionalPrice: z.coerce.number().positive("O preço promocional precisa ser maior que zero."),
   minQuantity: z.coerce.number().int().min(1).default(1),
   sortOrder: z.coerce.number().int().default(0),
@@ -186,6 +270,37 @@ export async function addCampaignItem(_state: AddItemFormState, formData: FormDa
     console.error("[admin/ofertas] erro ao adicionar item:", error.message);
     if (error.code === "23505") return { error: "Esse produto já está nessa campanha." };
     return { error: "Não foi possível adicionar o item." };
+  }
+
+  updateTag("offers");
+  return undefined;
+}
+
+export async function updateCampaignItem(_state: AddItemFormState, formData: FormData): Promise<AddItemFormState> {
+  const { supabase } = await requireAdminSession();
+
+  const parsed = UpdateItemSchema.safeParse({
+    id: formData.get("id"),
+    promotionalPrice: formData.get("promotionalPrice"),
+    minQuantity: formData.get("minQuantity") || 1,
+    sortOrder: formData.get("sortOrder") || 0,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  }
+
+  const { error } = await supabase
+    .from("offer_campaign_items")
+    .update({
+      promotional_price: parsed.data.promotionalPrice,
+      min_quantity: parsed.data.minQuantity,
+      sort_order: parsed.data.sortOrder,
+    })
+    .eq("id", parsed.data.id);
+
+  if (error) {
+    console.error("[admin/ofertas] erro ao atualizar item:", error.message);
+    return { error: "Não foi possível salvar as alterações do item." };
   }
 
   updateTag("offers");

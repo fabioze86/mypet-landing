@@ -8,7 +8,9 @@ export default async function OfertaDetalhePage({ params }: { params: Promise<{ 
 
   const { data: campaign } = await supabase
     .from("offer_campaigns")
-    .select("id, slug, title, channel")
+    .select(
+      "id, slug, title, channel, subtitle, badge, coupon_code, coupon_description, coupon_discount_pct, freight_message, primary_cta_label, secondary_cta_label, hero_priority, flash_offer, active, starts_at, ends_at",
+    )
     .eq("id", id)
     .single();
   if (!campaign) notFound();
