@@ -10,12 +10,22 @@ import { finalizeQuote } from "./actions";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 
+const brl = (n: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
+
 export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   const { cart, removeItem, updateQty, clear } = useCart();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  const total = cart.items.reduce(
+    (sum, item) => sum + (item.unitPrice != null ? item.unitPrice * item.qty : 0),
+    0,
+  );
+  const itemsWithPrice = cart.items.filter((item) => item.unitPrice != null);
+  const shouldShowTotal = itemsWithPrice.length > 1;
 
   if (submitted) {
     return (
@@ -135,9 +145,18 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
             >
               Remover
             </button>
+            <div style={{ minWidth: 72, textAlign: "right", fontSize: 13, fontWeight: 800, color: PALETTE.navy }}>
+              {item.unitPrice != null ? brl(item.unitPrice * item.qty) : "—"}
+            </div>
           </div>
         ))}
       </div>
+
+      {shouldShowTotal && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <p style={{ fontSize: 15, fontWeight: 900, color: PALETTE.navy }}>Total: <span>{brl(total)}</span></p>
+        </div>
+      )}
 
       <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 24 }}>
         {submitError && (
