@@ -103,10 +103,11 @@ async function fetchVariantsByParentIds(
 export async function queryCatalogLineItems(params: {
   q?: string;
   brand?: string;
+  categoryId?: string | string[];
   page: number;
   channel: string;
 }): Promise<CatalogLineItemsResult> {
-  const { q, brand, page, channel } = params;
+  const { q, brand, categoryId, page, channel } = params;
   const supabase = getHubClient();
   const { from, to } = pageRange(page);
 
@@ -124,6 +125,11 @@ export async function queryCatalogLineItems(params: {
     query = query.or(`name.ilike.%${safeQ}%,reference.ilike.%${safeQ}%`);
   }
   if (brand) query = query.eq("brand", brand);
+  if (Array.isArray(categoryId)) {
+    if (categoryId.length > 0) query = query.in("category_id", categoryId);
+  } else if (categoryId) {
+    query = query.eq("category_id", categoryId);
+  }
 
   const { data, count, error } = await query.range(from, to);
 
@@ -180,6 +186,7 @@ export async function queryCatalogLineItems(params: {
 export async function getCatalogLineItems(params: {
   q?: string;
   brand?: string;
+  categoryId?: string | string[];
   page: number;
   channel: string;
 }): Promise<CatalogLineItemsResult> {

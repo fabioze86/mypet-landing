@@ -173,6 +173,16 @@ describe("queryCatalogLineItems", () => {
     expect(calls["range"]).toEqual([[24, 47]]);
   });
 
+  it("filtra por categoryId único com .eq", async () => {
+    await queryCatalogLineItems({ page: 1, channel: "distribuidora", categoryId: "cat-9" });
+    expect(calls["eq"]).toContainEqual(["category_id", "cat-9"]);
+  });
+
+  it("filtra por uma lista de categoryIds (subárvore) com .in", async () => {
+    await queryCatalogLineItems({ page: 1, channel: "distribuidora", categoryId: ["cat-9", "cat-10"] });
+    expect(calls["in"]).toContainEqual(["category_id", ["cat-9", "cat-10"]]);
+  });
+
   it("busca por q que bate a referência (SKU) mas não o nome também retorna o produto", async () => {
     productPage = {
       data: [

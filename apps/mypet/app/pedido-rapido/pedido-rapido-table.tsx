@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "@mypet/core/components/cart-provider";
 import type { Palette } from "@mypet/core/theme";
 import type { CatalogLineItem, CatalogLineItemsResult } from "@mypet/core/catalog-line-items";
+import type { CategoryNode } from "@mypet/core/catalog-utils";
 import { searchLineItems } from "./actions";
 
 const brl = (n: number) =>
@@ -144,15 +145,18 @@ function Row({
 export function PedidoRapidoTable({
   initialResult,
   brands,
+  categories,
   palette: P,
 }: {
   initialResult: CatalogLineItemsResult;
   brands: string[];
+  categories: CategoryNode[];
   palette: Palette;
 }) {
   const { cart, addItem, updateQty, totalItems } = useCart();
   const [q, setQ] = useState("");
   const [brand, setBrand] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [page, setPage] = useState(1);
   const [result, setResult] = useState(initialResult);
   const [pending, startTransition] = useTransition();
@@ -168,14 +172,19 @@ export function PedidoRapidoTable({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       startTransition(async () => {
-        const next = await searchLineItems({ q: q || undefined, brand: brand || undefined, page });
+        const next = await searchLineItems({
+          q: q || undefined,
+          brand: brand || undefined,
+          categoryId: categoryId || undefined,
+          page,
+        });
         setResult(next);
       });
     }, DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [q, brand, page]);
+  }, [q, brand, categoryId, page]);
 
   const qtyInCart: Record<string, number> = {};
   for (const item of cart.items) qtyInCart[item.id] = item.qty;
@@ -213,6 +222,23 @@ export function PedidoRapidoTable({
           aria-label="Buscar produtos por nome ou SKU"
           style={{ flex: "1 1 240px", padding: "10px 14px", borderRadius: 10, border: `1px solid ${P.gray200}`, fontSize: 14 }}
         />
+        <select
+          value={categoryId}
+          onChange={(e) => {
+            setPage(1);
+            setCategoryId(e.target.value);
+          }}
+          aria-label="Filtrar por categoria"
+          style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${P.gray200}`, fontSize: 14, background: P.white }}
+        >
+          <option value="">Todas as categorias</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {"— ".repeat(Math.max(0, (c.level ?? 1) - 1))}
+              {c.name}
+            </option>
+          ))}
+        </select>
         <select
           value={brand}
           onChange={(e) => {

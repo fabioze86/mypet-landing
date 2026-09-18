@@ -46,7 +46,12 @@ export async function PedidoRapidoPageBody() {
         <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
           Busque por nome ou SKU, informe a quantidade e adicione direto na linha.
         </p>
-        <PedidoRapidoTable initialResult={firstPage} brands={brands} palette={PALETTE} />
+        <PedidoRapidoTable
+          initialResult={firstPage}
+          brands={brands}
+          categories={categories}
+          palette={PALETTE}
+        />
       </main>
     </div>
   );

@@ -42,7 +42,12 @@ function renderTable(result = baseResult) {
       createElement(
         CartProvider,
         null,
-        createElement(PedidoRapidoTable, { initialResult: result, brands: ["NAPI"], palette: config.palette }),
+        createElement(PedidoRapidoTable, {
+          initialResult: result,
+          brands: ["NAPI"],
+          categories: [],
+          palette: config.palette,
+        }),
       ),
     ),
   );
@@ -102,6 +107,11 @@ describe("PedidoRapidoTable", () => {
     expect(searchLineItems).not.toHaveBeenCalled();
 
     await waitFor(() => expect(searchLineItems).toHaveBeenCalledTimes(1), { timeout: 1000 });
-    expect(searchLineItems).toHaveBeenCalledWith({ q: "ração", brand: undefined, page: 1 });
+    expect(searchLineItems).toHaveBeenCalledWith({
+      q: "ração",
+      brand: undefined,
+      categoryId: undefined,
+      page: 1,
+    });
   });
 });

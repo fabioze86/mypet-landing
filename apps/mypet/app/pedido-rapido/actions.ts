@@ -1,6 +1,8 @@
 "use server";
 
 import { getCatalogLineItems, type CatalogLineItemsResult } from "@mypet/core/catalog-line-items";
+import { getCategories } from "@mypet/core/catalog";
+import { collectCategorySubtreeIds } from "@mypet/core/catalog-utils";
 import type { Channel } from "@mypet/core/channels";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
@@ -8,6 +10,7 @@ import { requireBuyer } from "@/lib/require-buyer";
 export async function searchLineItems(params: {
   q?: string;
   brand?: string;
+  categoryId?: string;
   page: number;
 }): Promise<CatalogLineItemsResult> {
   const buyer = await requireBuyer();
@@ -15,5 +18,18 @@ export async function searchLineItems(params: {
   if (!buyer) {
     return { items: [], total: 0, page, totalPages: 1 };
   }
-  return getCatalogLineItems({ ...params, page, channel: clientConfig.catalogChannel as Channel });
+
+  let categoryId: string[] | undefined;
+  if (params.categoryId) {
+    const categories = await getCategories();
+    categoryId = collectCategorySubtreeIds(categories, params.categoryId);
+  }
+
+  return getCatalogLineItems({
+    q: params.q,
+    brand: params.brand,
+    categoryId,
+    page,
+    channel: clientConfig.catalogChannel as Channel,
+  });
 }
