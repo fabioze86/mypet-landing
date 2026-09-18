@@ -28,9 +28,23 @@ function sameCartLine(item: CartItem, id: string, campaignId: string | undefined
 export function addItem(cart: Cart, product: Omit<CartItem, "qty">, qty: number): Cart {
   const existing = cart.items.find((item) => sameCartLine(item, product.id, product.campaignId));
   if (existing) {
+    // Preço não-campanha pode mudar entre dois "adds" na mesma sessão (ou o
+    // item pode ter entrado no carrinho antes do unitPrice estar disponível)
+    // — atualiza para o valor mais recente. Linhas de campanha mantêm o
+    // preço travado no primeiro add (mesma razão do `sameCartLine`: preço de
+    // campanha é um preço fechado, não deve mudar depois).
+    const refreshPrice = existing.campaignId === undefined && product.unitPrice !== undefined;
     return {
       items: cart.items.map((item) =>
-        sameCartLine(item, product.id, product.campaignId) ? { ...item, qty: item.qty + qty } : item
+        sameCartLine(item, product.id, product.campaignId)
+          ? {
+              ...item,
+              qty: item.qty + qty,
+              ...(refreshPrice
+                ? { unitPrice: product.unitPrice, ...(product.listPrice !== undefined ? { listPrice: product.listPrice } : {}) }
+                : {}),
+            }
+          : item
       ),
     };
   }

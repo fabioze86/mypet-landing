@@ -64,6 +64,24 @@ describe("PedidoRapidoTable", () => {
     expect(screen.getByText("1 item — R$ 42,90")).toBeInTheDocument();
   });
 
+  it("clicar em adicionar quando o item já está no carrinho SUBSTITUI a quantidade, não soma", () => {
+    localStorage.setItem(
+      "mypet_cart",
+      JSON.stringify({ items: [{ id: "p1", name: "Ração X", sku: "100", brand: "NAPI", img: "/img.jpg", unitPrice: 42.9, qty: 2 }] }),
+    );
+
+    renderTable();
+
+    // O input já deve exibir a quantidade atual do carrinho (2), sem alteração manual.
+    expect(screen.getByLabelText("Quantidade de Ração X")).toHaveValue(2);
+
+    fireEvent.click(screen.getByLabelText("Adicionar Ração X ao carrinho"));
+
+    const cart = JSON.parse(localStorage.getItem("mypet_cart") ?? "{}");
+    expect(cart.items).toHaveLength(1);
+    expect(cart.items[0]).toMatchObject({ id: "p1", qty: 2 });
+  });
+
   it("desabilita quantidade e botão de adicionar para item sem preço", () => {
     renderTable();
 

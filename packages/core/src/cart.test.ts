@@ -16,6 +16,32 @@ describe("addItem", () => {
   });
 });
 
+describe("addItem atualiza unitPrice no merge (linha sem campanha)", () => {
+  it("readicionar o mesmo produto sem campanha com unitPrice diferente atualiza o preço da linha", () => {
+    const withFirst = addItem(emptyCart, { ...product, unitPrice: 10 }, 1);
+    const withMore = addItem(withFirst, { ...product, unitPrice: 15 }, 1);
+
+    expect(withMore.items).toHaveLength(1);
+    expect(withMore.items[0]).toMatchObject({ unitPrice: 15, qty: 2 });
+  });
+
+  it("readicionar uma linha de campanha com unitPrice diferente NÃO altera o preço travado", () => {
+    const withFirst = addItem(
+      emptyCart,
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-1", campaignSlug: "camp-1-slug", unitPrice: 199, listPrice: 299 },
+      2,
+    );
+    const withMore = addItem(
+      withFirst,
+      { id: "p1", name: "Kit 11 vestidos", sku: "SKU-1", brand: null, img: "/img.jpg", campaignId: "camp-1", campaignSlug: "camp-1-slug", unitPrice: 250, listPrice: 350 },
+      1,
+    );
+
+    expect(withMore.items).toHaveLength(1);
+    expect(withMore.items[0]).toMatchObject({ campaignId: "camp-1", unitPrice: 199, listPrice: 299, qty: 3 });
+  });
+});
+
 describe("removeItem", () => {
   it("remove o item pelo id", () => {
     const cart = removeItem({ items: [{ ...product, qty: 2 }] }, "p1");

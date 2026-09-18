@@ -104,7 +104,7 @@ export function PedidoRapidoTable({
   brands: string[];
   palette: Palette;
 }) {
-  const { cart, addItem, totalItems } = useCart();
+  const { cart, addItem, updateQty, totalItems } = useCart();
   const [q, setQ] = useState("");
   const [brand, setBrand] = useState("");
   const [page, setPage] = useState(1);
@@ -140,11 +140,16 @@ export function PedidoRapidoTable({
   );
 
   function handleAdd(item: CatalogLineItem, qty: number) {
-    if (qty <= 0 || item.unitPrice == null) return;
-    addItem(
-      { id: item.id, name: item.name, sku: item.sku, brand: item.brand, img: item.img, unitPrice: item.unitPrice },
-      qty,
-    );
+    if (item.unitPrice == null) return;
+    if (item.id in qtyInCart) {
+      updateQty(item.id, qty);
+    } else {
+      if (qty <= 0) return;
+      addItem(
+        { id: item.id, name: item.name, sku: item.sku, brand: item.brand, img: item.img, unitPrice: item.unitPrice },
+        qty,
+      );
+    }
     setJustAdded((cur) => ({ ...cur, [item.id]: true }));
     setTimeout(() => setJustAdded((cur) => ({ ...cur, [item.id]: false })), 1500);
   }

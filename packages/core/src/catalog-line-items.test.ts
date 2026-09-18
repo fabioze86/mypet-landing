@@ -23,6 +23,7 @@ function makeBuilder(table: string) {
   builder.eq = record("eq");
   builder.neq = record("neq");
   builder.ilike = record("ilike");
+  builder.or = record("or");
   builder.order = record("order");
   builder.in = record("in");
   builder.range = (...args: unknown[]) => {
@@ -165,10 +166,33 @@ describe("queryCatalogLineItems", () => {
   it("repassa q, brand e paginação para a busca de produtos-base", async () => {
     await queryCatalogLineItems({ q: "ração", brand: "NAPI", page: 2, channel: "mypetbrasil" });
 
-    expect(calls["ilike"]).toContainEqual(["name", "%ração%"]);
+    expect(calls["or"]).toContainEqual(["name.ilike.%ração%,reference.ilike.%ração%"]);
     expect(calls["eq"]).toContainEqual(["brand", "NAPI"]);
     expect(calls["eq"]).toContainEqual(["product_channel_links.channel", "mypetbrasil"]);
     expect(calls["neq"]).toContainEqual(["product_role", "variant"]);
     expect(calls["range"]).toEqual([[24, 47]]);
+  });
+
+  it("busca por q que bate a referência (SKU) mas não o nome também retorna o produto", async () => {
+    productPage = {
+      data: [
+        {
+          id: "p1",
+          name: "Ração X",
+          reference: "COL-P",
+          brand: "NAPI",
+          product_role: "simple",
+          product_assets: [],
+          product_channel_prices: [{ channel: "mypetbrasil", sale_price: "10.00" }],
+        },
+      ],
+      count: 1,
+    };
+
+    const result = await queryCatalogLineItems({ q: "COL-P", page: 1, channel: "mypetbrasil" });
+
+    expect(calls["or"]).toContainEqual(["name.ilike.%COL-P%,reference.ilike.%COL-P%"]);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toMatchObject({ id: "p1", sku: "COL-P" });
   });
 });

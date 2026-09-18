@@ -46,6 +46,15 @@ export type CatalogLineItemsResult = {
   totalPages: number;
 };
 
+// `.or()` do PostgREST usa vírgula e parênteses como caracteres estruturais
+// do filtro — escapa esses caracteres em `q` para que um valor de busca com
+// vírgula/parênteses não quebre a sintaxe do filtro (mesmo nível de cuidado
+// que os `.ilike()` já existentes neste arquivo, que não escapam nada porque
+// `%`/`_` não quebram estrutura, só o resultado do match).
+function escapeOrFilterValue(value: string): string {
+  return value.replace(/[,()]/g, (c) => `\\${c}`);
+}
+
 function lineItemVariantLabel(axis: VariantAxisEntry[], sku: string, fallbackIndex: number): string {
   const label = axis.map((a) => a.valor).join(" / ");
   const isJustReference = label.trim().toLowerCase() === sku.trim().toLowerCase();
@@ -110,7 +119,10 @@ export async function queryCatalogLineItems(params: {
     .eq("product_channel_prices.channel", channel)
     .order("name", { ascending: true });
 
-  if (q) query = query.ilike("name", `%${q}%`);
+  if (q) {
+    const safeQ = escapeOrFilterValue(q);
+    query = query.or(`name.ilike.%${safeQ}%,reference.ilike.%${safeQ}%`);
+  }
   if (brand) query = query.eq("brand", brand);
 
   const { data, count, error } = await query.range(from, to);
