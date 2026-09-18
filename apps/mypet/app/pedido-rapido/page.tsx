@@ -7,6 +7,7 @@ import { getCatalogLineItems } from "@mypet/core/catalog-line-items";
 import type { Channel } from "@mypet/core/channels";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
+import { PedidoRapidoTable } from "./pedido-rapido-table";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -45,9 +46,7 @@ export async function PedidoRapidoPageBody() {
         <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
           Busque por nome ou SKU, informe a quantidade e adicione direto na linha.
         </p>
-        <p style={{ fontSize: 14, color: PALETTE.gray600 }}>
-          Carregando pedido rápido… ({firstPage.total} produtos, {brands.length} marcas)
-        </p>
+        <PedidoRapidoTable initialResult={firstPage} brands={brands} palette={PALETTE} />
       </main>
     </div>
   );
