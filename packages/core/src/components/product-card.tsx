@@ -71,7 +71,14 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
           <PriceLockSlot priceLabel={product.priceLabel} category={product.category} />
         )}
         <AddToCartControl
-          product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img }}
+          product={{
+            id: product.id,
+            name: product.name,
+            sku: product.sku,
+            brand: product.brand,
+            img: product.img,
+            unitPrice: product.salePrice ?? undefined,
+          }}
           compact
         />
       </div>
