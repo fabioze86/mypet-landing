@@ -13,6 +13,7 @@ import { MiniBannerStrip } from "@mypet/core/components/mini-banner-strip";
 import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
+import { PedidoRapidoCta } from "./pedido-rapido-cta";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -319,6 +320,9 @@ export async function LojaContent({
         <Suspense fallback={null}>
           <MiniBannerStrip channel={clientConfig.catalogChannel as Channel} />
         </Suspense>
+
+        {/* PEDIDO RÁPIDO CTA */}
+        <PedidoRapidoCta palette={PALETTE} />
 
         {/* CATALOG */}
         <Suspense fallback={
