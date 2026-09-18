@@ -29,7 +29,7 @@ export const CATALOG_SELECT =
  * Usado nos canais listados em `ERP_PRICE_CHANNELS` (ver catalog-utils), onde o
  * ERP é a fonte única de preço. Retorna mapa `referência -> preço`.
  */
-async function fetchErpPrices(references: (string | null | undefined)[]): Promise<Map<string, number>> {
+export async function fetchErpPrices(references: (string | null | undefined)[]): Promise<Map<string, number>> {
   const unique = [...new Set(references.filter((r): r is string => !!r))];
   if (unique.length === 0) return new Map();
 
