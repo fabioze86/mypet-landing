@@ -1,0 +1,54 @@
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { SiteNav } from "@mypet/core/components/site-nav";
+import { getCategories, getBrands } from "@mypet/core/catalog";
+import { getCatalogLineItems } from "@mypet/core/catalog-line-items";
+import type { Channel } from "@mypet/core/channels";
+import { clientConfig } from "@/client.config";
+import { requireBuyer } from "@/lib/require-buyer";
+
+const { palette: PALETTE } = clientConfig;
+
+export const metadata: Metadata = {
+  title: "Pedido Rápido | My Pet Brasil",
+  robots: { index: false, follow: false },
+};
+
+export default function PedidoRapidoPage() {
+  return (
+    <Suspense fallback={null}>
+      <PedidoRapidoPageBody />
+    </Suspense>
+  );
+}
+
+// exported for tests
+export async function PedidoRapidoPageBody() {
+  const buyer = await requireBuyer();
+  if (!buyer) redirect("/entrar");
+
+  const channel = clientConfig.catalogChannel as Channel;
+  const [categories, brands, firstPage] = await Promise.all([
+    getCategories(),
+    getBrands(channel),
+    getCatalogLineItems({ page: 1, channel }),
+  ]);
+
+  return (
+    <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
+      <SiteNav categories={categories} balcaoHref="/balcao" pedidoRapidoHref="/pedido-rapido" />
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 120px" }}>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>
+          Pedido rápido
+        </h1>
+        <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
+          Busque por nome ou SKU, informe a quantidade e adicione direto na linha.
+        </p>
+        <p style={{ fontSize: 14, color: PALETTE.gray600 }}>
+          Carregando pedido rápido… ({firstPage.total} produtos, {brands.length} marcas)
+        </p>
+      </main>
+    </div>
+  );
+}
