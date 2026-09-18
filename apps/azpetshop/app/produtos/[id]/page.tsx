@@ -42,10 +42,15 @@ export default async function ProductPage({
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { margin: 0; }
+        h1 { font-family: var(--font-baloo), sans-serif; font-weight: 800 !important; }
         .back-link {
-          display: inline-flex; align-items: center; gap: 6px; color: ${PALETTE.gray600};
-          font-size: 14px; font-weight: 700; text-decoration: none; margin-bottom: 24px;
+          display: inline-flex; align-items: center; gap: 8px; color: ${PALETTE.navy};
+          background: ${PALETTE.white}; border: 2px solid ${PALETTE.navy}; border-radius: 100px;
+          padding: 9px 18px; font-family: var(--font-nunito), sans-serif;
+          font-size: 14px; font-weight: 800; text-decoration: none; margin-bottom: 24px;
+          transition: background 0.15s, color 0.15s;
         }
+        .back-link:hover { background: ${PALETTE.navy}; color: ${PALETTE.gray50}; }
       `}</style>
       <SiteNav categories={categories} audienceLabel={null} />
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "24px" }}>

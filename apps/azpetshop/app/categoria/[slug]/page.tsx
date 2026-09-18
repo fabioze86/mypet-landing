@@ -39,16 +39,20 @@ export default async function CategoriaPage({
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { margin: 0; }
+        h1 { font-family: var(--font-baloo), sans-serif; font-weight: 800 !important; }
         .cat-btn {
-          padding: 8px 18px; border-radius: 100px; border: 1.5px solid ${PALETTE.gray200};
-          background: ${PALETTE.white}; color: ${PALETTE.gray600};
-          font-family: var(--font-nunito), sans-serif; font-size: 14px; font-weight: 600;
-          cursor: pointer; text-decoration: none;
+          padding: 8px 18px; border-radius: 100px; border: 2px solid ${PALETTE.navy};
+          background: ${PALETTE.white}; color: ${PALETTE.navy};
+          font-family: var(--font-nunito), sans-serif; font-size: 14px; font-weight: 700;
+          cursor: pointer; text-decoration: none; transition: background 0.15s, color 0.15s;
         }
+        .cat-btn:hover { background: ${PALETTE.navy}; color: ${PALETTE.gray50}; }
         .product-card {
           background: ${PALETTE.white}; border-radius: 16px; border: 1px solid ${PALETTE.gray200};
           overflow: hidden; display: flex; flex-direction: column; cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
         }
+        .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(36,18,51,0.12); }
         @media (max-width: 640px) {
           .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px !important; }
         }

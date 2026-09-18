@@ -24,8 +24,6 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     (sum, item) => sum + (item.unitPrice != null ? item.unitPrice * item.qty : 0),
     0,
   );
-  const itemsWithPrice = cart.items.filter((item) => item.unitPrice != null);
-  const shouldShowTotal = itemsWithPrice.length > 1;
 
   if (submitted) {
     return (
@@ -152,11 +150,9 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
         ))}
       </div>
 
-      {shouldShowTotal && (
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-          <p style={{ fontSize: 15, fontWeight: 900, color: PALETTE.navy }}>Total: <span>{brl(total)}</span></p>
-        </div>
-      )}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+        <p style={{ fontSize: 15, fontWeight: 900, color: PALETTE.navy }}>Total: <span>{brl(total)}</span></p>
+      </div>
 
       <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 24 }}>
         {submitError && (

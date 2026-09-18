@@ -53,10 +53,19 @@ describe("CotacaoContent — subtotal e total", () => {
   it("mostra — no subtotal de item sem unitPrice e não o inclui no total geral", () => {
     renderWithCart([
       { id: "p1", name: "Ração X", sku: "100", brand: "NAPI", img: "/img.jpg", qty: 2 },
-      { id: "p2", name: "Areia Y", sku: "200", brand: "NAPI", img: "/img2.jpg", qty: 1, unitPrice: 30 },
+      { id: "p2", name: "Areia Y", sku: "200", brand: "NAPI", img: "/img2.jpg", qty: 2, unitPrice: 30 },
     ]);
 
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
-    expect(screen.getByText("R$ 30,00")).toBeInTheDocument();
+    expect(screen.getAllByText("R$ 60,00").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("mostra total mesmo com apenas um item precificado", () => {
+    renderWithCart([
+      { id: "p1", name: "Ração X", sku: "100", brand: "NAPI", img: "/img.jpg", qty: 3, unitPrice: 50 },
+    ]);
+
+    expect(screen.getByText(/Total:/)).toBeInTheDocument();
+    expect(screen.getAllByText("R$ 150,00").length).toBeGreaterThanOrEqual(1);
   });
 });
