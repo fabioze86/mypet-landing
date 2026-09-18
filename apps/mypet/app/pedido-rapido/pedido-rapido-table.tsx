@@ -58,38 +58,84 @@ function Row({
       <div style={{ width: 100, textAlign: "right", fontSize: 13, fontWeight: 800, color: P.navy }}>
         {item.priceLabel ?? "Sob consulta"}
       </div>
-      <input
-        type="number"
-        min={0}
-        value={qty}
-        disabled={item.unitPrice == null}
-        aria-label={`Quantidade de ${item.name}`}
-        onChange={(e) => setQty(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+      <div
         style={{
-          width: 64,
-          padding: "6px 8px",
+          display: "flex",
+          alignItems: "center",
           border: `1.5px solid ${P.gray200}`,
           borderRadius: 8,
-          fontSize: 14,
+          opacity: item.unitPrice == null ? 0.5 : 1,
         }}
-      />
+      >
+        <button
+          type="button"
+          disabled={item.unitPrice == null}
+          onClick={() => setQty((q) => Math.max(0, q - 1))}
+          aria-label={`Diminuir quantidade de ${item.name}`}
+          style={{
+            width: 28,
+            height: 28,
+            border: "none",
+            background: "transparent",
+            cursor: item.unitPrice == null ? "not-allowed" : "pointer",
+            fontSize: 16,
+            color: P.gray600,
+          }}
+        >
+          −
+        </button>
+        <input
+          type="number"
+          min={0}
+          value={qty}
+          disabled={item.unitPrice == null}
+          aria-label={`Quantidade de ${item.name}`}
+          onChange={(e) => setQty(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+          style={{
+            width: 40,
+            padding: "6px 4px",
+            border: "none",
+            textAlign: "center",
+            fontSize: 14,
+            background: "transparent",
+          }}
+        />
+        <button
+          type="button"
+          disabled={item.unitPrice == null}
+          onClick={() => setQty((q) => q + 1)}
+          aria-label={`Aumentar quantidade de ${item.name}`}
+          style={{
+            width: 28,
+            height: 28,
+            border: "none",
+            background: "transparent",
+            cursor: item.unitPrice == null ? "not-allowed" : "pointer",
+            fontSize: 16,
+            color: P.gray600,
+          }}
+        >
+          +
+        </button>
+      </div>
       <button
         type="button"
         disabled={item.unitPrice == null}
         onClick={() => onAdd(qty)}
         aria-label={`Adicionar ${item.name} ao carrinho`}
         style={{
-          width: 36,
-          height: 36,
+          padding: "8px 14px",
           border: "none",
           borderRadius: 8,
-          background: added ? P.green : P.gray100,
-          color: added ? P.white : P.navy,
-          fontSize: 16,
+          background: added ? P.green : P.pink,
+          color: P.white,
+          fontSize: 13,
+          fontWeight: 700,
+          whiteSpace: "nowrap",
           cursor: item.unitPrice == null ? "not-allowed" : "pointer",
         }}
       >
-        {added ? "✓" : "🛒"}
+        {added ? "✓ Adicionado" : "Adicionar"}
       </button>
     </div>
   );
