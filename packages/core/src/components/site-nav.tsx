@@ -10,10 +10,12 @@ import { buildCategoryTree, type CategoryNode } from "../catalog-utils";
 export function SiteNav({
   categories,
   balcaoHref,
+  pedidoRapidoHref,
   audienceLabel,
 }: {
   categories: CategoryNode[];
   balcaoHref?: string;
+  pedidoRapidoHref?: string;
   audienceLabel?: string | null;
 }) {
   const { name, tagline, palette, logo } = useClientConfig();
@@ -48,6 +50,14 @@ export function SiteNav({
               style={{ fontSize: 13, fontWeight: 800, color: palette.pink, textDecoration: "none", whiteSpace: "nowrap" }}
             >
               Balcão de Negócios
+            </Link>
+          )}
+          {pedidoRapidoHref && (
+            <Link
+              href={pedidoRapidoHref}
+              style={{ fontSize: 13, fontWeight: 800, color: palette.pink, textDecoration: "none", whiteSpace: "nowrap" }}
+            >
+              Pedido rápido
             </Link>
           )}
           <CartBadge />
