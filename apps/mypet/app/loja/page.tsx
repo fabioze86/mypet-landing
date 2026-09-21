@@ -307,7 +307,7 @@ export async function LojaContent({
       <>
 
         {/* NAV */}
-        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" />
+        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" faqHref="/perguntas-frequentes" />
 
         {/* CATEGORY CHIPS */}
         <CategoryChips categories={categories} />

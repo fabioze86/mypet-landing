@@ -11,12 +11,14 @@ export function SiteNav({
   categories,
   balcaoHref,
   pedidoRapidoHref,
+  faqHref,
   audienceLabel,
   showMegaMenu = true,
 }: {
   categories: CategoryNode[];
   balcaoHref?: string;
   pedidoRapidoHref?: string;
+  faqHref?: string;
   audienceLabel?: string | null;
   showMegaMenu?: boolean;
 }) {
@@ -59,7 +61,16 @@ export function SiteNav({
               href={pedidoRapidoHref}
               style={{ fontSize: 13, fontWeight: 800, color: palette.pink, textDecoration: "none", whiteSpace: "nowrap" }}
             >
-              Pedido rápido
+              Consulte preços
+            </Link>
+          )}
+          {faqHref && (
+            <Link
+              href={faqHref}
+              className="site-nav-faq-link"
+              style={{ fontSize: 13, fontWeight: 600, color: palette.gray600, textDecoration: "none", whiteSpace: "nowrap" }}
+            >
+              Todas as dúvidas
             </Link>
           )}
           <CartBadge />
@@ -112,6 +123,9 @@ export function SiteNav({
             gap: 8px !important;
           }
           .site-nav-audience {
+            display: none;
+          }
+          .site-nav-faq-link {
             display: none;
           }
         }

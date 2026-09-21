@@ -92,7 +92,7 @@ export async function CotacaoPageBody() {
       `}</style>
 
       <LeadGateProvider>
-        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" />
+        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" faqHref="/perguntas-frequentes" />
 
         <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>
           <Link href="/loja" className="back-link">

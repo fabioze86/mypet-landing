@@ -88,26 +88,26 @@ export const steps = [
   {
     id: "cadastro",
     icon: "IdentificationCard",
-    title: "Cadastro com CNPJ e WhatsApp",
-    body: "Sem cotação por WhatsApp. Você preenche o formulário desta página.",
+    title: "Faça seu cadastro rápido",
+    body: "Informe seu CNPJ e os dados básicos da sua empresa. Leva poucos minutos.",
   },
   {
     id: "acesso",
     icon: "LockKeyOpen",
-    title: "Acesso liberado na hora",
-    body: "A loja com preço, estoque e carrinho abre assim que o cadastro é enviado.",
+    title: "Acesse preços de atacado",
+    body: "Seu acesso é liberado para consultar preços e condições dos produtos.",
   },
   {
     id: "pedido",
-    icon: "ShoppingCart",
-    title: "Monta o pedido no carrinho",
-    body: "Você escolhe os itens e fecha o pedido sozinho, no seu tempo.",
+    icon: "MagnifyingGlass",
+    title: "Pesquise e monte seu pedido",
+    body: "Busque por produto, SKU, categoria ou marca, informe as quantidades e adicione os itens que deseja.",
   },
   {
-    id: "entrega",
-    icon: "Package",
-    title: "Recebe no endereço do CNPJ",
-    body: "Entrega por transportadora no mesmo endereço do cadastro, em horário comercial.",
+    id: "compra",
+    icon: "ShoppingCart",
+    title: "Compre do seu jeito",
+    body: "Finalize seu pedido pelo site ou use a consulta para montar seu orçamento e decidir depois.",
   },
 ] as const;
 

@@ -109,12 +109,12 @@ export function AccessForm() {
       ) : null}
 
       <p>
-        Ao criar o acesso você concorda com o uso dos dados de CNPJ e WhatsApp para liberação da
-        loja.
+        Ao continuar, você concorda com o uso dos dados informados para identificação da sua
+        empresa e liberação dos preços.
       </p>
 
       <button type="submit" disabled={submitting}>
-        {submitting ? "Enviando…" : "Criar acesso à loja"}
+        {submitting ? "Enviando…" : "Consultar preços"}
       </button>
     </form>
   );

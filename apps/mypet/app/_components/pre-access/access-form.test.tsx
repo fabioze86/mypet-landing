@@ -23,7 +23,7 @@ describe("AccessForm", () => {
     await user.type(screen.getByLabelText("CNPJ"), "12.345.678/0001-95");
     await user.type(screen.getByLabelText("WhatsApp"), "(11) 99999-0000");
     await user.type(screen.getByLabelText(/E-mail/), "loja@example.com");
-    await user.click(screen.getByRole("button", { name: "Criar acesso à loja" }));
+    await user.click(screen.getByRole("button", { name: "Consultar preços" }));
 
     expect(fetch).toHaveBeenCalledWith(
       "/api/pre-acesso",
@@ -49,7 +49,7 @@ describe("AccessForm", () => {
 
     await user.type(screen.getByLabelText("CNPJ"), "12345678000195");
     await user.type(screen.getByLabelText("WhatsApp"), "5511999990000");
-    await user.click(screen.getByRole("button", { name: "Criar acesso à loja" }));
+    await user.click(screen.getByRole("button", { name: "Consultar preços" }));
 
     expect(fetch).toHaveBeenCalledWith(
       "/api/pre-acesso",
@@ -75,7 +75,7 @@ describe("AccessForm", () => {
 
     await user.type(screen.getByLabelText("CNPJ"), "1");
     await user.type(screen.getByLabelText("WhatsApp"), "2");
-    await user.click(screen.getByRole("button", { name: "Criar acesso à loja" }));
+    await user.click(screen.getByRole("button", { name: "Consultar preços" }));
 
     const whatsapp = screen.getByLabelText("WhatsApp");
     expect(await screen.findByText("Informe o WhatsApp com DDD e número.")).toBeInTheDocument();

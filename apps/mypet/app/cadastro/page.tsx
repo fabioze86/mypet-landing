@@ -34,16 +34,16 @@ export default function CadastroPage() {
         <section className="pa-cadastro-section" aria-labelledby="cadastro-title">
           <div className="pa-wrap pa-cadastro-wrap">
             <div className="pa-cadastro-intro">
-              <p className="pa-eyebrow">Acesso à loja</p>
-              <h1 id="cadastro-title">Libere os preços de atacado da My Pet Brasil</h1>
+              <p className="pa-eyebrow">Preços para lojistas</p>
+              <h1 id="cadastro-title">Consulte nossos preços de atacado</h1>
               <p>
-                Cadastro com CNPJ e WhatsApp. Liberação na hora, sem cotação por WhatsApp.
+                Informe os dados básicos da sua empresa para visualizar preços e montar seu orçamento.
               </p>
             </div>
 
             <div className="pa-panel" id="acesso">
-              <h2>Criar acesso à loja</h2>
-              <p className="pa-panel-sub">CNPJ e WhatsApp. Liberação na hora, sem cotação por WhatsApp.</p>
+              <h2>Liberar preços</h2>
+              <p className="pa-panel-sub">Faça uma identificação rápida para consultar os preços da My Pet Brasil.</p>
               <AccessForm />
             </div>
           </div>

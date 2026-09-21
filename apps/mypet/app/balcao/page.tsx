@@ -76,7 +76,7 @@ export async function BalcaoPageBody() {
         }
       `}</style>
 
-      <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" />
+      <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" faqHref="/perguntas-frequentes" />
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 80px" }}>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 6 }}>

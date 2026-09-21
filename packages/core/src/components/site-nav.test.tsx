@@ -19,7 +19,7 @@ const config: ClientConfig = {
   },
 };
 
-describe("SiteNav — link do Pedido Rápido", () => {
+describe("SiteNav — link de Consulte preços", () => {
   it("renderiza o link quando pedidoRapidoHref é informado", () => {
     const markup = renderToStaticMarkup(
       createElement(
@@ -34,7 +34,7 @@ describe("SiteNav — link do Pedido Rápido", () => {
     );
 
     expect(markup).toContain('href="/pedido-rapido"');
-    expect(markup).toContain(">Pedido rápido<");
+    expect(markup).toContain(">Consulte preços<");
   });
 
   it("não renderiza o link quando pedidoRapidoHref não é informado", () => {
@@ -46,7 +46,38 @@ describe("SiteNav — link do Pedido Rápido", () => {
       ),
     );
 
-    expect(markup).not.toContain(">Pedido rápido<");
+    expect(markup).not.toContain(">Consulte preços<");
+  });
+});
+
+describe("SiteNav — link Todas as dúvidas", () => {
+  it("renderiza o link quando faqHref é informado", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        ClientConfigProvider,
+        { config },
+        createElement(
+          CartProvider,
+          null,
+          createElement(SiteNav, { categories: [], faqHref: "/perguntas-frequentes" }),
+        ),
+      ),
+    );
+
+    expect(markup).toContain('href="/perguntas-frequentes"');
+    expect(markup).toContain(">Todas as dúvidas<");
+  });
+
+  it("não renderiza o link quando faqHref não é informado", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        ClientConfigProvider,
+        { config },
+        createElement(CartProvider, null, createElement(SiteNav, { categories: [] })),
+      ),
+    );
+
+    expect(markup).not.toContain(">Todas as dúvidas<");
   });
 });
 
