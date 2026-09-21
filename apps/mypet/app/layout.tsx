@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
@@ -43,6 +44,7 @@ export default function RootLayout({
         <ClientConfigProvider config={clientConfig}>
           <CartProvider>{children}</CartProvider>
         </ClientConfigProvider>
+        <Analytics />
       </body>
     </html>
   );
