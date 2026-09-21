@@ -76,7 +76,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
 
     if (!result.ok) {
       if (result.needsAuth) {
-        router.push("/#acesso");
+        router.push("/cadastro");
         return;
       }
       setSubmitError(result.error);

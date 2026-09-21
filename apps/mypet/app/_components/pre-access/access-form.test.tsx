@@ -36,7 +36,7 @@ describe("AccessForm", () => {
         }),
       }),
     );
-    expect(assign).toHaveBeenCalledWith("/loja");
+    expect(assign).toHaveBeenCalledWith("/pedido-rapido");
   });
 
   it("envia email vazio quando o campo fica em branco", async () => {

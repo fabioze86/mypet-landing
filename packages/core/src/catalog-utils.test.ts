@@ -6,14 +6,12 @@ import {
   pickActiveBadge,
   mainImage,
   mapProduct,
-  formatPrice,
   PLACEHOLDER_IMAGE,
   buildCategoryTree,
+  flattenCategoryTree,
   collectCategorySubtreeIds,
   getCategoryPath,
   topLevelCategories,
-  channelUsesErpPrice,
-  applyErpPrice,
   type RawProductRow,
   type CategoryNode,
 } from "./catalog-utils";
@@ -115,48 +113,6 @@ describe("mapProduct", () => {
   });
 });
 
-describe("channelUsesErpPrice", () => {
-  it("usa o preço do ERP (Bling) para o canal mypetbrasil", () => {
-    expect(channelUsesErpPrice("mypetbrasil")).toBe(true);
-  });
-  it("mantém o preço manual por canal nos demais canais", () => {
-    expect(channelUsesErpPrice("distribuidora")).toBe(false);
-    expect(channelUsesErpPrice("ffa_fabrica")).toBe(false);
-  });
-});
-
-describe("applyErpPrice", () => {
-  const base = { sku: "15675", salePrice: null as number | null, priceLabel: null as string | null };
-
-  it("sobrescreve preço e rótulo com o valor do ERP quando a referência existe", () => {
-    const out = applyErpPrice(base, new Map([["15675", 42.9]]));
-    expect(out.salePrice).toBe(42.9);
-    expect(out.priceLabel).toBe(formatPrice(42.9));
-    expect(out.priceLabel).toMatch(/^R\$\s?42,90$/);
-  });
-
-  it("ignora qualquer preço anterior quando o ERP não tem a referência", () => {
-    const out = applyErpPrice(
-      { sku: "999", salePrice: 10, priceLabel: "R$ 10,00" },
-      new Map([["15675", 42.9]]),
-    );
-    expect(out.salePrice).toBeNull();
-    expect(out.priceLabel).toBeNull();
-  });
-
-  it("trata sku vazio como sem preço", () => {
-    const out = applyErpPrice({ sku: "", salePrice: null, priceLabel: null }, new Map([["", 5]]));
-    expect(out.salePrice).toBeNull();
-    expect(out.priceLabel).toBeNull();
-  });
-
-  it("não muta o item original", () => {
-    const item = { sku: "15675", salePrice: null as number | null, priceLabel: null as string | null };
-    applyErpPrice(item, new Map([["15675", 42.9]]));
-    expect(item.salePrice).toBeNull();
-  });
-});
-
 const SAMPLE_CATEGORIES: CategoryNode[] = [
   { id: "c1", parentId: null, slug: "caes", name: "Cães", level: 1, sortOrder: 0 },
   { id: "c2", parentId: "c1", slug: "caes-racao", name: "Ração", level: 2, sortOrder: 0 },
@@ -185,6 +141,24 @@ describe("buildCategoryTree", () => {
 
   it("retorna lista vazia para entrada vazia", () => {
     expect(buildCategoryTree([])).toEqual([]);
+  });
+});
+
+describe("flattenCategoryTree", () => {
+  it("achata em profundidade — cada categoria aparece logo após o pai, antes dos irmãos do pai", () => {
+    const flat = flattenCategoryTree(buildCategoryTree(SAMPLE_CATEGORIES));
+    expect(flat.map((c) => c.id)).toEqual(["c1", "c2", "c3", "c4"]);
+  });
+
+  it("não inclui o campo children no resultado achatado", () => {
+    const flat = flattenCategoryTree(buildCategoryTree(SAMPLE_CATEGORIES));
+    for (const node of flat) {
+      expect(node).not.toHaveProperty("children");
+    }
+  });
+
+  it("retorna lista vazia para árvore vazia", () => {
+    expect(flattenCategoryTree([])).toEqual([]);
   });
 });
 

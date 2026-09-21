@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { AccessForm } from "./access-form";
 
 export function Hero() {
   return (
@@ -19,23 +18,20 @@ export function Hero() {
         <div>
           <p className="pa-eyebrow">Atacado para pet shops</p>
           <h1 id="hero-title">
-            Compre no atacado com condições{" "}
-            <span className="pa-hl">claras</span>
+            Produtos para pet shop direto de fábrica e{" "}
+            <span className="pa-hl">no atacado</span>
           </h1>
           <p className="pa-hero-lead">
-            Pedido mínimo, pagamento e prazo à vista antes de você entrar.
-            Cadastro com CNPJ e WhatsApp, acesso imediato.
+            A My Pet Brasil atende lojistas, banho e tosa, clínicas veterinárias e outros
+            negócios do mercado pet.
+          </p>
+          <p className="pa-hero-lead">
+            Consulte nossos preços e monte seu pedido de forma rápida. Faça um cadastro simples
+            com seu CNPJ para liberar os preços.
           </p>
           <div className="pa-hero-actions">
-            <a href="#condicoes" className="pa-btn pa-btn-primary">Ver condições</a>
-            <a href="#categorias" className="pa-btn pa-btn-hero-ghost">Ver categorias</a>
+            <a href="/cadastro" className="pa-btn pa-btn-primary">Consultar preços</a>
           </div>
-        </div>
-
-        <div className="pa-panel" id="acesso">
-          <h2>Criar acesso à loja</h2>
-          <p className="pa-panel-sub">CNPJ e WhatsApp. Liberação na hora, sem cotação por WhatsApp.</p>
-          <AccessForm />
         </div>
       </div>
     </section>

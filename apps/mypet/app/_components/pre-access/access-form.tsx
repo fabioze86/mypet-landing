@@ -35,7 +35,7 @@ export function AccessForm() {
         body: JSON.stringify({ cnpj, whatsapp, email }),
       });
       if (response.ok) {
-        window.location.assign("/loja");
+        window.location.assign("/pedido-rapido");
         return;
       }
       const data = await response.json().catch(() => null);

@@ -7,7 +7,7 @@
  * (`getBalcaoRules`, `getBalcaoEligibleProducts`) ficam em `./balcao`, que
  * reexporta tudo daqui.
  *
- * O preço-base vem do mesmo caminho do catálogo (espelho Bling para mypetbrasil).
+ * O preço-base vem do mesmo caminho do catálogo (product_channel_prices).
  * As faixas são percentuais sobre esse preço, avaliadas POR SKU. O desconto
  * logístico é fixo e mora só aqui, nunca no banco.
  */

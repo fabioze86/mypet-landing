@@ -6,8 +6,6 @@ import {
   formatPrice,
   pageRange,
   salePriceFromChannelPrices,
-  channelUsesErpPrice,
-  applyErpPrice,
   totalPages,
   mainImage,
   pickActiveBadge,
@@ -23,35 +21,6 @@ import {
 
 export const CATALOG_SELECT =
   "id, name, reference, brand, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at)";
-
-/**
- * Preços do espelho do Bling (view `v_precos_erp`, indexada por referência).
- * Usado nos canais listados em `ERP_PRICE_CHANNELS` (ver catalog-utils), onde o
- * ERP é a fonte única de preço. Retorna mapa `referência -> preço`.
- */
-export async function fetchErpPrices(references: (string | null | undefined)[]): Promise<Map<string, number>> {
-  const unique = [...new Set(references.filter((r): r is string => !!r))];
-  if (unique.length === 0) return new Map();
-
-  const supabase = getHubClient();
-  const { data, error } = await supabase
-    .from("v_precos_erp")
-    .select("reference, preco")
-    .in("reference", unique);
-
-  if (error) {
-    console.error("[catalog] erro ao consultar preços do ERP:", error.message);
-    return new Map();
-  }
-
-  const map = new Map<string, number>();
-  for (const row of (data as { reference: string | null; preco: number | string | null }[]) ?? []) {
-    if (!row.reference || row.preco === null || row.preco === undefined) continue;
-    const value = typeof row.preco === "number" ? row.preco : Number(row.preco);
-    if (Number.isFinite(value)) map.set(row.reference, value);
-  }
-  return map;
-}
 
 type RawCatalogVariantPriceRow = {
   parent_product_id: string | null;
@@ -82,19 +51,12 @@ async function applyStartingVariantPrices(items: CatalogResult["items"], channel
   }
 
   const variants = data as unknown as RawCatalogVariantPriceRow[];
-  const erpPrices = channelUsesErpPrice(channel)
-    ? await fetchErpPrices(variants.map((variant) => variant.reference))
-    : null;
   const lowestPriceByParent = new Map<string, number>();
 
   for (const variant of variants) {
     if (!variant.parent_product_id) continue;
-    const rawPrice = erpPrices
-      ? (variant.reference ? erpPrices.get(variant.reference) : null)
-      : (() => {
-          const raw = variant.product_channel_prices?.find((price) => price.sale_price != null)?.sale_price;
-          return raw == null ? null : Number(raw);
-        })();
+    const raw = variant.product_channel_prices?.find((price) => price.sale_price != null)?.sale_price;
+    const rawPrice = raw == null ? null : Number(raw);
     if (rawPrice == null || !Number.isFinite(rawPrice)) continue;
 
     const currentLowest = lowestPriceByParent.get(variant.parent_product_id);
@@ -147,11 +109,6 @@ export async function queryCatalog(params: {
   }
 
   let items = ((data as unknown as RawProductRow[]) ?? []).map((row) => mapProduct(row));
-
-  if (channelUsesErpPrice(channel)) {
-    const erpPrices = await fetchErpPrices(items.map((item) => item.sku));
-    items = items.map((item) => applyErpPrice(item, erpPrices));
-  }
 
   items = await applyStartingVariantPrices(items, channel);
 
@@ -268,10 +225,10 @@ export async function getProductById(id: string, channel: string) {
     return null;
   }
 
-  let variants = data.product_role === "parent" ? await getVariantsByParentId(id, channel) : [];
+  const variants = data.product_role === "parent" ? await getVariantsByParentId(id, channel) : [];
 
   const channelSalePrice = salePriceFromChannelPrices(data.product_channel_prices);
-  let product = {
+  const product = {
     id: data.id,
     name: data.name,
     sku: data.reference ?? "",
@@ -293,12 +250,6 @@ export async function getProductById(id: string, channel: string) {
     variantAxis: (data.variant_axis as VariantAxisEntry[] | null) ?? [],
     variants,
   };
-
-  if (channelUsesErpPrice(channel)) {
-    const erpPrices = await fetchErpPrices([product.sku, ...variants.map((v) => v.sku)]);
-    variants = variants.map((v) => applyErpPrice(v, erpPrices));
-    product = { ...applyErpPrice(product, erpPrices), variants };
-  }
 
   return product;
 }

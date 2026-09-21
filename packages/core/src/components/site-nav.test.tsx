@@ -49,3 +49,29 @@ describe("SiteNav — link do Pedido Rápido", () => {
     expect(markup).not.toContain(">Pedido rápido<");
   });
 });
+
+describe("SiteNav — showMegaMenu", () => {
+  it("renderiza o menu horizontal de categorias por padrão", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        ClientConfigProvider,
+        { config },
+        createElement(CartProvider, null, createElement(SiteNav, { categories: [] })),
+      ),
+    );
+
+    expect(markup).toContain('class="site-nav-mega-menu-row"');
+  });
+
+  it("oculta o menu horizontal de categorias quando showMegaMenu é false", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        ClientConfigProvider,
+        { config },
+        createElement(CartProvider, null, createElement(SiteNav, { categories: [], showMegaMenu: false })),
+      ),
+    );
+
+    expect(markup).not.toContain('class="site-nav-mega-menu-row"');
+  });
+});

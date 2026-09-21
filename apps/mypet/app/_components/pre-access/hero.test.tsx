@@ -10,10 +10,10 @@ describe("Hero", () => {
     expect(h1.querySelector(".pa-hl")).not.toBeNull();
   });
 
-  it("mantém o alvo de âncora do formulário de acesso", () => {
-    const { container } = render(<Hero />);
-    expect(container.querySelector("#acesso")).not.toBeNull();
-    expect(container.querySelector("form")).not.toBeNull();
+  it("tem um CTA para a página de cadastro", () => {
+    render(<Hero />);
+    const link = screen.getByRole("link", { name: "Consultar preços" });
+    expect(link).toHaveAttribute("href", "/cadastro");
   });
 
   it("não usa em-dash na copy", () => {

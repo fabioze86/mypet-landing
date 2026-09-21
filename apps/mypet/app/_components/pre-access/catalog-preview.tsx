@@ -32,7 +32,7 @@ export function CatalogPreview({
             const src = thumbs[category.id];
             return (
               <li key={category.id}>
-                <a className="pa-cat-tile" href="#acesso">
+                <a className="pa-cat-tile" href="/cadastro">
                   <span className="pa-cat-media">
                     {src ? (
                       <img src={src} alt="" loading="lazy" decoding="async" />

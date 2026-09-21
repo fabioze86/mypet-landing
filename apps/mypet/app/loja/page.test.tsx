@@ -20,9 +20,15 @@ beforeEach(() => {
 });
 
 describe("LojaPage", () => {
-  it("redireciona para / quando não há comprador", async () => {
+  it("redireciona para /pedido-rapido — navegação da loja está temporariamente oculta", async () => {
     requireBuyer.mockResolvedValue(null);
     await expect(LojaContent({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT");
-    expect(redirect).toHaveBeenCalledWith("/");
+    expect(redirect).toHaveBeenCalledWith("/pedido-rapido");
+  });
+
+  it("redireciona para /pedido-rapido mesmo com comprador autenticado", async () => {
+    requireBuyer.mockResolvedValue({ id: "b1" });
+    await expect(LojaContent({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT");
+    expect(redirect).toHaveBeenCalledWith("/pedido-rapido");
   });
 });

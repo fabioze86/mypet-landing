@@ -4,13 +4,12 @@ import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { getCategoryThumbs } from "./_data/category-thumbs";
 import { Hero } from "./_components/pre-access/hero";
-import { MetricsBar } from "./_components/pre-access/metrics-bar";
+import { CommercialFaq } from "./_components/pre-access/commercial-faq";
+import { QuickAccessSteps } from "./_components/pre-access/quick-access-steps";
+import { WhyBuy } from "./_components/pre-access/why-buy";
 import { CommercialConditions } from "./_components/pre-access/commercial-conditions";
 import { HowItWorks } from "./_components/pre-access/how-it-works";
 import { CatalogPreview } from "./_components/pre-access/catalog-preview";
-import { Testimonials } from "./_components/pre-access/testimonials";
-import { CommercialFaq } from "./_components/pre-access/commercial-faq";
-import { InstitutionalTrust } from "./_components/pre-access/institutional-trust";
 import { ClosingCta } from "./_components/pre-access/closing-cta";
 import { LANDING_STYLES } from "./_components/pre-access/styles";
 
@@ -41,24 +40,23 @@ export default async function LandingPage() {
             <span>{SITE_NAME}</span>
           </div>
           <nav className="pa-nav" aria-label="Seções da página">
+            <a href="#faq">Dúvidas</a>
             <a href="#condicoes">Condições</a>
             <a href="#como-funciona">Como funciona</a>
             <a href="#categorias">Categorias</a>
-            <a href="#faq">Dúvidas</a>
-            <a href="#acesso" className="pa-nav-cta">Criar acesso</a>
+            <a href="/cadastro" className="pa-nav-cta">Consultar preços</a>
           </nav>
         </div>
       </header>
 
       <main>
         <Hero />
-        <MetricsBar />
+        <CommercialFaq />
+        <QuickAccessSteps />
+        <WhyBuy />
         <CommercialConditions />
         <HowItWorks />
         <CatalogPreview categories={topCategories} thumbs={thumbs} />
-        <Testimonials />
-        <CommercialFaq />
-        <InstitutionalTrust categoryCount={topCategories.length} />
         <ClosingCta />
       </main>
 

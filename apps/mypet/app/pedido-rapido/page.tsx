@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { getCategories, getBrands } from "@mypet/core/catalog";
 import { getCatalogLineItems } from "@mypet/core/catalog-line-items";
+import { buildCategoryTree, flattenCategoryTree } from "@mypet/core/catalog-utils";
 import type { Channel } from "@mypet/core/channels";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
@@ -35,10 +36,11 @@ export async function PedidoRapidoPageBody() {
     getBrands(channel),
     getCatalogLineItems({ page: 1, channel }),
   ]);
+  const orderedCategories = flattenCategoryTree(buildCategoryTree(categories));
 
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
-      <SiteNav categories={categories} balcaoHref="/balcao" pedidoRapidoHref="/pedido-rapido" />
+      <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" />
       <main style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 24px 120px" }}>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>
           Pedido rápido
@@ -49,7 +51,7 @@ export async function PedidoRapidoPageBody() {
         <PedidoRapidoTable
           initialResult={firstPage}
           brands={brands}
-          categories={categories}
+          categories={orderedCategories}
           palette={PALETTE}
         />
       </main>

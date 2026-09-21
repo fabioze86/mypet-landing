@@ -10,7 +10,7 @@
 
 import { cacheLife, cacheTag } from "next/cache";
 import { getHubClient } from "./supabase";
-import { channelUsesErpPrice, mainImage } from "./catalog-utils";
+import { mainImage } from "./catalog-utils";
 import {
   buildOfferCampaign,
   type OfferCampaign,
@@ -61,39 +61,11 @@ async function resolveProducts(channel: string, productIds: string[]): Promise<M
 async function resolveRealPrices(
   channel: string,
   productIds: string[],
-  productById: Map<string, ResolvedProductInfo>,
 ): Promise<Map<string, number>> {
   const priceByProductId = new Map<string, number>();
   if (productIds.length === 0) return priceByProductId;
 
   const supabase = getHubClient();
-
-  if (channelUsesErpPrice(channel)) {
-    const refByProductId = new Map<string, string>();
-    for (const id of productIds) {
-      const ref = productById.get(id)?.reference;
-      if (ref) refByProductId.set(id, ref);
-    }
-    const refs = [...new Set(refByProductId.values())];
-    if (refs.length === 0) return priceByProductId;
-
-    const { data, error } = await supabase.from("v_precos_erp").select("reference, preco").in("reference", refs);
-    if (error) {
-      console.error("[offers] erro ao consultar preços do ERP:", error.message);
-      return priceByProductId;
-    }
-    const priceByRef = new Map<string, number>();
-    for (const p of (data as { reference: string | null; preco: number | string | null }[]) ?? []) {
-      if (!p.reference || p.preco == null) continue;
-      const v = Number(p.preco);
-      if (Number.isFinite(v)) priceByRef.set(p.reference, v);
-    }
-    for (const [productId, ref] of refByProductId) {
-      const v = priceByRef.get(ref);
-      if (v != null) priceByProductId.set(productId, v);
-    }
-    return priceByProductId;
-  }
 
   const { data, error } = await supabase
     .from("product_channel_prices")
@@ -109,6 +81,7 @@ async function resolveRealPrices(
     const v = Number(row.sale_price);
     if (Number.isFinite(v)) priceByProductId.set(row.product_id, v);
   }
+
   return priceByProductId;
 }
 
@@ -127,7 +100,7 @@ async function resolveRealPrices(
 async function finishQuery(channel: string, rows: RawOfferCampaignRow[]): Promise<OfferCampaign[]> {
   const productIds = [...new Set(rows.flatMap((r) => (r.offer_campaign_items ?? []).map((i) => i.product_id)))];
   const productById = await resolveProducts(channel, productIds);
-  const realPriceByProductId = await resolveRealPrices(channel, productIds, productById);
+  const realPriceByProductId = await resolveRealPrices(channel, productIds);
 
   const now = new Date();
   return rows

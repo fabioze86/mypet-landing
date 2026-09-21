@@ -36,11 +36,52 @@ export const commercialConditions = [
   },
 ] as const;
 
-export const metrics = [
-  { id: "itens", value: "~5 mil", label: "itens no catálogo, com preço de atacado" },
-  { id: "categorias", value: "12+", label: "categorias em destaque nesta página" },
-  { id: "cobertura", value: "Brasil", label: "entrega por transportadora para todas as regiões" },
-  { id: "prazo", value: "3 a 7 dias", label: "úteis no Sul e Sudeste após o despacho" },
+export const quickAccessSteps = [
+  {
+    id: "cnpj-email",
+    icon: "IdentificationCard",
+    title: "Informe seu CNPJ e e-mail",
+    body: "Faça seu acesso de forma rápida.",
+  },
+  {
+    id: "consulta",
+    icon: "MagnifyingGlass",
+    title: "Consulte produtos e preços",
+    body: "Pesquise pelo nome, SKU, categoria ou marca.",
+  },
+  {
+    id: "orcamento",
+    icon: "ShoppingCart",
+    title: "Monte seu orçamento",
+    body: "Informe as quantidades e adicione os produtos que interessam à sua loja.",
+  },
+] as const;
+
+export const whyBuyPoints = [
+  {
+    id: "variedade",
+    icon: "Stack",
+    heading: "Variedade para sua loja",
+    body: "Produtos para cães, gatos, banho e tosa, higiene, acessórios e outras categorias.",
+  },
+  {
+    id: "cnpj",
+    icon: "Storefront",
+    heading: "Compra para CNPJ",
+    body: "Atendimento especializado em lojistas e profissionais do segmento pet.",
+  },
+  {
+    id: "consulta",
+    icon: "MagnifyingGlass",
+    heading: "Consulte antes de comprar",
+    body: "Veja preços, pesquise por produto ou SKU e monte seu pedido.",
+  },
+  {
+    id: "sem-caixa-fechada",
+    icon: "Package",
+    heading: "Compra sem caixa fechada",
+    body: "Monte seu mix de acordo com a necessidade da sua loja.",
+  },
 ] as const;
 
 export const steps = [

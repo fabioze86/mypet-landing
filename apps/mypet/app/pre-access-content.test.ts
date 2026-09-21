@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   commercialConditions,
-  metrics,
+  quickAccessSteps,
+  whyBuyPoints,
   steps,
   testimonials,
 } from "./pre-access-content";
@@ -15,11 +16,19 @@ describe("pre-access-content", () => {
     }
   });
 
-  it("tem exatamente 4 métricas com value e label", () => {
-    expect(metrics).toHaveLength(4);
-    for (const m of metrics) {
-      expect(m.value.trim()).not.toBe("");
-      expect(m.label.trim()).not.toBe("");
+  it("tem exatamente 3 passos de consulta rápida", () => {
+    expect(quickAccessSteps).toHaveLength(3);
+    for (const s of quickAccessSteps) {
+      expect(s.title.trim()).not.toBe("");
+      expect(s.body.trim()).not.toBe("");
+    }
+  });
+
+  it("tem exatamente 4 pontos de confiança", () => {
+    expect(whyBuyPoints).toHaveLength(4);
+    for (const p of whyBuyPoints) {
+      expect(p.heading.trim()).not.toBe("");
+      expect(p.body.trim()).not.toBe("");
     }
   });
 
@@ -40,7 +49,8 @@ describe("pre-access-content", () => {
   it("nenhum texto de conteúdo usa em-dash ou en-dash", () => {
     const blob = JSON.stringify({
       commercialConditions,
-      metrics,
+      quickAccessSteps,
+      whyBuyPoints,
       steps,
       testimonials,
     });

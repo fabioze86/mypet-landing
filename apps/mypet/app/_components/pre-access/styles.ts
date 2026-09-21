@@ -63,7 +63,7 @@ export const LANDING_STYLES = `
   .pa-hero { position: relative; isolation: isolate; background: var(--pa-navy-dark); padding: 88px 0 72px; overflow: hidden; }
   .pa-hero-media { object-fit: cover; opacity: .18; z-index: -2; }
   .pa-hero-overlay { position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(15,31,69,.72), rgba(15,31,69,.94)); }
-  .pa-hero-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: start; }
+  .pa-hero-grid { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; max-width: 640px; }
   .pa-eyebrow { display: inline-block; font-family: var(--pa-geist); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; font-size: 12px; color: #fff; background: var(--pa-green); padding: 6px 14px; border-radius: var(--pa-r-pill); margin: 0 0 18px; }
   .pa-hero h1 { font-family: var(--pa-geist); font-weight: 700; letter-spacing: -0.025em; color: #fff; font-size: clamp(30px, 4.2vw, 44px); line-height: 1.08; margin: 0 0 16px; max-width: 22ch; }
   .pa-hero h1 .pa-hl { color: #4ADE80; }
@@ -71,6 +71,16 @@ export const LANDING_STYLES = `
   .pa-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
   .pa-btn-hero-ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.5); border-radius: var(--pa-r-pill); font-family: var(--pa-geist); font-weight: 600; font-size: 15px; padding: 12px 24px; text-decoration: none; display: inline-flex; align-items: center; transition: border-color .18s ease, background .18s ease; }
   .pa-btn-hero-ghost:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
+
+  /* cadastro page */
+  .pa-cadastro-section { padding: 64px 0 96px; }
+  .pa-cadastro-wrap { max-width: 560px; margin: 0 auto; }
+  .pa-cadastro-intro { text-align: center; margin-bottom: 28px; }
+  .pa-cadastro-intro h1 { font-family: var(--pa-geist); font-weight: 700; letter-spacing: -0.02em; color: var(--pa-navy); font-size: clamp(26px, 3.6vw, 34px); line-height: 1.15; margin: 0 0 12px; }
+  .pa-cadastro-intro p { color: var(--pa-muted); font-size: 16px; line-height: 1.6; margin: 0 auto; max-width: 48ch; }
+  .pa-cadastro-wrap .pa-panel { box-shadow: 0 16px 40px rgba(15,31,69,0.12); border: 1px solid var(--pa-line); }
+  .pa-cadastro-back { color: var(--pa-muted); text-decoration: none; font-weight: 500; font-size: 14px; }
+  .pa-cadastro-back:hover { color: var(--pa-navy); }
 
   /* access panel */
   .pa-panel { background: #fff; border-radius: var(--pa-r-card); padding: 26px 24px; box-shadow: 0 24px 60px rgba(15,31,69,0.35); }
@@ -109,6 +119,7 @@ export const LANDING_STYLES = `
   .pa-step-icon { display: inline-flex; color: var(--pa-green-dark); margin: 14px 0 8px; }
   .pa-step h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 15px; margin: 0 0 6px; }
   .pa-step p { color: var(--pa-muted); font-size: 13px; line-height: 1.55; margin: 0; }
+  .pa-steps-cta { margin-top: 36px; }
   @media (max-width: 900px) {
     .pa-steps { grid-template-columns: 1fr; gap: 22px; }
     .pa-steps::before { top: 0; bottom: 0; left: 18px; right: auto; width: 2px; height: auto; }
@@ -144,7 +155,7 @@ export const LANDING_STYLES = `
   .pa-faq details p { margin: 0; padding: 0 4px 18px; color: var(--pa-muted); font-size: 14px; line-height: 1.6; }
 
   /* institutional */
-  .pa-inst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 24px; }
+  .pa-inst-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 24px; }
   .pa-inst-item { padding-top: 20px; border-top: 2px solid var(--pa-navy); }
   .pa-inst-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--pa-r-pill); background: var(--pa-green-soft); color: var(--pa-green-dark); margin-bottom: 10px; }
   .pa-inst-item strong { display: block; font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 15px; margin-bottom: 6px; }
@@ -169,6 +180,9 @@ export const LANDING_STYLES = `
     .pa-section > .pa-wrap, .pa-inst > .pa-wrap, .pa-closing-inner { animation: pa-rise .5s ease both; animation-timeline: view(); animation-range: entry 0% cover 22%; }
   }
   @keyframes pa-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @media (max-width: 1100px) {
+    .pa-inst-grid { grid-template-columns: repeat(2, 1fr); }
+  }
   @media (max-width: 900px) {
     .pa-hero-grid { grid-template-columns: 1fr; gap: 30px; }
     .pa-cond-grid { grid-template-columns: 1fr; }

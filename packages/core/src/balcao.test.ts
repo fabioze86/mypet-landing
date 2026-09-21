@@ -270,7 +270,7 @@ describe("buildEstimate", () => {
 });
 
 describe("getBalcaoEligibleProducts", () => {
-  it("resolve preço do ERP, aplica a regra e descarta produto sem preço", async () => {
+  it("resolve preço do canal, aplica a regra e descarta produto sem preço", async () => {
     vi.resetModules();
     vi.doMock("next/cache", () => ({ cacheLife: () => {}, cacheTag: () => {} }));
     vi.doMock("./supabase", () => ({
@@ -299,29 +299,29 @@ describe("getBalcaoEligibleProducts", () => {
               }),
             };
           }
-          if (table === "products") {
-            const chain = {
-              select: () => chain,
-              eq: () => chain,
-              neq: () => chain,
-              or: () => chain,
-              order: () =>
-                Promise.resolve({
-                  data: [
-                    { id: "pa", name: "A", reference: "SKU-A", brand: null, category_id: "cat-1", product_assets: [], product_channel_prices: [] },
-                    { id: "pb", name: "B", reference: "SKU-B", brand: null, category_id: "cat-1", product_assets: [], product_channel_prices: [] },
-                  ],
-                  error: null,
-                }),
-            };
-            return chain;
-          }
-          // v_precos_erp
-          return {
-            select: () => ({
-              in: () => Promise.resolve({ data: [{ reference: "SKU-A", preco: "100.00" }], error: null }),
-            }),
+          const chain = {
+            select: () => chain,
+            eq: () => chain,
+            neq: () => chain,
+            or: () => chain,
+            order: () =>
+              Promise.resolve({
+                data: [
+                  {
+                    id: "pa",
+                    name: "A",
+                    reference: "SKU-A",
+                    brand: null,
+                    category_id: "cat-1",
+                    product_assets: [],
+                    product_channel_prices: [{ sale_price: "100.00" }],
+                  },
+                  { id: "pb", name: "B", reference: "SKU-B", brand: null, category_id: "cat-1", product_assets: [], product_channel_prices: [] },
+                ],
+                error: null,
+              }),
           };
+          return chain;
         },
       }),
     }));

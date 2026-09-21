@@ -12,11 +12,13 @@ export function SiteNav({
   balcaoHref,
   pedidoRapidoHref,
   audienceLabel,
+  showMegaMenu = true,
 }: {
   categories: CategoryNode[];
   balcaoHref?: string;
   pedidoRapidoHref?: string;
   audienceLabel?: string | null;
+  showMegaMenu?: boolean;
 }) {
   const { name, tagline, palette, logo } = useClientConfig();
   const tree = buildCategoryTree(categories);
@@ -64,11 +66,13 @@ export function SiteNav({
         </div>
       </div>
 
-      <div className="site-nav-mega-menu-row" style={{ borderTop: `1px solid ${palette.gray100}` }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 12px" }}>
-          <MegaMenu tree={tree} />
+      {showMegaMenu && (
+        <div className="site-nav-mega-menu-row" style={{ borderTop: `1px solid ${palette.gray100}` }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 12px" }}>
+            <MegaMenu tree={tree} />
+          </div>
         </div>
-      </div>
+      )}
 
       <style>{`
         .site-nav-mobile-trigger { display: none; }

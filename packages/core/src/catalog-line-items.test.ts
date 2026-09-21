@@ -5,10 +5,6 @@ vi.mock("next/cache", () => ({
   cacheTag: () => {},
 }));
 
-vi.mock("./catalog", () => ({
-  fetchErpPrices: async () => new Map<string, number>(),
-}));
-
 const calls: Record<string, unknown[][]> = {};
 let productPage: { data: unknown[]; count: number } = { data: [], count: 0 };
 let variantRows: unknown[] = [];

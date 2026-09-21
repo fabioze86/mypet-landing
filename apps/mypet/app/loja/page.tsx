@@ -116,6 +116,10 @@ export async function LojaContent({
 }: {
   searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
 }) {
+  // Navegação da /loja temporariamente oculta — fluxo principal é /pedido-rapido.
+  // Removível quando a loja completa voltar a ficar disponível para o cliente.
+  redirect("/pedido-rapido");
+
   const buyer = await requireBuyer();
   if (!buyer) redirect("/");
   const categories = await getCategories();
@@ -303,7 +307,7 @@ export async function LojaContent({
       <>
 
         {/* NAV */}
-        <SiteNav categories={categories} balcaoHref="/balcao" pedidoRapidoHref="/pedido-rapido" />
+        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" />
 
         {/* CATEGORY CHIPS */}
         <CategoryChips categories={categories} />

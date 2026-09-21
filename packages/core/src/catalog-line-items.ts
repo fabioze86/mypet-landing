@@ -1,12 +1,10 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { getHubClient } from "./supabase";
-import { fetchErpPrices } from "./catalog";
 import {
   mapVariant,
   formatPrice,
   pageRange,
   salePriceFromChannelPrices,
-  channelUsesErpPrice,
   totalPages,
   mainImage,
   PLACEHOLDER_IMAGE,
@@ -60,11 +58,6 @@ function lineItemVariantLabel(axis: VariantAxisEntry[], sku: string, fallbackInd
   const isJustReference = label.trim().toLowerCase() === sku.trim().toLowerCase();
   if (label && !isJustReference) return label;
   return `N.${fallbackIndex + 1}`;
-}
-
-function withErpPrice(item: CatalogLineItem, pricesByReference: Map<string, number>): CatalogLineItem {
-  const preco = item.sku ? pricesByReference.get(item.sku) ?? null : null;
-  return { ...item, unitPrice: preco, priceLabel: formatPrice(preco) };
 }
 
 async function fetchVariantsByParentIds(
@@ -142,7 +135,7 @@ export async function queryCatalogLineItems(params: {
   const parentIds = rows.filter((r) => r.product_role === "parent").map((r) => r.id);
   const variantsByParent = await fetchVariantsByParentIds(parentIds, channel);
 
-  let items: CatalogLineItem[] = [];
+  const items: CatalogLineItem[] = [];
   for (const row of rows) {
     if (row.product_role === "parent") {
       const variants = variantsByParent.get(row.id) ?? [];
@@ -172,11 +165,6 @@ export async function queryCatalogLineItems(params: {
         variantLabel: null,
       });
     }
-  }
-
-  if (channelUsesErpPrice(channel)) {
-    const erpPrices = await fetchErpPrices(items.map((item) => item.sku));
-    items = items.map((item) => withErpPrice(item, erpPrices));
   }
 
   const total = count ?? 0;

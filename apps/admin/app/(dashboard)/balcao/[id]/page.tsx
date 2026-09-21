@@ -5,6 +5,8 @@ import { requireAdminSession } from "@/lib/auth";
 import { previewUnitPrice } from "@/lib/balcao";
 import { updateRule } from "../actions";
 
+const CHANNEL = "mypetbrasil";
+
 const ERROR_MESSAGES: Record<string, string> = {
   dados_invalidos: "Dados inválidos. Revise os campos.",
   faixas_invalidas: "As faixas informadas são inválidas.",
@@ -54,15 +56,18 @@ export default async function EditBalcaoRulePage({
     .sort((a, b) => a.minQty - b.minQty);
   const tiersJson = JSON.stringify(tiers);
 
-  // Prévia com preço-base do ERP (por referência). Só quando escopo = sku.
+  // Prévia com preço-base do canal (product_channel_prices). Só quando escopo = sku.
   let previewBase: number | null = null;
   if (rule.scope === "sku" && rule.product_reference) {
     const { data: p } = await getHubClient()
-      .from("v_precos_erp")
-      .select("preco")
+      .from("products")
+      .select("product_channel_prices(channel, sale_price)")
       .eq("reference", rule.product_reference)
       .maybeSingle();
-    previewBase = p?.preco != null ? Number(p.preco) : null;
+    const raw = (p?.product_channel_prices as { channel: string; sale_price: number | string | null }[] | null)?.find(
+      (row) => row.channel === CHANNEL,
+    )?.sale_price;
+    previewBase = raw != null ? Number(raw) : null;
   }
   const qty = Number(previewQty) > 0 ? Math.floor(Number(previewQty)) : 15;
   const preview = previewBase != null ? previewUnitPrice(previewBase, tiers, qty) : null;
@@ -103,12 +108,12 @@ export default async function EditBalcaoRulePage({
       <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-2 text-sm font-bold text-slate-700">Prévia</h2>
         {rule.scope !== "sku" ? (
-          <p className="text-sm text-slate-500">Prévia disponível apenas para regras de SKU (preço-base do ERP por referência).</p>
+          <p className="text-sm text-slate-500">Prévia disponível apenas para regras de SKU (preço-base do canal por referência).</p>
         ) : previewBase == null ? (
-          <p className="text-sm text-slate-500">Sem preço no espelho do ERP para <code>{rule.product_reference}</code>.</p>
+          <p className="text-sm text-slate-500">Sem preço cadastrado no canal para <code>{rule.product_reference}</code>.</p>
         ) : (
           <form method="get" className="text-sm text-slate-700">
-            <p>Preço-base ERP: <strong>{brl(previewBase)}</strong></p>
+            <p>Preço-base: <strong>{brl(previewBase)}</strong></p>
             <label className="mt-2 block">
               Quantidade para simular
               <input name="previewQty" type="number" min={1} defaultValue={qty} className="ml-2 w-24 rounded border border-slate-300 px-2 py-1" />

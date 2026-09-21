@@ -10,7 +10,7 @@
 
 import { cacheLife, cacheTag } from "next/cache";
 import { getHubClient } from "./supabase";
-import { channelUsesErpPrice, mainImage } from "./catalog-utils";
+import { mainImage } from "./catalog-utils";
 import {
   resolveRuleForProduct,
   type BalcaoRule,
@@ -135,27 +135,6 @@ export async function getBalcaoEligibleProducts(
 
   const rows = (data as unknown as RawEligibleRow[]) ?? [];
 
-  // Preço-base: espelho Bling para canais ERP, senão product_channel_prices.
-  const priceByRef = new Map<string, number>();
-  if (channelUsesErpPrice(channel)) {
-    const refs = [...new Set(rows.map((r) => r.reference).filter((r): r is string => !!r))];
-    if (refs.length > 0) {
-      const { data: erp, error: erpErr } = await supabase
-        .from("v_precos_erp")
-        .select("reference, preco")
-        .in("reference", refs);
-      if (erpErr) {
-        console.error("[balcao] erro ao consultar preços do ERP:", erpErr.message);
-      } else {
-        for (const p of (erp as { reference: string | null; preco: number | string | null }[]) ?? []) {
-          if (!p.reference || p.preco == null) continue;
-          const v = Number(p.preco);
-          if (Number.isFinite(v)) priceByRef.set(p.reference, v);
-        }
-      }
-    }
-  }
-
   const out: BalcaoEligibleProduct[] = [];
   for (const row of rows) {
     const rule = resolveRuleForProduct(rules, {
@@ -164,13 +143,8 @@ export async function getBalcaoEligibleProducts(
     });
     if (!rule) continue; // inclui o caso de SKU excluído
 
-    let basePrice: number | null = null;
-    if (channelUsesErpPrice(channel)) {
-      basePrice = row.reference ? priceByRef.get(row.reference) ?? null : null;
-    } else {
-      const raw = row.product_channel_prices?.find((p) => p.sale_price != null)?.sale_price;
-      basePrice = raw == null ? null : Number(raw);
-    }
+    const raw = row.product_channel_prices?.find((p) => p.sale_price != null)?.sale_price;
+    const basePrice: number | null = raw == null ? null : Number(raw);
     if (basePrice == null || !Number.isFinite(basePrice)) continue;
 
     out.push({

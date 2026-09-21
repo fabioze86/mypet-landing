@@ -16,10 +16,10 @@ describe("CatalogPreview", () => {
     expect(within(region).queryByText(/\bSKU\b/i)).toBeNull();
   });
 
-  it("aponta tudo para o formulário de acesso", () => {
+  it("aponta tudo para a página de cadastro", () => {
     const { container } = render(<CatalogPreview categories={cats} thumbs={{}} />);
     const links = Array.from(container.querySelectorAll("a"));
     expect(links.length).toBeGreaterThan(0);
-    expect(links.every((a) => a.getAttribute("href") === "#acesso")).toBe(true);
+    expect(links.every((a) => a.getAttribute("href") === "/cadastro")).toBe(true);
   });
 });

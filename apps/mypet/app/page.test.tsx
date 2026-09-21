@@ -15,13 +15,23 @@ vi.mock("./_data/category-thumbs", () => ({
 import LandingPage from "./page";
 
 describe("LandingPage", () => {
-  it("renderiza condições, como funciona, depoimentos, FAQ e CTA final", async () => {
+  it("renderiza condições, como funciona, FAQ, consulta rápida, confiança e CTA final", async () => {
     render(await LandingPage());
     expect(screen.getByText("Pedido mínimo")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: /como funciona/i })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "O que dizem os lojistas" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Números da operação" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Quer apenas consultar nossos preços?" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Por que comprar na My Pet Brasil?" })).toBeInTheDocument();
     expect(screen.getAllByRole("group").length).toBeGreaterThanOrEqual(8); // <details> do FAQ
+  });
+
+  it("não mostra a seção de depoimentos", async () => {
+    render(await LandingPage());
+    expect(screen.queryByRole("region", { name: "O que dizem os lojistas" })).toBeNull();
+  });
+
+  it("não mostra o formulário de criação de acesso na home", async () => {
+    const { container } = render(await LandingPage());
+    expect(container.querySelector("form")).toBeNull();
   });
 
   it("a vitrine do catálogo mostra categorias sem qualquer preço", async () => {
@@ -37,10 +47,10 @@ describe("LandingPage", () => {
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
   });
 
-  it("usa o mesmo rótulo de CTA de conversão no header, hero e faixa final", async () => {
+  it("usa o mesmo alvo de CTA de conversão no header, hero e faixa final", async () => {
     const { container } = render(await LandingPage());
-    const acessoLinks = Array.from(container.querySelectorAll('a[href="#acesso"]'));
-    expect(acessoLinks.length).toBeGreaterThanOrEqual(2);
+    const cadastroLinks = Array.from(container.querySelectorAll('a[href="/cadastro"]'));
+    expect(cadastroLinks.length).toBeGreaterThanOrEqual(2);
   });
 
   it("não tem em-dash na copy visível da página", async () => {

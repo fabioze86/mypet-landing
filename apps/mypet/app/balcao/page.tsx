@@ -26,6 +26,10 @@ export default function BalcaoPage() {
 
 // exported for tests
 export async function BalcaoPageBody() {
+  // Navegação do /balcao temporariamente oculta — fluxo principal é /pedido-rapido.
+  // Removível quando o Balcão de Negócios voltar a ficar disponível para o cliente.
+  redirect("/pedido-rapido");
+
   const buyer = await requireBuyer();
   if (!buyer) redirect("/entrar");
 
@@ -72,7 +76,7 @@ export async function BalcaoPageBody() {
         }
       `}</style>
 
-      <SiteNav categories={categories} balcaoHref="/balcao" pedidoRapidoHref="/pedido-rapido" />
+      <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" />
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 80px" }}>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 6 }}>

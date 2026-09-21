@@ -84,14 +84,12 @@ vi.mock("./supabase", () => {
       });
       builder.then = (resolve) => {
         const data =
-          currentTable === "v_precos_erp"
-            ? [{ reference: "100", preco: "42.90" }] // numeric chega como string via PostgREST
-            : currentTable === "products"
-              ? variantRows
-              : [
-                  { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1, sort_order: 0 },
-                  { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sort_order: 1 },
-                ];
+          currentTable === "products"
+            ? variantRows
+            : [
+                { id: "cat-1", parent_id: null, slug: "caes", name: "Cães", level: 1, sort_order: 0 },
+                { id: "cat-2", parent_id: "cat-1", slug: "caes-racao", name: "Ração", level: 2, sort_order: 1 },
+              ];
         resolve({ data, error: null });
       };
       return {
@@ -198,27 +196,6 @@ describe("getProductById", () => {
   });
 });
 
-describe("preço do ERP (Bling) no canal mypetbrasil", () => {
-  it("queryCatalog sobrescreve o preço dos itens com o valor de v_precos_erp", async () => {
-    const result = await queryCatalog({ page: 1, channel: "mypetbrasil" });
-    expect(calls["fromAll"]).toContain("v_precos_erp");
-    expect(calls["in"]).toContainEqual(["reference", ["100"]]);
-    expect(result.items[0].salePrice).toBe(42.9);
-    expect(result.items[0].priceLabel).toMatch(/42,90/);
-  });
-
-  it("getProductById sobrescreve o preço do produto com o valor de v_precos_erp", async () => {
-    const product = await getProductById("p1", "mypetbrasil");
-    expect(calls["fromAll"]).toContain("v_precos_erp");
-    expect(product?.salePrice).toBe(42.9);
-    expect(product?.priceLabel).toMatch(/42,90/);
-  });
-
-  it("não consulta v_precos_erp para canais que usam preço manual", async () => {
-    await queryCatalog({ page: 1, channel: "distribuidora" });
-    expect(calls["fromAll"] ?? []).not.toContain("v_precos_erp");
-  });
-});
 
 describe("getCategories", () => {
   it("consulta a tabela categories e mapeia parent_id para parentId", async () => {
