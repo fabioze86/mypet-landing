@@ -41,6 +41,7 @@ export default async function LandingPage() {
           </div>
           <nav className="pa-nav" aria-label="Seções da página">
             <a href="#faq">Dúvidas</a>
+            <a href="/perguntas-frequentes">Todas as dúvidas</a>
             <a href="#condicoes">Condições</a>
             <a href="#como-funciona">Como funciona</a>
             <a href="#categorias">Categorias</a>
