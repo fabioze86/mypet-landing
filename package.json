@@ -15,7 +15,8 @@
     "lint": "eslint",
     "test": "pnpm --filter @mypet/core test && pnpm --filter azpetshop test",
     "push:send": "tsx scripts/push-send.ts",
-    "azpetshop:import-precos": "tsx scripts/azpetshop-import-precos.ts"
+    "azpetshop:import-precos": "tsx scripts/azpetshop-import-precos.ts",
+    "central-ajuda:seed": "tsx scripts/seed-central-ajuda.ts"
   },
   "devDependencies": {
     "concurrently": "^9",
