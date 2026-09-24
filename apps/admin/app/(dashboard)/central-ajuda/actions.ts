@@ -5,6 +5,7 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import { slugify, isDuplicateSlugError } from "@/lib/categories";
+import { revalidarCentralAjudaPublica } from "@/lib/central-ajuda-revalidation";
 
 export const ICONES_AJUDA = [
   "Flag",
@@ -58,6 +59,7 @@ export async function createCategoriaAjuda(formData: FormData): Promise<void> {
   }
 
   updateTag("central-ajuda");
+  await revalidarCentralAjudaPublica();
   redirect("/central-ajuda");
 }
 
@@ -95,5 +97,6 @@ export async function updateCategoriaAjuda(id: string, formData: FormData): Prom
   }
 
   updateTag("central-ajuda");
+  await revalidarCentralAjudaPublica();
   redirect("/central-ajuda");
 }

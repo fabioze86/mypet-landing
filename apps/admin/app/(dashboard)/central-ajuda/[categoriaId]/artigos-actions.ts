@@ -5,6 +5,7 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import { slugify, isDuplicateSlugError } from "@/lib/categories";
+import { revalidarCentralAjudaPublica } from "@/lib/central-ajuda-revalidation";
 
 const NovoArtigoSchema = z.object({
   titulo: z.string().min(1, "Informe o título."),
@@ -40,6 +41,7 @@ export async function createArtigoAjuda(categoriaId: string, formData: FormData)
   }
 
   updateTag("central-ajuda");
+  await revalidarCentralAjudaPublica();
   redirect(`/central-ajuda/${categoriaId}/${data.id}`);
 }
 
@@ -74,5 +76,6 @@ export async function alternarStatusArtigoAjuda(
   }
 
   updateTag("central-ajuda");
+  await revalidarCentralAjudaPublica();
   redirect(`/central-ajuda/${categoriaId}`);
 }
