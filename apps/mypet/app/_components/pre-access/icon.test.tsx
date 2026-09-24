@@ -12,4 +12,11 @@ describe("PaIcon", () => {
     const { container } = render(<PaIcon name="NaoExiste123" />);
     expect(container.querySelector("svg")).toBeNull();
   });
+
+  it("renderiza os ícones novos da central de ajuda", () => {
+    for (const name of ["Flag", "UserCircle", "Tag", "ArrowsClockwise", "Receipt", "Handshake"]) {
+      const { container } = render(<PaIcon name={name} />);
+      expect(container.querySelector("svg")).not.toBeNull();
+    }
+  });
 });

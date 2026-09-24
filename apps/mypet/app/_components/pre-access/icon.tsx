@@ -1,33 +1,45 @@
 import type { ComponentType } from "react";
 import {
+  ArrowsClockwise,
   CreditCard,
   CurrencyCircleDollar,
+  Flag,
+  Handshake,
   IdentificationCard,
   LockKeyOpen,
   MagnifyingGlass,
   Package,
+  Receipt,
   ShoppingCart,
   Star,
+  Storefront,
+  Tag,
   Truck,
   Headset,
-  Storefront,
   Stack,
+  UserCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import type { IconProps } from "@phosphor-icons/react";
 
 const MAP: Record<string, ComponentType<IconProps>> = {
+  ArrowsClockwise,
   CreditCard,
   CurrencyCircleDollar,
+  Flag,
+  Handshake,
   IdentificationCard,
   LockKeyOpen,
   MagnifyingGlass,
   Package,
+  Receipt,
   ShoppingCart,
   Star,
+  Storefront,
+  Tag,
   Truck,
   Headset,
-  Storefront,
   Stack,
+  UserCircle,
 };
 
 export function PaIcon({
