@@ -13,7 +13,10 @@ vi.mock("@mypet/core/help-center", () => ({
   getArtigosAjudaPublicadosPorCategoria: (id: string) => getArtigosAjudaPublicadosPorCategoria(id),
 }));
 
-import CategoriaAjudaPage from "./page";
+// Acessa o corpo async da página diretamente (a página exportada por padrão só
+// monta o header/footer estáticos e delega a busca de dados a este componente,
+// para permitir o boundary de Suspense exigido pelo cacheComponents).
+import { CategoriaAjudaPageBody as CategoriaAjudaPage } from "./page";
 
 beforeEach(() => {
   notFound.mockClear();

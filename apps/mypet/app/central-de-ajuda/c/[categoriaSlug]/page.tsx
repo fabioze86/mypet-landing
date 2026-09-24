@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,17 +23,11 @@ export async function generateMetadata({
   };
 }
 
-export default async function CategoriaAjudaPage({
+export default function CategoriaAjudaPage({
   params,
 }: {
   params: Promise<{ categoriaSlug: string }>;
 }) {
-  const { categoriaSlug } = await params;
-  const categoria = await getCategoriaAjudaBySlug(categoriaSlug);
-  if (!categoria) notFound();
-
-  const artigos = await getArtigosAjudaPublicadosPorCategoria(categoria.id);
-
   return (
     <>
       <style>{LANDING_STYLES}</style>
@@ -50,26 +45,9 @@ export default async function CategoriaAjudaPage({
       </header>
 
       <main>
-        <section className="pa-section" aria-labelledby="categoria-title">
-          <div className="pa-wrap" style={{ maxWidth: 820 }}>
-            <Link href="/central-de-ajuda" className="pa-cadastro-back">&larr; Central de ajuda</Link>
-            <h1 id="categoria-title" className="pa-h2" style={{ marginTop: 16 }}>{categoria.titulo}</h1>
-            <p className="pa-sec-lead">{categoria.descricao}</p>
-
-            {artigos.length === 0 ? (
-              <p className="pa-help-empty">Nenhum artigo publicado nesta categoria ainda.</p>
-            ) : (
-              <div className="pa-help-list">
-                {artigos.map((artigo) => (
-                  <Link key={artigo.id} href={`/central-de-ajuda/a/${artigo.slug}`}>
-                    <span className="pa-help-list-title">{artigo.titulo}</span>
-                    <span className="pa-help-list-sub">{artigo.resumo}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+        <Suspense fallback={<p className="pa-help-empty">Carregando categoria…</p>}>
+          <CategoriaAjudaPageBody params={params} />
+        </Suspense>
       </main>
 
       <footer className="pa-footer">
@@ -82,5 +60,40 @@ export default async function CategoriaAjudaPage({
         </div>
       </footer>
     </>
+  );
+}
+
+export async function CategoriaAjudaPageBody({
+  params,
+}: {
+  params: Promise<{ categoriaSlug: string }>;
+}) {
+  const { categoriaSlug } = await params;
+  const categoria = await getCategoriaAjudaBySlug(categoriaSlug);
+  if (!categoria) notFound();
+
+  const artigos = await getArtigosAjudaPublicadosPorCategoria(categoria.id);
+
+  return (
+    <section className="pa-section" aria-labelledby="categoria-title">
+      <div className="pa-wrap" style={{ maxWidth: 820 }}>
+        <Link href="/central-de-ajuda" className="pa-cadastro-back">&larr; Central de ajuda</Link>
+        <h1 id="categoria-title" className="pa-h2" style={{ marginTop: 16 }}>{categoria.titulo}</h1>
+        <p className="pa-sec-lead">{categoria.descricao}</p>
+
+        {artigos.length === 0 ? (
+          <p className="pa-help-empty">Nenhum artigo publicado nesta categoria ainda.</p>
+        ) : (
+          <div className="pa-help-list">
+            {artigos.map((artigo) => (
+              <Link key={artigo.id} href={`/central-de-ajuda/a/${artigo.slug}`}>
+                <span className="pa-help-list-title">{artigo.titulo}</span>
+                <span className="pa-help-list-sub">{artigo.resumo}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

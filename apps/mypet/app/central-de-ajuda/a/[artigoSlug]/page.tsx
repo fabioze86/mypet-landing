@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -23,19 +24,11 @@ export async function generateMetadata({
   };
 }
 
-export default async function ArtigoAjudaPage({
+export default function ArtigoAjudaPage({
   params,
 }: {
   params: Promise<{ artigoSlug: string }>;
 }) {
-  const { artigoSlug } = await params;
-  const artigo = await getArtigoAjudaPublicadoBySlug(artigoSlug);
-  if (!artigo) notFound();
-
-  const relacionados = (await getArtigosAjudaPublicadosPorCategoria(artigo.categoriaId)).filter(
-    (a) => a.id !== artigo.id,
-  );
-
   return (
     <>
       <style>{LANDING_STYLES}</style>
@@ -53,24 +46,9 @@ export default async function ArtigoAjudaPage({
       </header>
 
       <main>
-        <section className="pa-section" aria-labelledby="artigo-title">
-          <div className="pa-wrap" style={{ maxWidth: 820 }}>
-            <Link href="/central-de-ajuda" className="pa-cadastro-back">&larr; Central de ajuda</Link>
-            <article className="pa-help-article" style={{ marginTop: 16 }}>
-              <h1 id="artigo-title">{artigo.titulo}</h1>
-              <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(artigo.corpoMarkdown) }} />
-            </article>
-
-            {relacionados.length > 0 && (
-              <div className="pa-help-related">
-                <h4>Veja também</h4>
-                {relacionados.map((a) => (
-                  <Link key={a.id} href={`/central-de-ajuda/a/${a.slug}`}>{a.titulo}</Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+        <Suspense fallback={<p className="pa-help-empty">Carregando artigo…</p>}>
+          <ArtigoAjudaPageBody params={params} />
+        </Suspense>
       </main>
 
       <footer className="pa-footer">
@@ -83,5 +61,40 @@ export default async function ArtigoAjudaPage({
         </div>
       </footer>
     </>
+  );
+}
+
+export async function ArtigoAjudaPageBody({
+  params,
+}: {
+  params: Promise<{ artigoSlug: string }>;
+}) {
+  const { artigoSlug } = await params;
+  const artigo = await getArtigoAjudaPublicadoBySlug(artigoSlug);
+  if (!artigo) notFound();
+
+  const relacionados = (await getArtigosAjudaPublicadosPorCategoria(artigo.categoriaId)).filter(
+    (a) => a.id !== artigo.id,
+  );
+
+  return (
+    <section className="pa-section" aria-labelledby="artigo-title">
+      <div className="pa-wrap" style={{ maxWidth: 820 }}>
+        <Link href="/central-de-ajuda" className="pa-cadastro-back">&larr; Central de ajuda</Link>
+        <article className="pa-help-article" style={{ marginTop: 16 }}>
+          <h1 id="artigo-title">{artigo.titulo}</h1>
+          <div dangerouslySetInnerHTML={{ __html: renderizarMarkdown(artigo.corpoMarkdown) }} />
+        </article>
+
+        {relacionados.length > 0 && (
+          <div className="pa-help-related">
+            <h4>Veja também</h4>
+            {relacionados.map((a) => (
+              <Link key={a.id} href={`/central-de-ajuda/a/${a.slug}`}>{a.titulo}</Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
