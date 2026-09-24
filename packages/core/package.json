@@ -22,6 +22,7 @@
     "./channels": "./src/channels.ts",
     "./datetime": "./src/datetime.ts",
     "./features": "./src/features.ts",
+    "./help-center": "./src/help-center.ts",
     "./leads": "./src/leads.ts",
     "./leads-server": "./src/leads-server.ts",
     "./offers": "./src/offers.ts",
