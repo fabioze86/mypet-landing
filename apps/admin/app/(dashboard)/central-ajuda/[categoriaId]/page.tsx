@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAdminSession } from "@/lib/auth";
-import { ICONES_AJUDA, updateCategoriaAjuda } from "../actions";
+import { updateCategoriaAjuda } from "../actions";
+import { ICONES_AJUDA } from "../icones";
 import { createArtigoAjuda, alternarStatusArtigoAjuda } from "./artigos-actions";
 
 const ERROR_MESSAGES: Record<string, string> = {

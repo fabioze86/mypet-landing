@@ -6,20 +6,7 @@ import { redirect } from "next/navigation";
 import { requireAdminSession } from "@/lib/auth";
 import { slugify, isDuplicateSlugError } from "@/lib/categories";
 import { revalidarCentralAjudaPublica } from "@/lib/central-ajuda-revalidation";
-
-export const ICONES_AJUDA = [
-  "Flag",
-  "UserCircle",
-  "Package",
-  "Tag",
-  "ShoppingCart",
-  "CreditCard",
-  "Truck",
-  "Storefront",
-  "ArrowsClockwise",
-  "Receipt",
-  "Handshake",
-] as const;
+import { ICONES_AJUDA } from "./icones";
 
 const CategoriaSchema = z.object({
   titulo: z.string().min(1, "Informe o título."),

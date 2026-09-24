@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdminSession } from "@/lib/auth";
-import { createCategoriaAjuda, ICONES_AJUDA } from "./actions";
+import { createCategoriaAjuda } from "./actions";
+import { ICONES_AJUDA } from "./icones";
 
 const ERROR_MESSAGES: Record<string, string> = {
   slug_duplicado: "Já existe uma categoria com esse slug. Escolha outro.",
