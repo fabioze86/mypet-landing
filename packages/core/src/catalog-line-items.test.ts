@@ -202,3 +202,15 @@ describe("queryCatalogLineItems", () => {
     expect(result.items[0]).toMatchObject({ id: "p1", sku: "COL-P" });
   });
 });
+
+import { escapeOrFilterValue } from "./catalog-line-items";
+
+describe("escapeOrFilterValue", () => {
+  it("escapa vírgula e parênteses, que são estruturais no filtro .or()", () => {
+    expect(escapeOrFilterValue("ração (kg), 10")).toBe("ração \\(kg\\)\\, 10");
+  });
+
+  it("não mexe em texto sem caracteres estruturais", () => {
+    expect(escapeOrFilterValue("tapete higienico")).toBe("tapete higienico");
+  });
+});

@@ -49,7 +49,7 @@ export type CatalogLineItemsResult = {
 // vírgula/parênteses não quebre a sintaxe do filtro (mesmo nível de cuidado
 // que os `.ilike()` já existentes neste arquivo, que não escapam nada porque
 // `%`/`_` não quebram estrutura, só o resultado do match).
-function escapeOrFilterValue(value: string): string {
+export function escapeOrFilterValue(value: string): string {
   return value.replace(/[,()]/g, (c) => `\\${c}`);
 }
 
