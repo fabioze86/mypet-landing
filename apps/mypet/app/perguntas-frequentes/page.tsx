@@ -42,6 +42,9 @@ export default function FaqPage() {
             <p className="pa-sec-lead">
               Todas as dúvidas que costumam chegar pelo WhatsApp sobre cadastro, preços, pagamento e entrega, reunidas aqui.
             </p>
+            <p className="pa-sec-lead" style={{ marginTop: 8 }}>
+              Veja também a <a href="/central-de-ajuda">central de ajuda</a>, organizada por categoria.
+            </p>
             <div className="pa-faq-list">
               {commercialFaq.map((item) => (
                 <details key={item.q}>
