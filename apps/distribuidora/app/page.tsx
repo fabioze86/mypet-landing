@@ -290,7 +290,7 @@ export default async function Home({
         {/* CATEGORY CHIPS */}
         <CategoryChips categories={categories} />
 
-        {/* COMPACT BANNER — canal de banner é por site, desacoplado do catálogo (ffa_fabrica) */}
+        {/* COMPACT BANNER — canal de banner é por site, desacoplado do catálogo (mypetbrasil) */}
 
         {/* MINI BANNER STRIP */}
 
