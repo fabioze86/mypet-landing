@@ -194,4 +194,38 @@ export const LANDING_STYLES = `
     .pa-nav { gap: 12px; }
     .pa-nav a:not(.pa-nav-cta) { display: none; }
   }
+
+  /* central de ajuda */
+  .pa-help-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 28px; }
+  .pa-help-card { display: flex; flex-direction: column; gap: 10px; text-decoration: none; }
+  .pa-help-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--pa-r-pill); background: var(--pa-green-soft); color: var(--pa-green-dark); }
+  .pa-help-card h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 16px; margin: 0; }
+  .pa-help-card p { color: var(--pa-muted); font-size: 13px; line-height: 1.5; margin: 0; }
+
+  .pa-help-list { margin-top: 24px; border-top: 1px solid var(--pa-line); }
+  .pa-help-list a { display: block; padding: 18px 4px; border-bottom: 1px solid var(--pa-line); text-decoration: none; }
+  .pa-help-list a:hover .pa-help-list-title { color: var(--pa-green-dark); }
+  .pa-help-list-title { display: block; font-family: var(--pa-geist); font-weight: 600; font-size: 15px; color: var(--pa-navy); }
+  .pa-help-list-sub { display: block; margin-top: 4px; color: var(--pa-muted); font-size: 13px; }
+  .pa-help-empty { color: var(--pa-muted); font-size: 14px; padding: 24px 0; }
+
+  .pa-help-article { max-width: 68ch; }
+  .pa-help-article h1 { font-family: var(--pa-geist); font-weight: 700; color: var(--pa-navy); font-size: clamp(24px, 3.2vw, 32px); margin: 0 0 20px; }
+  .pa-help-article h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 18px; margin: 24px 0 8px; }
+  .pa-help-article p { color: var(--pa-ink); font-size: 15px; line-height: 1.7; margin: 0 0 14px; }
+  .pa-help-article ul, .pa-help-article ol { margin: 0 0 14px; padding-left: 22px; color: var(--pa-ink); font-size: 15px; line-height: 1.7; }
+  .pa-help-article li { margin-bottom: 6px; }
+  .pa-help-article strong { color: var(--pa-navy); }
+  .pa-help-article table { border-collapse: collapse; width: 100%; margin: 4px 0 16px; font-size: 14px; }
+  .pa-help-article th, .pa-help-article td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--pa-line); }
+  .pa-help-article th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pa-muted); }
+  .pa-help-article blockquote { margin: 0 0 16px; padding: 12px 16px; background: var(--pa-green-soft); border-radius: var(--pa-r-input); color: var(--pa-ink); font-size: 14px; }
+  .pa-help-related { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--pa-line); }
+  .pa-help-related h4 { font-family: var(--pa-geist); font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pa-muted); margin: 0 0 10px; }
+  .pa-help-related a { display: block; color: var(--pa-green-dark); font-weight: 600; font-size: 14px; text-decoration: none; margin-bottom: 6px; }
+
+  .pa-help-search { display: flex; gap: 10px; max-width: 480px; }
+  .pa-help-search input { flex: 1; padding: 12px 14px; border: 1.5px solid var(--pa-line); border-radius: var(--pa-r-input); font-size: 15px; font-family: inherit; }
+  .pa-help-search button { padding: 12px 20px; border: 0; border-radius: var(--pa-r-input); background: var(--pa-green); color: #fff; font-family: var(--pa-geist); font-weight: 600; cursor: pointer; }
+  .pa-help-search button:hover { background: var(--pa-green-dark); }
 `;
