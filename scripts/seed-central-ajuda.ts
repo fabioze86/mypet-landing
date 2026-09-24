@@ -525,25 +525,35 @@ Já solicitamos a remoção dessa vinculação.`,
 async function seed() {
   const supabase = getHubServiceClient();
 
+  // ignoreDuplicates: true torna o upsert insert-only-if-missing — uma
+  // reexecução deste script nunca sobrescreve uma linha já existente (por
+  // exemplo, uma categoria/artigo já editado ou publicado pelo dono via
+  // admin). Por isso o upsert não devolve dados de linhas que já existiam,
+  // e buscamos o id delas à parte.
   const categoriaIdPorSlug = new Map<string, string>();
   for (const categoria of CATEGORIAS) {
+    const { error: upsertError } = await supabase.from("categorias_ajuda").upsert(
+      {
+        slug: categoria.slug,
+        titulo: categoria.titulo,
+        descricao: categoria.descricao,
+        icone: categoria.icone,
+        ordem: categoria.ordem,
+        atualizado_por: "seed-2026-09-23",
+      },
+      { onConflict: "slug", ignoreDuplicates: true },
+    );
+    if (upsertError) {
+      throw new Error(`Falha ao inserir categoria ${categoria.slug}: ${upsertError.message}`);
+    }
+
     const { data, error } = await supabase
       .from("categorias_ajuda")
-      .upsert(
-        {
-          slug: categoria.slug,
-          titulo: categoria.titulo,
-          descricao: categoria.descricao,
-          icone: categoria.icone,
-          ordem: categoria.ordem,
-          atualizado_por: "seed-2026-09-23",
-        },
-        { onConflict: "slug" },
-      )
       .select("id, slug")
+      .eq("slug", categoria.slug)
       .single();
     if (error || !data) {
-      throw new Error(`Falha ao inserir categoria ${categoria.slug}: ${error?.message}`);
+      throw new Error(`Falha ao buscar categoria ${categoria.slug}: ${error?.message}`);
     }
     categoriaIdPorSlug.set(data.slug, data.id);
     console.log(`categoria: ${categoria.slug}`);
@@ -567,15 +577,18 @@ async function seed() {
         ordem: artigo.ordem,
         atualizado_por: "seed-2026-09-23",
       },
-      { onConflict: "slug" },
+      { onConflict: "slug", ignoreDuplicates: true },
     );
     if (error) {
       throw new Error(`Falha ao inserir artigo ${artigo.slug}: ${error.message}`);
     }
-    console.log(`artigo: ${artigo.slug} (rascunho)`);
+    console.log(`artigo: ${artigo.slug} (sem alteração se já existia)`);
   }
 
-  console.log(`\n${CATEGORIAS.length} categorias e ${ARTIGOS.length} artigos semeados, todos em rascunho.`);
+  console.log(
+    `\n${CATEGORIAS.length} categorias e ${ARTIGOS.length} artigos verificados. ` +
+      `Só linhas novas foram inseridas (em rascunho) — nenhuma linha existente foi alterada.`,
+  );
 }
 
 seed().catch((erro) => {
