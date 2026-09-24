@@ -94,7 +94,7 @@ describe("buscarArtigosAjudaPublicados", () => {
     rows = [];
     await buscarArtigosAjudaPublicados("pedido mínimo");
     expect(calls["or"]).toEqual([
-      "titulo.ilike.%pedido mínimo%,resumo.ilike.%pedido mínimo%,palavras_chave.ilike.%pedido mínimo%",
+      "titulo.ilike.%pedido mínimo%,resumo.ilike.%pedido mínimo%,palavras_chave.ilike.%pedido mínimo%,corpo_markdown.ilike.%pedido mínimo%",
     ]);
     expect(calls["eq"]).toContainEqual(["status", "publicado"]);
   });
@@ -103,7 +103,7 @@ describe("buscarArtigosAjudaPublicados", () => {
     rows = [];
     await buscarArtigosAjudaPublicados("caixa (transporte), pequena");
     expect(calls["or"]).toEqual([
-      "titulo.ilike.%caixa \\(transporte\\)\\, pequena%,resumo.ilike.%caixa \\(transporte\\)\\, pequena%,palavras_chave.ilike.%caixa \\(transporte\\)\\, pequena%",
+      "titulo.ilike.%caixa \\(transporte\\)\\, pequena%,resumo.ilike.%caixa \\(transporte\\)\\, pequena%,palavras_chave.ilike.%caixa \\(transporte\\)\\, pequena%,corpo_markdown.ilike.%caixa \\(transporte\\)\\, pequena%",
     ]);
   });
 });

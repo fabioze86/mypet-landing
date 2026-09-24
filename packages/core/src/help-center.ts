@@ -163,7 +163,7 @@ export async function buscarArtigosAjudaPublicados(termo: string): Promise<Artig
     .from("artigos_ajuda")
     .select(ARTIGO_RESUMO_SELECT)
     .eq("status", "publicado")
-    .or(`titulo.ilike.%${seguro}%,resumo.ilike.%${seguro}%,palavras_chave.ilike.%${seguro}%`)
+    .or(`titulo.ilike.%${seguro}%,resumo.ilike.%${seguro}%,palavras_chave.ilike.%${seguro}%,corpo_markdown.ilike.%${seguro}%`)
     .order("ordem", { ascending: true });
 
   if (error) {
