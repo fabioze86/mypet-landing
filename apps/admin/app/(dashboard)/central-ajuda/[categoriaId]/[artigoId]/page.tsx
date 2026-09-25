@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { requireAdminSession } from "@/lib/auth";
 import { updateArtigoAjuda } from "./actions";
 
@@ -29,6 +30,9 @@ export default async function EditArtigoAjudaPage({
 
   return (
     <div className="max-w-3xl">
+      <Link href={`/central-ajuda/${categoriaId}`} className="mb-4 inline-block text-sm font-semibold text-slate-500 hover:text-slate-700">
+        &larr; Voltar para a categoria
+      </Link>
       <h1 className="mb-1 text-xl font-bold text-slate-800">Editar artigo</h1>
       <p className="mb-6 text-sm text-slate-500">
         Status atual: <span className={artigo.status === "publicado" ? "text-emerald-600" : "text-amber-600"}>{artigo.status}</span>

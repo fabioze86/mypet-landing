@@ -13,7 +13,7 @@ type CategoriaRow = {
   titulo: string;
   slug: string;
   ordem: number;
-  artigos: { count: number }[];
+  artigos: { id: string; titulo: string }[];
 };
 
 export default async function CentralAjudaPage({
@@ -26,8 +26,9 @@ export default async function CentralAjudaPage({
 
   const { data: categorias } = await supabase
     .from("categorias_ajuda")
-    .select("id, titulo, slug, ordem, artigos:artigos_ajuda(count)")
-    .order("ordem", { ascending: true });
+    .select("id, titulo, slug, ordem, artigos:artigos_ajuda(id, titulo, ordem)")
+    .order("ordem", { ascending: true })
+    .order("ordem", { referencedTable: "artigos_ajuda", ascending: true });
 
   return (
     <div>
@@ -78,10 +79,27 @@ export default async function CentralAjudaPage({
         </thead>
         <tbody>
           {((categorias ?? []) as CategoriaRow[]).map((categoria) => (
-            <tr key={categoria.id} className="border-b border-slate-100">
+            <tr key={categoria.id} className="border-b border-slate-100 align-top">
               <td className="px-4 py-3">{categoria.titulo}</td>
               <td className="px-4 py-3 text-slate-500">{categoria.slug}</td>
-              <td className="px-4 py-3">{categoria.artigos?.[0]?.count ?? 0}</td>
+              <td className="px-4 py-3">
+                {categoria.artigos?.length ? (
+                  <ul className="flex flex-col gap-1">
+                    {categoria.artigos.map((artigo) => (
+                      <li key={artigo.id}>
+                        <Link
+                          href={`/central-ajuda/${categoria.id}/${artigo.id}`}
+                          className="text-slate-600 underline decoration-slate-300 hover:text-slate-800"
+                        >
+                          {artigo.titulo}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-slate-400">Nenhum artigo</span>
+                )}
+              </td>
               <td className="px-4 py-3">
                 <Link href={`/central-ajuda/${categoria.id}`} className="text-sm font-semibold text-slate-700 underline">
                   Editar
