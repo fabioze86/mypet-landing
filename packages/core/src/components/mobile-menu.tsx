@@ -7,19 +7,21 @@ import * as Accordion from "@radix-ui/react-accordion";
 import { useClientConfig } from "../theme";
 import type { CategoryTreeNode } from "../catalog-utils";
 
-export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
+export type MobileMenuLink = { href: string; label: string };
+
+export function MobileMenu({ tree, links = [] }: { tree: CategoryTreeNode[]; links?: MobileMenuLink[] }) {
   const { palette } = useClientConfig();
   const [open, setOpen] = useState(false);
 
-  if (tree.length === 0) return null;
+  if (tree.length === 0 && links.length === 0) return null;
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <button
           type="button"
-          aria-label="Abrir menu de categorias"
-          style={{ background: "transparent", border: "none", fontSize: 22, cursor: "pointer", color: palette.navy, padding: 6 }}
+          aria-label={links.length > 0 ? "Abrir menu" : "Abrir menu de categorias"}
+          style={{ background: "transparent", border: "none", fontSize: 22, lineHeight: 1, cursor: "pointer", color: palette.navy, padding: 8, minWidth: 40, minHeight: 40 }}
         >
           ☰
         </button>
@@ -29,7 +31,7 @@ export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
         <Dialog.Content className="mobile-menu-content" aria-describedby={undefined}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: `1px solid ${palette.gray200}` }}>
             <Dialog.Title style={{ fontSize: 16, fontWeight: 800, color: palette.navy, margin: 0 }}>
-              Categorias
+              {links.length > 0 ? "Menu" : "Categorias"}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
@@ -41,6 +43,27 @@ export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
               </button>
             </Dialog.Close>
           </div>
+
+          {links.length > 0 && (
+            <div style={{ padding: "8px 0", borderBottom: `6px solid ${palette.gray100}` }}>
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  style={{ display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 700, color: palette.navy, textDecoration: "none" }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {tree.length > 0 && links.length > 0 && (
+            <p style={{ padding: "16px 20px 0", margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: palette.gray400 }}>
+              Categorias
+            </p>
+          )}
 
           <Accordion.Root type="multiple" style={{ padding: "8px 0" }}>
             {tree.map((category) =>
@@ -113,7 +136,7 @@ export function MobileMenu({ tree }: { tree: CategoryTreeNode[] }) {
               padding: 14px 20px;
               background: transparent;
               border: none;
-              font-family: 'Nunito', sans-serif;
+              font-family: inherit;
               font-size: 15px;
               font-weight: 700;
               cursor: pointer;

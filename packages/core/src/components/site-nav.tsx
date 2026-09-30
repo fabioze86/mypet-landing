@@ -4,45 +4,58 @@ import Link from "next/link";
 import { useClientConfig } from "../theme";
 import { CartBadge } from "./cart-badge";
 import { MegaMenu } from "./mega-menu";
-import { MobileMenu } from "./mobile-menu";
+import { MobileMenu, type MobileMenuLink } from "./mobile-menu";
 import { buildCategoryTree, type CategoryNode } from "../catalog-utils";
 
 export function SiteNav({
   categories,
   balcaoHref,
   pedidoRapidoHref,
+  pedidosHref,
   faqHref,
+  homeHref = "/",
   audienceLabel,
   showMegaMenu = true,
 }: {
   categories: CategoryNode[];
   balcaoHref?: string;
   pedidoRapidoHref?: string;
+  pedidosHref?: string;
   faqHref?: string;
+  homeHref?: string;
   audienceLabel?: string | null;
   showMegaMenu?: boolean;
 }) {
   const { name, tagline, palette, logo } = useClientConfig();
   const tree = buildCategoryTree(categories);
 
+  // No mobile os links de texto saem da barra e vão para o menu (☰), para a
+  // marca e o carrinho não disputarem espaço com eles.
+  const links: MobileMenuLink[] = [
+    ...(pedidoRapidoHref ? [{ href: pedidoRapidoHref, label: "Consulte preços" }] : []),
+    ...(balcaoHref ? [{ href: balcaoHref, label: "Balcão de Negócios" }] : []),
+    ...(pedidosHref ? [{ href: pedidosHref, label: "Meus pedidos" }] : []),
+    ...(faqHref ? [{ href: faqHref, label: "Todas as dúvidas" }] : []),
+  ];
+
   return (
     <nav style={{ background: palette.white, borderBottom: `1px solid ${palette.gray200}`, position: "sticky", top: 0, zIndex: 100 }}>
       <div className="site-nav-shell" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div className="site-nav-brand-area" style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           <div className="site-nav-mobile-trigger">
-            <MobileMenu tree={tree} />
+            <MobileMenu tree={tree} links={links} />
           </div>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", minWidth: 0 }}>
+          <Link href={homeHref} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", minWidth: 0 }}>
             <div className="site-nav-logo" style={{ width: 34, height: 34, background: palette.pink, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto" }}>
               <span style={{ fontSize: 18 }}>{logo.emoji}</span>
             </div>
             <div className="site-nav-brand-copy" style={{ minWidth: 0 }}>
-              <div className="site-nav-name" style={{ fontWeight: 900, fontSize: 15, color: palette.navy, lineHeight: 1 }}>{name}</div>
+              <div className="site-nav-name" style={{ fontWeight: 800, fontSize: 15, color: palette.navy, lineHeight: 1.1 }}>{name}</div>
               <div className="site-nav-tagline" style={{ fontSize: 10, fontWeight: 600, color: palette.pink, letterSpacing: "0.12em", textTransform: "uppercase" }}>{tagline}</div>
             </div>
           </Link>
         </div>
-        <div className="site-nav-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="site-nav-actions" style={{ display: "flex", alignItems: "center", gap: 16 }}>
           {audienceLabel !== null && (
             <span className="site-nav-audience" style={{ fontSize: 13, color: palette.gray600, fontWeight: 600 }}>
               {audienceLabel ?? "Exclusivo para lojistas"}
@@ -51,6 +64,7 @@ export function SiteNav({
           {balcaoHref && (
             <Link
               href={balcaoHref}
+              className="site-nav-text-link"
               style={{ fontSize: 13, fontWeight: 800, color: palette.pink, textDecoration: "none", whiteSpace: "nowrap" }}
             >
               Balcão de Negócios
@@ -59,15 +73,25 @@ export function SiteNav({
           {pedidoRapidoHref && (
             <Link
               href={pedidoRapidoHref}
+              className="site-nav-text-link"
               style={{ fontSize: 13, fontWeight: 800, color: palette.pink, textDecoration: "none", whiteSpace: "nowrap" }}
             >
               Consulte preços
             </Link>
           )}
+          {pedidosHref && (
+            <Link
+              href={pedidosHref}
+              className="site-nav-text-link"
+              style={{ fontSize: 13, fontWeight: 600, color: palette.gray600, textDecoration: "none", whiteSpace: "nowrap" }}
+            >
+              Meus pedidos
+            </Link>
+          )}
           {faqHref && (
             <Link
               href={faqHref}
-              className="site-nav-faq-link"
+              className="site-nav-faq-link site-nav-text-link"
               style={{ fontSize: 13, fontWeight: 600, color: palette.gray600, textDecoration: "none", whiteSpace: "nowrap" }}
             >
               Todas as dúvidas
@@ -87,9 +111,11 @@ export function SiteNav({
 
       <style>{`
         .site-nav-mobile-trigger { display: none; }
-        .site-nav-name {
+        .site-nav-name,
+        .site-nav-tagline {
           overflow: hidden;
           text-overflow: ellipsis;
+          white-space: nowrap;
         }
         @media (max-width: 768px) {
           .site-nav-mega-menu-row { display: none; }
@@ -109,24 +135,19 @@ export function SiteNav({
             border-radius: 8px !important;
           }
           .site-nav-name {
-            max-width: 150px;
-            font-size: 13px !important;
-            line-height: 1.05 !important;
+            font-size: 14px !important;
           }
           .site-nav-tagline {
             font-size: 9px !important;
-            letter-spacing: 0.06em !important;
-            white-space: nowrap;
+            letter-spacing: 0.08em !important;
           }
           .site-nav-actions {
             flex: 0 0 auto;
             gap: 8px !important;
           }
-          .site-nav-audience {
-            display: none;
-          }
-          .site-nav-faq-link {
-            display: none;
+          .site-nav-audience,
+          .site-nav-text-link {
+            display: none !important;
           }
         }
       `}</style>

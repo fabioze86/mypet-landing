@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getHubServiceClient } from "@mypet/core/supabase";
 import { getOrdersByBuyer } from "@mypet/core/orders-server";
@@ -7,6 +8,7 @@ import { requireBuyer } from "@/lib/require-buyer";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { clientConfig } from "@/client.config";
+import { BUYER_STYLES } from "../_components/buyer-area/styles";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -17,6 +19,13 @@ const STATUS_LABEL: Record<string, string> = {
   cancelado: "Cancelado",
 };
 
+const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
+  pendente: { bg: "#FFF4E5", fg: "#B35C00" },
+  confirmado: { bg: "#E3F5EC", fg: "#068A47" },
+  entregue: { bg: PALETTE.navyLight, fg: PALETTE.navy },
+  cancelado: { bg: PALETTE.gray100, fg: PALETTE.gray600 },
+};
+
 // exported for tests
 export async function PedidosContent() {
   const buyer = await requireBuyer();
@@ -25,36 +34,71 @@ export async function PedidosContent() {
   const orders = await getOrdersByBuyer(getHubServiceClient(), buyer.id);
 
   return (
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.navy, marginBottom: 24 }}>
-        Meus pedidos
-      </h1>
+    <main className="ba-main ba-main--narrow">
+      <h1 className="ba-h1" style={{ marginBottom: 20 }}>Meus pedidos</h1>
 
       {orders.length === 0 ? (
-        <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 32, textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: PALETTE.gray600 }}>Você ainda não fez nenhum pedido.</p>
+        <div className="ba-card" style={{ padding: "32px 20px", textAlign: "center" }}>
+          <p style={{ fontSize: 14, color: PALETTE.gray600, margin: "0 0 20px" }}>Você ainda não fez nenhum pedido.</p>
+          <Link href="/pedido-rapido" className="ba-btn ba-btn-primary">
+            Consultar preços
+          </Link>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {orders.map((order) => (
-            <div key={order.id} style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <span style={{ fontSize: 13, color: PALETTE.gray400 }}>
-                  {new Date(order.createdAt).toLocaleDateString("pt-BR")}
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 800, color: PALETTE.pink, textTransform: "uppercase" }}>
-                  {STATUS_LABEL[order.status] ?? order.status}
-                </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {orders.map((order) => {
+            const color = STATUS_COLOR[order.status] ?? STATUS_COLOR.cancelado;
+            const totalQty = order.items.reduce((sum, item) => sum + item.qty, 0);
+            return (
+              <div key={order.id} className="ba-card" style={{ padding: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: PALETTE.navy }}>
+                      {new Date(order.createdAt).toLocaleDateString("pt-BR")}
+                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: PALETTE.gray600 }}>
+                      {order.items.length} {order.items.length === 1 ? "produto" : "produtos"} · {totalQty} un.
+                    </p>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      background: color.bg,
+                      color: color.fg,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {STATUS_LABEL[order.status] ?? order.status}
+                  </span>
+                </div>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, borderTop: `1px solid ${PALETTE.gray100}` }}>
+                  {order.items.map((item) => (
+                    <li
+                      key={item.productId}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        padding: "8px 0",
+                        borderBottom: `1px solid ${PALETTE.gray100}`,
+                        fontSize: 14,
+                        lineHeight: 1.4,
+                        color: PALETTE.gray800,
+                      }}
+                    >
+                      <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{item.name}</span>
+                      <span style={{ flex: "0 0 auto", fontWeight: 600, color: PALETTE.navy, fontVariantNumeric: "tabular-nums" }}>
+                        {item.qty}×
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul style={{ listStyle: "none" }}>
-                {order.items.map((item) => (
-                  <li key={item.productId} style={{ fontSize: 14, color: PALETTE.gray800, marginBottom: 4 }}>
-                    {item.name} — Qtd: {item.qty}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </main>
@@ -65,14 +109,18 @@ export default async function PedidosPage() {
   const categories = await getCategories();
 
   return (
-    <div style={{ fontFamily: "'Nunito', 'Nunito Sans', sans-serif", background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-      `}</style>
+    <div className="ba-page">
+      <style>{BUYER_STYLES}</style>
 
       <LeadGateProvider>
-        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" faqHref="/perguntas-frequentes" />
+        <SiteNav
+          categories={categories}
+          showMegaMenu={false}
+          homeHref="/pedido-rapido"
+          pedidoRapidoHref="/pedido-rapido"
+          pedidosHref="/pedidos"
+          faqHref="/perguntas-frequentes"
+        />
         <Suspense fallback={null}>
           <PedidosContent />
         </Suspense>

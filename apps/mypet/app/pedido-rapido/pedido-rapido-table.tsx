@@ -32,112 +32,65 @@ function Row({
     setQty(initialQty);
   }, [initialQty]);
 
+  const disabled = item.unitPrice == null;
+
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-        padding: 12,
-        borderBottom: `1px solid ${P.gray100}`,
-      }}
-    >
-      <img
-        src={item.img}
-        alt={item.name}
-        style={{ width: 44, height: 44, objectFit: "contain", borderRadius: 8, flexShrink: 0 }}
-      />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: P.navy }}>
+    <div className="pr-row">
+      <img src={item.img} alt={item.name} className="pr-img" />
+      <div className="pr-info">
+        <p className="pr-name" style={{ color: P.navy }}>
           {item.name}
           {item.variantLabel ? ` — ${item.variantLabel}` : ""}
         </p>
-        <p style={{ fontSize: 11, color: P.gray400 }}>
+        <p className="pr-meta" style={{ color: P.gray400 }}>
           {item.brand ? `${item.brand} · ` : ""}SKU: {item.sku}
         </p>
       </div>
-      <div style={{ width: 100, textAlign: "right", fontSize: 13, fontWeight: 800, color: P.navy }}>
+      <div className="pr-price" style={{ color: disabled ? P.gray600 : P.navy }}>
         {item.priceLabel ?? "Sob consulta"}
       </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          border: `1.5px solid ${P.gray200}`,
-          borderRadius: 8,
-          opacity: item.unitPrice == null ? 0.5 : 1,
-        }}
-      >
+      <div className="pr-actions">
+        <div className="pr-stepper" style={{ borderColor: P.gray200, opacity: disabled ? 0.5 : 1 }}>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setQty((q) => Math.max(0, q - 1))}
+            aria-label={`Diminuir quantidade de ${item.name}`}
+            style={{ color: P.gray600 }}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={qty}
+            disabled={disabled}
+            aria-label={`Quantidade de ${item.name}`}
+            onChange={(e) => setQty(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+            style={{ color: P.navy }}
+          />
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => setQty((q) => q + 1)}
+            aria-label={`Aumentar quantidade de ${item.name}`}
+            style={{ color: P.gray600 }}
+          >
+            +
+          </button>
+        </div>
         <button
           type="button"
-          disabled={item.unitPrice == null}
-          onClick={() => setQty((q) => Math.max(0, q - 1))}
-          aria-label={`Diminuir quantidade de ${item.name}`}
-          style={{
-            width: 28,
-            height: 28,
-            border: "none",
-            background: "transparent",
-            cursor: item.unitPrice == null ? "not-allowed" : "pointer",
-            fontSize: 16,
-            color: P.gray600,
-          }}
+          disabled={disabled}
+          onClick={() => onAdd(qty)}
+          aria-label={`Adicionar ${item.name} ao carrinho`}
+          className="pr-add"
+          style={{ background: added ? P.navy : P.pink, color: P.white }}
         >
-          −
-        </button>
-        <input
-          type="number"
-          min={0}
-          value={qty}
-          disabled={item.unitPrice == null}
-          aria-label={`Quantidade de ${item.name}`}
-          onChange={(e) => setQty(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
-          style={{
-            width: 40,
-            padding: "6px 4px",
-            border: "none",
-            textAlign: "center",
-            fontSize: 14,
-            background: "transparent",
-          }}
-        />
-        <button
-          type="button"
-          disabled={item.unitPrice == null}
-          onClick={() => setQty((q) => q + 1)}
-          aria-label={`Aumentar quantidade de ${item.name}`}
-          style={{
-            width: 28,
-            height: 28,
-            border: "none",
-            background: "transparent",
-            cursor: item.unitPrice == null ? "not-allowed" : "pointer",
-            fontSize: 16,
-            color: P.gray600,
-          }}
-        >
-          +
+          {added ? "✓ Adicionado" : "Adicionar"}
         </button>
       </div>
-      <button
-        type="button"
-        disabled={item.unitPrice == null}
-        onClick={() => onAdd(qty)}
-        aria-label={`Adicionar ${item.name} ao carrinho`}
-        style={{
-          padding: "8px 14px",
-          border: "none",
-          borderRadius: 8,
-          background: added ? P.green : P.pink,
-          color: P.white,
-          fontSize: 13,
-          fontWeight: 700,
-          whiteSpace: "nowrap",
-          cursor: item.unitPrice == null ? "not-allowed" : "pointer",
-        }}
-      >
-        {added ? "✓ Adicionado" : "Adicionar"}
-      </button>
     </div>
   );
 }
@@ -210,9 +163,11 @@ export function PedidoRapidoTable({
   }
 
   return (
-    <div style={{ paddingBottom: 96 }}>
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+    <div>
+      <style>{tableStyles(P)}</style>
+      <div className="pr-filters">
         <input
+          type="search"
           value={q}
           onChange={(e) => {
             setPage(1);
@@ -220,7 +175,7 @@ export function PedidoRapidoTable({
           }}
           placeholder="Buscar por nome ou SKU..."
           aria-label="Buscar produtos por nome ou SKU"
-          style={{ flex: "1 1 240px", padding: "10px 14px", borderRadius: 10, border: `1px solid ${P.gray200}`, fontSize: 14 }}
+          className="pr-field pr-search"
         />
         <select
           value={categoryId}
@@ -229,7 +184,7 @@ export function PedidoRapidoTable({
             setCategoryId(e.target.value);
           }}
           aria-label="Filtrar por categoria"
-          style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${P.gray200}`, fontSize: 14, background: P.white }}
+          className="pr-field"
         >
           <option value="">Todas as categorias</option>
           {categories.map((c) => (
@@ -246,7 +201,7 @@ export function PedidoRapidoTable({
             setBrand(e.target.value);
           }}
           aria-label="Filtrar por marca"
-          style={{ padding: "10px 14px", borderRadius: 10, border: `1px solid ${P.gray200}`, fontSize: 14, background: P.white }}
+          className="pr-field"
         >
           <option value="">Todas as marcas</option>
           {brands.map((b) => (
@@ -255,15 +210,7 @@ export function PedidoRapidoTable({
         </select>
       </div>
 
-      <div
-        style={{
-          background: P.white,
-          border: `1px solid ${P.gray200}`,
-          borderRadius: 16,
-          overflow: "hidden",
-          opacity: pending ? 0.6 : 1,
-        }}
-      >
+      <div className="pr-list" style={{ opacity: pending ? 0.6 : 1 }}>
         {result.items.length === 0 ? (
           <p style={{ padding: 32, textAlign: "center", fontSize: 14, color: P.gray600 }}>
             Nenhum produto encontrado.
@@ -283,46 +230,96 @@ export function PedidoRapidoTable({
       </div>
 
       {result.totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 24 }}>
-          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="cat-btn">
+        <div className="pr-pager">
+          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="pr-page-btn">
             ← Anterior
           </button>
-          <span style={{ fontSize: 14, color: P.gray600 }}>
-            Página {page} de {result.totalPages}
+          <span style={{ fontSize: 14, color: P.gray600, whiteSpace: "nowrap" }}>
+            {page} de {result.totalPages}
           </span>
           <button
             type="button"
             disabled={page >= result.totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="cat-btn"
+            className="pr-page-btn"
           >
             Próxima →
           </button>
         </div>
       )}
 
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: P.navy,
-          color: P.white,
-          padding: "14px 24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          zIndex: 50,
-        }}
-      >
-        <span style={{ fontSize: 14, fontWeight: 700 }}>
-          {totalItems} {totalItems === 1 ? "item" : "itens"} — {brl(cartTotal)}
-        </span>
-        <Link href="/cotacao" style={{ color: P.white, fontWeight: 800, textDecoration: "none", fontSize: 14 }}>
-          Ver meu pedido →
-        </Link>
-      </div>
+      {totalItems > 0 && (
+        <div className="pr-cartbar" style={{ background: P.navyDark, color: P.white }}>
+          <div className="pr-cartbar-inner">
+            <span style={{ fontSize: 14, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+              {totalItems} {totalItems === 1 ? "item" : "itens"} — {brl(cartTotal)}
+            </span>
+            <Link href="/cotacao" className="pr-cartbar-cta" style={{ background: P.pink, color: P.white }}>
+              Ver meu pedido →
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function tableStyles(P: Palette) {
+  return `
+    .pr-filters { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-bottom: 16px; }
+    .pr-field { width: 100%; min-width: 0; padding: 10px 14px; border-radius: 10px; border: 1.5px solid ${P.gray200}; font-size: 14px; font-family: inherit; color: ${P.navy}; background: ${P.white}; text-overflow: ellipsis; }
+    .pr-field:focus { outline: none; border-color: ${P.pink}; box-shadow: 0 0 0 3px ${P.pinkLight}; }
+
+    .pr-list { background: ${P.white}; border: 1px solid ${P.gray200}; border-radius: 16px; overflow: hidden; transition: opacity .15s; }
+    .pr-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 110px auto; align-items: center; gap: 16px; padding: 12px 16px; border-bottom: 1px solid ${P.gray100}; }
+    .pr-row:last-child { border-bottom: 0; }
+    .pr-img { width: 44px; height: 44px; object-fit: contain; border-radius: 8px; }
+    .pr-info { min-width: 0; }
+    .pr-name { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+    .pr-meta { margin: 2px 0 0; font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+    .pr-price { text-align: right; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .pr-actions { display: flex; align-items: center; gap: 8px; }
+    .pr-stepper { display: flex; align-items: center; border: 1.5px solid; border-radius: 8px; }
+    .pr-stepper button { width: 30px; height: 32px; border: 0; background: transparent; font-size: 16px; cursor: pointer; }
+    .pr-stepper button:disabled { cursor: not-allowed; }
+    .pr-stepper input { width: 40px; padding: 6px 2px; border: 0; text-align: center; font-size: 14px; font-family: inherit; background: transparent; -moz-appearance: textfield; }
+    .pr-stepper input::-webkit-outer-spin-button,
+    .pr-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .pr-add { padding: 9px 16px; border: 0; border-radius: 999px; font-size: 13px; font-weight: 600; font-family: inherit; white-space: nowrap; cursor: pointer; min-width: 112px; transition: background .18s; }
+    .pr-add:disabled { cursor: not-allowed; opacity: .5; }
+
+    .pr-pager { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 20px; }
+    .pr-page-btn { padding: 9px 16px; border-radius: 999px; border: 1.5px solid ${P.gray200}; background: ${P.white}; color: ${P.navy}; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; }
+    .pr-page-btn:hover:not(:disabled) { border-color: ${P.navy}; }
+    .pr-page-btn:disabled { opacity: .4; cursor: default; }
+
+    .pr-cartbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -8px 24px rgba(15,31,69,.18); }
+    .pr-cartbar-inner { max-width: 1100px; margin: 0 auto; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .pr-cartbar-cta { padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
+
+    @media (max-width: 640px) {
+      .pr-filters { grid-template-columns: 1fr 1fr; }
+      .pr-search { grid-column: 1 / -1; }
+      /* 16px evita o zoom automático do iOS ao focar o campo */
+      .pr-field { font-size: 16px; padding: 10px 12px; }
+
+      .pr-row {
+        grid-template-columns: 56px minmax(0, 1fr);
+        grid-template-areas: "img info" "img price" "actions actions";
+        gap: 4px 12px;
+        padding: 14px;
+      }
+      .pr-img { grid-area: img; width: 56px; height: 56px; align-self: start; }
+      .pr-info { grid-area: info; }
+      .pr-name { font-size: 14px; }
+      .pr-price { grid-area: price; text-align: left; font-size: 15px; }
+      .pr-actions { grid-area: actions; margin-top: 10px; }
+      .pr-stepper button { width: 40px; height: 40px; font-size: 18px; }
+      .pr-stepper input { width: 44px; font-size: 16px; }
+      .pr-add { flex: 1; padding: 11px 16px; font-size: 14px; }
+
+      .pr-page-btn { padding: 9px 12px; }
+      .pr-cartbar-inner { padding: 10px 16px; }
+    }
+  `;
 }

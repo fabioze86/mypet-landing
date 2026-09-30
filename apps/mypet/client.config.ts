@@ -6,10 +6,13 @@ export const clientConfig: ClientConfig = {
   tagline: "Atacado B2B",
   domain: "mypetbrasil.com.br",
   catalogChannel: "mypetbrasil",
+  // As chaves "pink*" são o acento da paleta usado pelos componentes do core.
+  // No mypet o acento é o verde da landing (styles.ts: --pa-green*), para que
+  // as telas pós-login tenham a mesma identidade visual navy + verde.
   palette: {
-    pink: "#E5197A",
-    pinkDark: "#B8115F",
-    pinkLight: "#FCE4F0",
+    pink: "#00A651",
+    pinkDark: "#068A47",
+    pinkLight: "#E3F5EC",
     cyan: "#00C4D4",
     cyanDark: "#009BAA",
     cyanLight: "#E0F9FB",
