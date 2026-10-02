@@ -165,7 +165,7 @@ export default async function Home({
         }
         .product-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 12px 32px rgba(82,48,120,0.12);
+          box-shadow: 0 12px 32px rgba(26,52,114,0.12);
         }
 
         .unlock-btn {
@@ -222,7 +222,7 @@ export default async function Home({
 
         .modal-overlay {
           position: fixed; inset: 0;
-          background: rgba(59,35,87,0.55);
+          background: rgba(15,31,69,0.55);
           display: flex; align-items: center; justify-content: center;
           z-index: 999;
           padding: 16px;
@@ -363,6 +363,7 @@ export default async function Home({
               <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
               <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
             </div>
+            <a href="https://www.mypetbrasil.com" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>Conheça o site oficial: www.mypetbrasil.com</a>
             <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
           </div>
         </footer>

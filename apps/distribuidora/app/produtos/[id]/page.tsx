@@ -66,7 +66,7 @@ export default async function ProductPage({
           justify-content: center;
           gap: 8px;
           letter-spacing: 0.01em;
-          box-shadow: 0 4px 12px rgba(113,68,164,0.22);
+          box-shadow: 0 4px 12px rgba(0,166,81,0.22);
         }
         .unlock-btn:hover { background: ${PALETTE.pinkDark}; transform: translateY(-1px); }
         .unlock-btn:active { transform: translateY(0); }
@@ -100,7 +100,7 @@ export default async function ProductPage({
 
         .modal-overlay {
           position: fixed; inset: 0;
-          background: rgba(59,35,87,0.55);
+          background: rgba(15,31,69,0.55);
           display: flex; align-items: center; justify-content: center;
           z-index: 999;
           padding: 16px;
@@ -186,6 +186,7 @@ export default async function ProductPage({
               <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
               <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
             </div>
+            <a href="https://www.mypetbrasil.com" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>Conheça o site oficial: www.mypetbrasil.com</a>
             <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
           </div>
         </footer>
