@@ -45,6 +45,45 @@ export async function createArtigoAjuda(categoriaId: string, formData: FormData)
   redirect(`/central-ajuda/${categoriaId}/${data.id}`);
 }
 
+export async function moverArtigoAjuda(id: string, categoriaId: string, formData: FormData): Promise<void> {
+  const { supabase } = await requireAdminSession();
+  const posicao = Number(formData.get("posicao"));
+  if (!Number.isInteger(posicao) || posicao < 1) return;
+
+  const { data: artigos, error: listError } = await supabase
+    .from("artigos_ajuda")
+    .select("id, ordem")
+    .eq("categoria_id", categoriaId)
+    .order("ordem", { ascending: true })
+    .order("titulo", { ascending: true });
+
+  if (listError || !artigos?.some((a) => a.id === id)) {
+    console.error("[admin/central-ajuda] erro ao listar artigos para reordenar:", listError?.message);
+    redirect(`/central-ajuda/${categoriaId}?error=falha_ao_salvar`);
+  }
+
+  const ids = artigos.map((a) => a.id).filter((artigoId) => artigoId !== id);
+  ids.splice(Math.min(posicao - 1, ids.length), 0, id);
+
+  const ordemAtual = new Map(artigos.map((a) => [a.id, a.ordem]));
+  const resultados = await Promise.all(
+    ids
+      .map((artigoId, index) => ({ artigoId, index }))
+      .filter(({ artigoId, index }) => ordemAtual.get(artigoId) !== index)
+      .map(({ artigoId, index }) => supabase.from("artigos_ajuda").update({ ordem: index }).eq("id", artigoId)),
+  );
+
+  const falha = resultados.find((r) => r.error);
+  if (falha) {
+    console.error("[admin/central-ajuda] erro ao reordenar artigos:", falha.error?.message);
+    redirect(`/central-ajuda/${categoriaId}?error=falha_ao_salvar`);
+  }
+
+  updateTag("central-ajuda");
+  await revalidarCentralAjudaPublica();
+  redirect(`/central-ajuda/${categoriaId}`);
+}
+
 export async function alternarStatusArtigoAjuda(
   id: string,
   categoriaId: string,

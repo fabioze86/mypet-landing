@@ -3,7 +3,8 @@ import Link from "next/link";
 import { requireAdminSession } from "@/lib/auth";
 import { updateCategoriaAjuda } from "../actions";
 import { ICONES_AJUDA } from "../icones";
-import { createArtigoAjuda, alternarStatusArtigoAjuda } from "./artigos-actions";
+import { createArtigoAjuda, alternarStatusArtigoAjuda, moverArtigoAjuda } from "./artigos-actions";
+import { PosicaoSelect } from "./posicao-select";
 
 const ERROR_MESSAGES: Record<string, string> = {
   slug_duplicado: "Já existe uma categoria com esse slug. Escolha outro.",
@@ -33,7 +34,8 @@ export default async function EditCategoriaAjudaPage({
     .from("artigos_ajuda")
     .select("id, titulo, slug, status, ordem")
     .eq("categoria_id", categoriaId)
-    .order("ordem", { ascending: true });
+    .order("ordem", { ascending: true })
+    .order("titulo", { ascending: true });
 
   const updateWithId = updateCategoriaAjuda.bind(null, categoriaId);
 
@@ -97,6 +99,7 @@ export default async function EditCategoriaAjudaPage({
       <table className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white text-sm">
         <thead className="bg-slate-50 text-left text-xs font-medium uppercase text-slate-500">
           <tr>
+            <th className="px-4 py-3">Posição</th>
             <th className="px-4 py-3">Título</th>
             <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3" />
@@ -104,8 +107,13 @@ export default async function EditCategoriaAjudaPage({
           </tr>
         </thead>
         <tbody>
-          {(artigos ?? []).map((artigo) => (
+          {(artigos ?? []).map((artigo, index, lista) => (
             <tr key={artigo.id} className="border-b border-slate-100">
+              <td className="px-4 py-3">
+                <form action={moverArtigoAjuda.bind(null, artigo.id, categoriaId)}>
+                  <PosicaoSelect key={`${index}-${lista.length}`} atual={index + 1} total={lista.length} />
+                </form>
+              </td>
               <td className="px-4 py-3">{artigo.titulo}</td>
               <td className="px-4 py-3">
                 <span className={artigo.status === "publicado" ? "text-emerald-600" : "text-amber-600"}>
