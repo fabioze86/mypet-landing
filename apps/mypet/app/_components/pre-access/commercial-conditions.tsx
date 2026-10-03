@@ -7,7 +7,7 @@ export function CommercialConditions() {
       <div className="pa-wrap">
         <h2 id="condicoes-title" className="pa-h2">Condições comerciais</h2>
         <p className="pa-sec-lead">
-          O que define o pedido antes de qualquer conversa. Os valores exatos aparecem dentro da loja.
+          As mesmas condições do site mypetbrasil.com, válidas para os pedidos feitos pela tabela.
         </p>
         <ul className="pa-cond-grid" style={{ listStyle: "none", padding: 0 }}>
           {commercialConditions.map((c) => (

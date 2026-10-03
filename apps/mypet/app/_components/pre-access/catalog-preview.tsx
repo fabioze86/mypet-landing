@@ -24,7 +24,7 @@ export function CatalogPreview({
       <div className="pa-wrap">
         <h2 id="categorias-title" className="pa-h2">Vitrine do catálogo</h2>
         <p className="pa-sec-lead">
-          Reconheça o mix da sua loja. Preço, estoque e carrinho só na loja, depois do acesso.
+          As categorias da tabela. Os preços aparecem assim que você faz o cadastro.
         </p>
 
         <ul className="pa-cat-grid" style={{ listStyle: "none", padding: 0 }}>
@@ -50,7 +50,7 @@ export function CatalogPreview({
         </ul>
 
         <p className="pa-cat-note">
-          Catálogo completo com quase 5 mil itens abre assim que você cria o acesso.
+          Tabela completa com quase 5 mil itens, liberada assim que você faz o cadastro.
         </p>
       </div>
     </section>

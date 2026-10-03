@@ -3,7 +3,7 @@ import { SITES } from "@mypet/core/features";
 
 export const clientConfig: ClientConfig = {
   name: "My Pet Brasil",
-  tagline: "Atacado B2B",
+  tagline: "Tabela de Preços",
   domain: "mypetbrasil.com.br",
   catalogChannel: "mypetbrasil",
   // As chaves "pink*" são o acento da paleta usado pelos componentes do core.
@@ -30,5 +30,6 @@ export const clientConfig: ClientConfig = {
     gray800: "#2D3550",
   },
   logo: { emoji: "🐾" },
+  priceEyebrow: "Tabela de Preços My Pet",
   features: SITES.mypet.features,
 };

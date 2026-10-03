@@ -6,13 +6,13 @@ describe("Hero", () => {
   it("tem um h1 com uma palavra destacada", () => {
     render(<Hero />);
     const h1 = screen.getByRole("heading", { level: 1 });
-    expect(h1).toHaveTextContent(/atacado/i);
+    expect(h1).toHaveTextContent(/whatsapp/i);
     expect(h1.querySelector(".pa-hl")).not.toBeNull();
   });
 
   it("tem um CTA para a página de cadastro", () => {
     render(<Hero />);
-    const link = screen.getByRole("link", { name: "Consultar preços" });
+    const link = screen.getByRole("link", { name: "Abrir tabela de preços" });
     expect(link).toHaveAttribute("href", "/cadastro");
   });
 

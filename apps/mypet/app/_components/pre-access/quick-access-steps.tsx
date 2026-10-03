@@ -9,7 +9,7 @@ export function QuickAccessSteps() {
       aria-labelledby="consultar-precos-title"
     >
       <div className="pa-wrap">
-        <h2 id="consultar-precos-title" className="pa-h2">Quer apenas consultar nossos preços?</h2>
+        <h2 id="consultar-precos-title" className="pa-h2">Como usar a tabela</h2>
         <ol className="pa-steps" style={{ listStyle: "none", padding: 0 }}>
           {quickAccessSteps.map((s, i) => (
             <li key={s.id} className="pa-step">
@@ -23,7 +23,7 @@ export function QuickAccessSteps() {
           ))}
         </ol>
         <div className="pa-steps-cta">
-          <a href="/cadastro" className="pa-btn pa-btn-primary">Liberar meu acesso aos preços</a>
+          <a href="/cadastro" className="pa-btn pa-btn-primary">Liberar tabela de preços</a>
         </div>
       </div>
     </section>

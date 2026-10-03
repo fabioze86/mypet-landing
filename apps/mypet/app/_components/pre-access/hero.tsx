@@ -16,21 +16,21 @@ export function Hero() {
 
       <div className="pa-wrap pa-hero-grid">
         <div>
-          <p className="pa-eyebrow">Atacado para pet shops</p>
+          <p className="pa-eyebrow">Tabela de Preços My Pet Brasil</p>
           <h1 id="hero-title">
-            Produtos para pet shop direto de fábrica e{" "}
-            <span className="pa-hl">no atacado</span>
+            Todos os preços da My Pet numa tela e seu pedido{" "}
+            <span className="pa-hl">direto no WhatsApp</span>
           </h1>
           <p className="pa-hero-lead">
-            A My Pet Brasil atende lojistas, banho e tosa, clínicas veterinárias e outros
-            negócios do mercado pet.
+            Os mesmos produtos e preços do site mypetbrasil.com, numa tabela feita para
+            reposição: busque por SKU, marca ou categoria e informe as quantidades.
           </p>
           <p className="pa-hero-lead">
-            Consulte nossos preços e monte seu pedido de forma rápida. Faça um cadastro simples
-            com seu CNPJ para liberar os preços.
+            Seu pedido chega pronto para o nosso time no WhatsApp. Cadastro rápido com CNPJ
+            para liberar a tabela.
           </p>
           <div className="pa-hero-actions">
-            <a href="/cadastro" className="pa-btn pa-btn-primary">Consultar preços</a>
+            <a href="/cadastro" className="pa-btn pa-btn-primary">Abrir tabela de preços</a>
           </div>
         </div>
       </div>

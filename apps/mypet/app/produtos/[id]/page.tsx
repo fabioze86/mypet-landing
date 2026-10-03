@@ -22,12 +22,12 @@ export async function generateMetadata({
   if (!product) return { title: `Produto não encontrado — ${clientConfig.name}` };
 
   return {
-    title: `${product.name} — ${clientConfig.name} Atacado`,
-    description: `Confira os detalhes de ${product.name} no atacado B2B da ${clientConfig.name}. Solicite cotação sem compromisso.`,
+    title: `${product.name} — ${clientConfig.name}`,
+    description: `Confira os detalhes de ${product.name} da ${clientConfig.name}. Preço na tabela para lojistas cadastrados.`,
     alternates: { canonical: canonicalUrl(clientConfig.domain, `/produtos/${id}`) },
     openGraph: {
       title: product.name,
-      description: `Confira os detalhes de ${product.name} no atacado B2B da ${clientConfig.name}.`,
+      description: `Confira os detalhes de ${product.name} da ${clientConfig.name}.`,
       images: [product.img],
     },
     twitter: {
@@ -278,7 +278,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
           <div style={{ fontSize: 15, color: PALETTE.gray600, lineHeight: 1.6, whiteSpace: "pre-line" }}>
             {product.description || (
               <span style={{ color: PALETTE.gray400, fontStyle: "italic" }}>
-                Descrição detalhada não cadastrada no catálogo. Solicite informações adicionais no momento da cotação.
+                Descrição detalhada não cadastrada no catálogo. Peça informações adicionais ao nosso time pelo WhatsApp.
               </span>
             )}
           </div>

@@ -17,7 +17,7 @@ export async function finalizeQuote(items: CartItem[]): Promise<FinalizeQuoteRes
   if (!buyer) {
     return {
       ok: false,
-      error: "Você precisa criar um acesso para finalizar a cotação.",
+      error: "Faça seu cadastro para enviar o pedido.",
       needsAuth: true,
     };
   }

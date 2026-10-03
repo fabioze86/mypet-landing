@@ -1,13 +1,21 @@
 // Conteúdo da landing pública (pré-acesso) do canal mypetbrasil.
 //
+// Posicionamento: este site é a "Tabela de Preços My Pet Brasil", uma extensão
+// do e-commerce www.mypetbrasil.com — mesmos produtos, mesmos preços. O cliente
+// consulta, monta o pedido aqui e o pedido é enviado pelo WhatsApp.
+// Na copy, NÃO usar "atacado" (sugere preço diferente do site), "cotação"
+// (soa sem compromisso) nem "loja" para se referir a este site.
+//
 // As "Condições comerciais" e o FAQ abaixo espelham o que estava publicado na
 // Central de Ajuda de produção (mypetbrasil.zendesk.com, extração de 2026-08-23):
-// pedido mínimo, formas de pagamento, prazos de entrega/frete, regra de CNPJ,
-// atacado e dropshipping. Ao mudar a regra comercial na central, atualize aqui.
+// pedido mínimo, formas de pagamento, prazos de entrega/frete, regra de CNPJ
+// e dropshipping. Ao mudar a regra comercial na central, atualize aqui.
 //
 // O que aparece aqui são REGRAS comerciais públicas (pedido mínimo, parcelamento),
-// não preço de item. Preço, estoque e carrinho continuam só em /loja (storefront
-// protegido); nada de valor de produto/catálogo nesta página.
+// não preço de item. Preço e pedido ficam só na tabela (/pedido-rapido, protegida
+// por cadastro); nada de valor de produto nesta página.
+
+export const OFFICIAL_SITE_URL = "https://www.mypetbrasil.com";
 
 export const commercialConditions = [
   {
@@ -40,47 +48,48 @@ export const quickAccessSteps = [
   {
     id: "cnpj-email",
     icon: "IdentificationCard",
-    title: "Informe seu CNPJ e e-mail",
-    body: "Faça seu acesso de forma rápida.",
+    title: "Informe seu CNPJ",
+    body: "Cadastro rápido para liberar a tabela.",
   },
   {
     id: "consulta",
     icon: "MagnifyingGlass",
-    title: "Consulte produtos e preços",
+    title: "Consulte os preços",
     body: "Pesquise pelo nome, SKU, categoria ou marca.",
   },
   {
-    id: "orcamento",
+    id: "pedido",
     icon: "ShoppingCart",
-    title: "Monte seu orçamento",
-    body: "Informe as quantidades e adicione os produtos que interessam à sua loja.",
+    title: "Envie seu pedido pelo WhatsApp",
+    body: "Informe as quantidades e mande o pedido pronto para o nosso time.",
   },
 ] as const;
 
+// "Mesma My Pet, mesmos preços": responde a dúvida "compro por qual site?".
 export const whyBuyPoints = [
   {
-    id: "variedade",
+    id: "mesmos-precos",
+    icon: "CurrencyCircleDollar",
+    heading: "Mesmos preços do site",
+    body: "Os valores da tabela são os mesmos do mypetbrasil.com, atualizados todos os dias.",
+  },
+  {
+    id: "mesmos-produtos",
     icon: "Stack",
-    heading: "Variedade para sua loja",
-    body: "Produtos para cães, gatos, banho e tosa, higiene, acessórios e outras categorias.",
+    heading: "Mesmos produtos e estoque",
+    body: "Quase 5 mil itens para cães, gatos, banho e tosa, higiene e acessórios.",
   },
   {
-    id: "cnpj",
-    icon: "Storefront",
-    heading: "Compra para CNPJ",
-    body: "Atendimento especializado em lojistas e profissionais do segmento pet.",
-  },
-  {
-    id: "consulta",
+    id: "tudo-numa-tela",
     icon: "MagnifyingGlass",
-    heading: "Consulte antes de comprar",
-    body: "Veja preços, pesquise por produto ou SKU e monte seu pedido.",
+    heading: "Todos os preços numa tela",
+    body: "Busque por SKU, marca ou categoria e veja dezenas de itens de uma vez. Ideal para reposição.",
   },
   {
-    id: "sem-caixa-fechada",
-    icon: "Package",
-    heading: "Compra sem caixa fechada",
-    body: "Monte seu mix de acordo com a necessidade da sua loja.",
+    id: "whatsapp",
+    icon: "Headset",
+    heading: "Pedido direto com o nosso time",
+    body: "Você monta o pedido aqui e ele chega pronto no WhatsApp da My Pet, com atendimento de gente.",
   },
 ] as const;
 
@@ -94,20 +103,20 @@ export const steps = [
   {
     id: "acesso",
     icon: "LockKeyOpen",
-    title: "Acesse preços de atacado",
-    body: "Seu acesso é liberado para consultar preços e condições dos produtos.",
+    title: "Abra a tabela de preços",
+    body: "O acesso é liberado na hora, com os mesmos preços do mypetbrasil.com.",
   },
   {
     id: "pedido",
     icon: "MagnifyingGlass",
-    title: "Pesquise e monte seu pedido",
-    body: "Busque por produto, SKU, categoria ou marca, informe as quantidades e adicione os itens que deseja.",
+    title: "Monte seu pedido",
+    body: "Busque por produto, SKU, categoria ou marca, informe as quantidades e adicione os itens.",
   },
   {
     id: "compra",
     icon: "ShoppingCart",
-    title: "Compre do seu jeito",
-    body: "Finalize seu pedido pelo site ou use a consulta para montar seu orçamento e decidir depois.",
+    title: "Envie pelo WhatsApp",
+    body: "Seu pedido chega pronto no WhatsApp da My Pet. Nosso time confirma estoque, frete e pagamento e fecha com você.",
   },
 ] as const;
 
@@ -133,7 +142,7 @@ export const testimonials = [
   {
     id: "t3",
     quote:
-      "Recebo dentro do prazo que aparece na loja e o frete fecha certo pelo CEP. Parou de ser aposta.",
+      "Recebo dentro do prazo combinado e o frete fecha certo pelo CEP. Parou de ser aposta.",
     name: "Juliana Prates",
     city: "Londrina, PR",
     store: "Casa do Bicho",
@@ -143,7 +152,7 @@ export const testimonials = [
 export const commercialFaq = [
   {
     q: "Preciso de CNPJ para comprar?",
-    a: "A My Pet vende para lojistas e revendedores do ramo pet. Você pode criar o acesso com CNPJ ou com CPF; os preços são os mesmos. O documento identifica a sua loja quando você entra na loja.",
+    a: "A tabela é para quem revende: pet shops, banho e tosa, clínicas veterinárias, agropecuárias e distribuidores. Se você ainda está abrindo o negócio ou pesquisando o mercado pet, pode criar o acesso com CPF para conhecer os preços, que são os mesmos. Mas atenção: a My Pet não vende para consumidor final, todo pedido é para revenda.",
   },
   {
     q: "A My Pet vende para consumidor final?",
@@ -151,11 +160,19 @@ export const commercialFaq = [
   },
   {
     q: "Como eu vejo os preços?",
-    a: "Os preços aparecem só na loja, depois que você cria o acesso com CNPJ e WhatsApp. São quase 5 mil itens e os valores podem mudar diariamente, por isso não ficam no catálogo público. Já são preços de atacado, para lojista.",
+    a: "Os preços aparecem na tabela, liberada assim que você faz o cadastro com CNPJ e WhatsApp. São quase 5 mil itens e os valores podem mudar diariamente, por isso não ficam no catálogo público.",
+  },
+  {
+    q: "Os preços da tabela são os mesmos do site mypetbrasil.com?",
+    a: "Sim. Tabela e site usam a mesma base de preços, produtos e estoque da My Pet Brasil. A tabela é só outro jeito de consultar: tudo numa tela, com busca por SKU, marca e categoria, para montar o pedido mais rápido.",
+  },
+  {
+    q: "Como eu fecho o pedido?",
+    a: "Monte o pedido na tabela e toque em \"Enviar pedido pelo WhatsApp\". A lista chega pronta para o nosso time, que confirma estoque, frete e forma de pagamento e fecha o pedido com você por lá.",
   },
   {
     q: "Qual é o pedido mínimo?",
-    a: "R$ 250,00 para compra e entrega na capital de São Paulo. R$ 400,00 para o interior de SP e para os demais estados. O total do seu carrinho aparece na loja.",
+    a: "R$ 250,00 para compra e entrega na capital de São Paulo. R$ 400,00 para o interior de SP e para os demais estados. O total do seu pedido aparece na tabela enquanto você monta.",
   },
   {
     q: "Quais são as formas de pagamento?",
@@ -175,7 +192,7 @@ export const commercialFaq = [
   },
   {
     q: "Como funciona o frete e quais regiões são atendidas?",
-    a: "Enviamos para todo o Brasil por transportadora. O frete é calculado pelo valor do pedido e pelo destino, e algumas cidades têm frete grátis. O valor aparece no carrinho quando você informa o CEP de entrega.",
+    a: "Enviamos para todo o Brasil por transportadora. O frete é calculado pelo valor do pedido e pelo destino, e algumas cidades têm frete grátis. Nosso time informa o valor pelo WhatsApp ao confirmar o pedido.",
   },
   {
     q: "A My Pet trabalha com dropshipping?",
@@ -187,7 +204,7 @@ export const commercialFaq = [
   },
   {
     q: "Posso ver o catálogo antes de criar o acesso?",
-    a: "Pode. As marcas e categorias ficam nesta página e há um catálogo completo de produtos sem preço. Preço, estoque e pedido ficam na loja, liberada assim que você cria o acesso.",
+    a: "Pode. As marcas e categorias ficam nesta página e há um catálogo completo de produtos sem preço. Os preços ficam na tabela, liberada assim que você faz o cadastro.",
   },
 ] as const;
 

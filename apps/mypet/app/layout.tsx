@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(`https://${clientConfig.domain}`),
   title: `${clientConfig.name} — ${clientConfig.tagline}`,
   description:
-    "Atacado para pet shops: veja condições de compra, pedido mínimo e categorias antes de acessar a loja.",
+    "Tabela de preços da My Pet Brasil: os mesmos produtos e preços do mypetbrasil.com numa tela só, com pedido enviado pelo WhatsApp.",
 };
 
 export default function RootLayout({

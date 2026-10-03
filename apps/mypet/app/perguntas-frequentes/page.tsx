@@ -64,7 +64,7 @@ export default function FaqPage() {
             <span>{SITE_NAME} - {TAGLINE}</span>
           </div>
           <small>
-            © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberação da loja.
+            © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberar a tabela de preços.
             {" "}Desenvolvido por{" "}
             <a
               href="https://www.zemann.com.br"

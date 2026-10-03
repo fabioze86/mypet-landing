@@ -29,7 +29,7 @@ describe("finalizeQuote", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: "Você precisa criar um acesso para finalizar a cotação.",
+      error: "Faça seu cadastro para enviar o pedido.",
       needsAuth: true,
     });
     expect(createOrder).not.toHaveBeenCalled();

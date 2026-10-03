@@ -42,10 +42,10 @@ export async function CotacaoPageBody() {
 
         <main className="ba-main ba-main--narrow">
           <Link href="/pedido-rapido" className="ba-back">
-            ← Continuar comprando
+            ← Voltar para a tabela
           </Link>
 
-          <h1 className="ba-h1" style={{ marginBottom: 20 }}>Sua cotação</h1>
+          <h1 className="ba-h1" style={{ marginBottom: 20 }}>Seu pedido</h1>
 
           <CotacaoContent palette={PALETTE} />
         </main>

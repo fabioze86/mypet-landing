@@ -62,7 +62,7 @@ describe("PedidoRapidoTable", () => {
   it("clicar em adicionar grava a linha no carrinho com o preço e atualiza a barra fixa de total", () => {
     renderTable();
 
-    fireEvent.click(screen.getByLabelText("Adicionar Ração X ao carrinho"));
+    fireEvent.click(screen.getByLabelText("Adicionar Ração X ao pedido"));
 
     const cart = JSON.parse(localStorage.getItem("mypet_cart") ?? "{}");
     expect(cart.items[0]).toMatchObject({ id: "p1", unitPrice: 42.9, qty: 1 });
@@ -80,7 +80,7 @@ describe("PedidoRapidoTable", () => {
     // O input já deve exibir a quantidade atual do carrinho (2), sem alteração manual.
     expect(screen.getByLabelText("Quantidade de Ração X")).toHaveValue(2);
 
-    fireEvent.click(screen.getByLabelText("Adicionar Ração X ao carrinho"));
+    fireEvent.click(screen.getByLabelText("Adicionar Ração X ao pedido"));
 
     const cart = JSON.parse(localStorage.getItem("mypet_cart") ?? "{}");
     expect(cart.items).toHaveLength(1);
@@ -91,7 +91,7 @@ describe("PedidoRapidoTable", () => {
     renderTable();
 
     expect(screen.getByLabelText("Quantidade de Kit sem preço")).toBeDisabled();
-    expect(screen.getByLabelText("Adicionar Kit sem preço ao carrinho")).toBeDisabled();
+    expect(screen.getByLabelText("Adicionar Kit sem preço ao pedido")).toBeDisabled();
     expect(screen.getByText("Sob consulta")).toBeInTheDocument();
   });
 

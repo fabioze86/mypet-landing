@@ -8,9 +8,9 @@ const { name: SITE_NAME, tagline: TAGLINE, logo } = clientConfig;
 
 export function generateMetadata(): Metadata {
   return {
-    title: `Criar acesso à loja - ${SITE_NAME}`,
+    title: `Liberar tabela de preços - ${SITE_NAME}`,
     description:
-      "Informe CNPJ e WhatsApp para liberar os preços de atacado da My Pet Brasil, sem cotação por WhatsApp.",
+      "Informe CNPJ e WhatsApp para liberar a tabela de preços da My Pet Brasil, com os mesmos preços do mypetbrasil.com.",
     alternates: { canonical: canonicalUrl(clientConfig.domain, "/cadastro") },
   };
 }
@@ -34,15 +34,15 @@ export default function CadastroPage() {
         <section className="pa-cadastro-section" aria-labelledby="cadastro-title">
           <div className="pa-wrap pa-cadastro-wrap">
             <div className="pa-cadastro-intro">
-              <p className="pa-eyebrow">Preços para lojistas</p>
-              <h1 id="cadastro-title">Consulte nossos preços de atacado</h1>
+              <p className="pa-eyebrow">Tabela de Preços My Pet Brasil</p>
+              <h1 id="cadastro-title">Libere a tabela de preços</h1>
               <p>
-                Informe os dados básicos da sua empresa para visualizar preços e montar seu orçamento.
+                Informe os dados básicos da sua empresa para ver os preços, montar seu pedido e enviá-lo pelo WhatsApp.
               </p>
             </div>
 
             <div className="pa-panel" id="acesso">
-              <h2>Liberar preços</h2>
+              <h2>Liberar tabela</h2>
               <p className="pa-panel-sub">Faça uma identificação rápida para consultar os preços da My Pet Brasil.</p>
               <AccessForm />
             </div>
@@ -57,7 +57,7 @@ export default function CadastroPage() {
             <span>{SITE_NAME} - {TAGLINE}</span>
           </div>
           <small>
-            © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberação da loja.
+            © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberar a tabela de preços.
             {" "}Desenvolvido por{" "}
             <a
               href="https://www.zemann.com.br"

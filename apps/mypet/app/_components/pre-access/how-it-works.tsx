@@ -10,7 +10,7 @@ export function HowItWorks() {
     >
       <div className="pa-wrap">
         <h2 id="como-funciona-title" className="pa-h2">Como funciona</h2>
-        <p className="pa-sec-lead">Consulte preços e comece a comprar em poucos passos.</p>
+        <p className="pa-sec-lead">Da consulta ao pedido no WhatsApp em poucos passos.</p>
         <ol className="pa-steps" style={{ listStyle: "none", padding: 0 }}>
           {steps.map((s, i) => (
             <li key={s.id} className="pa-step">

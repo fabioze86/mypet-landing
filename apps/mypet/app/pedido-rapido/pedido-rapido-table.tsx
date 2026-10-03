@@ -84,7 +84,7 @@ function Row({
           type="button"
           disabled={disabled}
           onClick={() => onAdd(qty)}
-          aria-label={`Adicionar ${item.name} ao carrinho`}
+          aria-label={`Adicionar ${item.name} ao pedido`}
           className="pr-add"
           style={{ background: added ? P.navy : P.pink, color: P.white }}
         >

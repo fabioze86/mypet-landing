@@ -6,11 +6,11 @@ import { LANDING_STYLES } from "./styles";
 describe("WhyBuy", () => {
   it("mostra 4 pontos com ícone", () => {
     const { container } = render(<WhyBuy />);
-    const region = screen.getByRole("region", { name: "Por que comprar na My Pet Brasil?" });
-    expect(within(region).getByText("Variedade para sua loja")).toBeInTheDocument();
-    expect(within(region).getByText("Compra para CNPJ")).toBeInTheDocument();
-    expect(within(region).getByText("Consulte antes de comprar")).toBeInTheDocument();
-    expect(within(region).getByText("Compra sem caixa fechada")).toBeInTheDocument();
+    const region = screen.getByRole("region", { name: "Mesma My Pet, mesmos preços" });
+    expect(within(region).getByText("Mesmos preços do site")).toBeInTheDocument();
+    expect(within(region).getByText("Mesmos produtos e estoque")).toBeInTheDocument();
+    expect(within(region).getByText("Todos os preços numa tela")).toBeInTheDocument();
+    expect(within(region).getByText("Pedido direto com o nosso time")).toBeInTheDocument();
     expect(container.querySelectorAll(".pa-inst-item svg").length).toBe(4);
   });
 

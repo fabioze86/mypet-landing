@@ -13,8 +13,8 @@ export function CartBadge() {
       href="/cotacao"
       aria-label={
         totalItems > 0
-          ? `Carrinho de cotação com ${totalItems} ${totalItems === 1 ? "item" : "itens"}`
-          : "Carrinho de cotação vazio"
+          ? `Carrinho com ${totalItems} ${totalItems === 1 ? "item" : "itens"}`
+          : "Carrinho vazio"
       }
       style={{
         position: "relative",

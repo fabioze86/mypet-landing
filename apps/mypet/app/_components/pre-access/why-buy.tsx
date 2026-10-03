@@ -5,7 +5,7 @@ export function WhyBuy() {
   return (
     <section className="pa-section pa-inst" aria-labelledby="why-buy-title">
       <div className="pa-wrap">
-        <h2 id="why-buy-title" className="pa-h2">Por que comprar na My Pet Brasil?</h2>
+        <h2 id="why-buy-title" className="pa-h2">Mesma My Pet, mesmos preços</h2>
         <div className="pa-inst-grid">
           {whyBuyPoints.map((item) => (
             <div key={item.id} className="pa-inst-item">

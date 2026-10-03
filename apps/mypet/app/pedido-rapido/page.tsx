@@ -14,7 +14,7 @@ import { PedidoRapidoTable } from "./pedido-rapido-table";
 const { palette: PALETTE } = clientConfig;
 
 export const metadata: Metadata = {
-  title: "Pedido Rápido | My Pet Brasil",
+  title: "Tabela de Preços | My Pet Brasil",
   robots: { index: false, follow: false },
 };
 
@@ -51,9 +51,9 @@ export async function PedidoRapidoPageBody() {
         faqHref="/perguntas-frequentes"
       />
       <main className="ba-main">
-        <h1 className="ba-h1">Consulte preços e monte seu pedido</h1>
+        <h1 className="ba-h1">Tabela de preços</h1>
         <p className="ba-lead">
-          Pesquise por produto, SKU, categoria ou marca. Informe a quantidade e adicione os itens que deseja.
+          Os mesmos preços do mypetbrasil.com. Pesquise por produto, SKU, categoria ou marca, informe a quantidade e envie o pedido pelo WhatsApp.
         </p>
         <PedidoRapidoTable
           initialResult={firstPage}

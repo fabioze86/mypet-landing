@@ -15,13 +15,28 @@ vi.mock("./_data/category-thumbs", () => ({
 import LandingPage from "./page";
 
 describe("LandingPage", () => {
-  it("renderiza condições, como funciona, FAQ, consulta rápida, confiança e CTA final", async () => {
+  it("renderiza condições, como funciona, FAQ, mesmos preços e CTA final", async () => {
     render(await LandingPage());
     expect(screen.getByText("Pedido mínimo")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: /como funciona/i })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Quer apenas consultar nossos preços?" })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Por que comprar na My Pet Brasil?" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Mesma My Pet, mesmos preços" })).toBeInTheDocument();
     expect(screen.getAllByRole("group").length).toBeGreaterThanOrEqual(8); // <details> do FAQ
+  });
+
+  it("linka o site oficial mypetbrasil.com", async () => {
+    render(await LandingPage());
+    expect(screen.getByRole("link", { name: "mypetbrasil.com" })).toHaveAttribute(
+      "href",
+      "https://www.mypetbrasil.com",
+    );
+  });
+
+  // Posicionamento: a tabela é extensão do site oficial (mesmo preço) e o
+  // pedido segue pelo WhatsApp. "Atacado" sugere preço diferente do site e
+  // "cotação" soa sem compromisso.
+  it("não usa as palavras atacado nem cotação na copy", async () => {
+    const { container } = render(await LandingPage());
+    expect(container.textContent).not.toMatch(/atacado|cota[cç][aã]o/i);
   });
 
   it("não mostra a seção de depoimentos", async () => {

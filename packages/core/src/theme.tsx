@@ -32,6 +32,8 @@ export type ClientConfig = {
   palette: Palette;
   logo: { emoji: string };
   features: Features;
+  /** Rótulo acima do preço na página de produto. Padrão: "Atacado B2B". */
+  priceEyebrow?: string;
 };
 
 const ClientConfigContext = createContext<ClientConfig | null>(null);

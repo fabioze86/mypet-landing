@@ -5,21 +5,21 @@ import { clientConfig } from "@/client.config";
 import { getCategoryThumbs } from "./_data/category-thumbs";
 import { Hero } from "./_components/pre-access/hero";
 import { CommercialFaq } from "./_components/pre-access/commercial-faq";
-import { QuickAccessSteps } from "./_components/pre-access/quick-access-steps";
 import { WhyBuy } from "./_components/pre-access/why-buy";
 import { CommercialConditions } from "./_components/pre-access/commercial-conditions";
 import { HowItWorks } from "./_components/pre-access/how-it-works";
 import { CatalogPreview } from "./_components/pre-access/catalog-preview";
 import { ClosingCta } from "./_components/pre-access/closing-cta";
 import { LANDING_STYLES } from "./_components/pre-access/styles";
+import { OFFICIAL_SITE_URL } from "./pre-access-content";
 
 const { name: SITE_NAME, tagline: TAGLINE, logo } = clientConfig;
 
 export function generateMetadata(): Metadata {
   return {
-    title: `${SITE_NAME} - atacado para pet shops`,
+    title: `Tabela de preços para pet shops - ${SITE_NAME}`,
     description:
-      "Atacado para pet shops: veja condições de compra, pedido mínimo e categorias antes de acessar a loja.",
+      "Tabela de preços da My Pet Brasil: os mesmos produtos e preços do mypetbrasil.com numa tela só, com pedido enviado pelo WhatsApp.",
     alternates: { canonical: canonicalUrl(clientConfig.domain, "/") },
   };
 }
@@ -40,23 +40,23 @@ export default async function LandingPage() {
             <span>{SITE_NAME}</span>
           </div>
           <nav className="pa-nav" aria-label="Seções da página">
+            <a href="#como-funciona">Como funciona</a>
             <a href="#faq">Dúvidas</a>
             <a href="/perguntas-frequentes">Todas as dúvidas</a>
             <a href="#condicoes">Condições</a>
-            <a href="#como-funciona">Como funciona</a>
             <a href="#categorias">Categorias</a>
-            <a href="/cadastro" className="pa-nav-cta">Consultar preços</a>
+            <a href={OFFICIAL_SITE_URL} target="_blank" rel="noopener noreferrer">mypetbrasil.com</a>
+            <a href="/cadastro" className="pa-nav-cta">Abrir tabela</a>
           </nav>
         </div>
       </header>
 
       <main>
         <Hero />
-        <CommercialFaq />
-        <QuickAccessSteps />
         <WhyBuy />
-        <CommercialConditions />
         <HowItWorks />
+        <CommercialFaq />
+        <CommercialConditions />
         <CatalogPreview categories={topCategories} thumbs={thumbs} />
         <ClosingCta />
       </main>
@@ -68,7 +68,7 @@ export default async function LandingPage() {
             <span>{SITE_NAME} - {TAGLINE}</span>
           </div>
           <small>
-            © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberação da loja.
+            © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberar a tabela de preços.
             {" "}Desenvolvido por{" "}
             <a
               href="https://www.zemann.com.br"

@@ -7,7 +7,11 @@ export type QuoteCustomer = {
   cnpj?: string;
 };
 
-export function buildQuoteMessage(items: CartItem[], customer: QuoteCustomer): string {
+export function buildQuoteMessage(
+  items: CartItem[],
+  customer: QuoteCustomer,
+  intro = "Olá! Gostaria de uma cotação de atacado:",
+): string {
   const itemLines = items
     .map((item) => {
       const skuPart = item.sku ? ` (SKU ${item.sku})` : "";
@@ -23,7 +27,7 @@ export function buildQuoteMessage(items: CartItem[], customer: QuoteCustomer): s
   if (customer.cnpj) customerLines.push(`CNPJ: ${customer.cnpj}`);
 
   return [
-    "Olá! Gostaria de uma cotação de atacado:",
+    intro,
     "",
     itemLines,
     "",

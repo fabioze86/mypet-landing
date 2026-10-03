@@ -9,6 +9,7 @@ import type { Palette } from "@mypet/core/theme";
 import { finalizeQuote } from "./actions";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
+const WHATSAPP_INTRO = "Olá! Quero fazer este pedido pela Tabela de Preços My Pet Brasil:";
 
 const brl = (n: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
@@ -30,10 +31,10 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       <div className="ba-card" style={{ padding: "32px 20px", textAlign: "center" }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: PALETTE.navy, margin: "0 0 8px" }}>
-          Cotação enviada!
+          Pedido enviado!
         </h2>
         <p style={{ fontSize: 14, lineHeight: 1.55, color: PALETTE.gray600, margin: "0 0 20px" }}>
-          Abrimos o WhatsApp com os itens da sua cotação. Nossa equipe vai te responder por lá.
+          Abrimos o WhatsApp com o seu pedido. Nosso time confirma estoque, frete e pagamento e fecha o pedido com você por lá.
         </p>
         <div className="cq-done-actions">
           <Link href="/pedido-rapido" className="ba-btn ba-btn-primary">
@@ -53,13 +54,13 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       <div className="ba-card" style={{ padding: "32px 20px", textAlign: "center" }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🛒</div>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: PALETTE.navy, margin: "0 0 8px" }}>
-          Sua cotação está vazia
+          Seu pedido está vazio
         </h2>
         <p style={{ fontSize: 14, lineHeight: 1.55, color: PALETTE.gray600, margin: "0 0 20px" }}>
-          Consulte os preços e adicione produtos para montar sua cotação.
+          Consulte a tabela e adicione produtos para montar seu pedido.
         </p>
         <Link href="/pedido-rapido" className="ba-btn ba-btn-primary">
-          Consultar preços
+          Abrir tabela de preços
         </Link>
       </div>
     );
@@ -85,7 +86,11 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       return;
     }
 
-    const message = buildQuoteMessage(cart.items, { ...result.buyer, cnpj: result.buyer.cnpj ?? undefined });
+    const message = buildQuoteMessage(
+      cart.items,
+      { ...result.buyer, cnpj: result.buyer.cnpj ?? undefined },
+      WHATSAPP_INTRO,
+    );
     window.open(buildWhatsAppLink(WHATSAPP_NUMBER, message), "_blank");
 
     clear();
@@ -138,7 +143,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
             <button
               type="button"
               onClick={() => removeItem(item.id)}
-              aria-label={`Remover ${item.name} da cotação`}
+              aria-label={`Remover ${item.name} do pedido`}
               className="cq-remove"
               style={{ color: PALETTE.gray600 }}
             >
@@ -157,10 +162,10 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
           <p style={{ color: "#C0392B", fontSize: 13, fontWeight: 600, margin: "0 0 12px", textAlign: "center" }}>{submitError}</p>
         )}
         <button type="button" className="ba-btn ba-btn-primary ba-btn-block" disabled={submitting} onClick={handleSubmit}>
-          {submitting ? "Enviando..." : "Enviar cotação pelo WhatsApp"}
+          {submitting ? "Enviando..." : "Enviar pedido pelo WhatsApp"}
         </button>
         <p style={{ fontSize: 12, lineHeight: 1.5, color: PALETTE.gray600, margin: "10px 0 0", textAlign: "center" }}>
-          Abriremos o WhatsApp com os itens para nossa equipe confirmar estoque e condições.
+          Abriremos o WhatsApp com o pedido pronto. Nosso time confirma estoque, frete e pagamento com você.
         </p>
       </div>
     </>

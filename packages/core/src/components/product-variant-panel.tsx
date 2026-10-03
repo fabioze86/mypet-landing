@@ -76,7 +76,7 @@ function PurchaseGrid({
   selected: ProductVariant;
   onSelect: (id: string) => void;
 }) {
-  const { palette: PALETTE, features } = useClientConfig();
+  const { palette: PALETTE, features, priceEyebrow } = useClientConfig();
   const hasVariants = product.variants.length > 0;
   const useTable = hasVariants && !hasAxisData(product.variants);
 
@@ -183,7 +183,7 @@ function PurchaseGrid({
                       marginBottom: 4,
                     }}
                   >
-                    Atacado B2B
+                    {priceEyebrow ?? "Atacado B2B"}
                   </div>
                   <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
                     {priceLabel ?? "Preço sob consulta"}

@@ -20,12 +20,12 @@ export async function generateMetadata({
   if (!node) return { title: `Categoria não encontrada — ${clientConfig.name}` };
 
   return {
-    title: `${node.name} — ${clientConfig.name} Atacado`,
-    description: `Confira os produtos de ${node.name} no atacado B2B da ${clientConfig.name}. Preços sob consulta para lojistas.`,
+    title: `${node.name} — ${clientConfig.name}`,
+    description: `Confira os produtos de ${node.name} da ${clientConfig.name}. Preços na tabela para lojistas cadastrados.`,
     alternates: { canonical: canonicalUrl(clientConfig.domain, `/categoria/${slug}`) },
     openGraph: {
       title: node.name,
-      description: `Confira os produtos de ${node.name} no atacado B2B da ${clientConfig.name}.`,
+      description: `Confira os produtos de ${node.name} da ${clientConfig.name}.`,
     },
   };
 }
