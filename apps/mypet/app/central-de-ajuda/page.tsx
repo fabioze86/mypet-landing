@@ -44,27 +44,17 @@ export default async function CentralDeAjudaPage() {
             </p>
 
             <div className="pa-help-grid">
-              {categorias.map((categoria) => {
-                const conteudo = (
-                  <>
+              {categorias
+                .filter((categoria) => ativas.includes(categoria.id))
+                .map((categoria) => (
+                  <Link key={categoria.id} href={`/central-de-ajuda/c/${categoria.slug}`} className="pa-help-card">
                     <span className="pa-help-icon">
                       <PaIcon name={categoria.icone} size={22} />
                     </span>
                     <h3>{categoria.titulo}</h3>
                     <p>{categoria.descricao}</p>
-                  </>
-                );
-                return ativas.includes(categoria.id) ? (
-                  <Link key={categoria.id} href={`/central-de-ajuda/c/${categoria.slug}`} className="pa-help-card">
-                    {conteudo}
                   </Link>
-                ) : (
-                  <div key={categoria.id} className="pa-help-card pa-help-card-off" aria-disabled="true">
-                    {conteudo}
-                    <span className="pa-help-soon">Em breve</span>
-                  </div>
-                );
-              })}
+                ))}
             </div>
           </div>
         </section>

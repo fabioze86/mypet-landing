@@ -201,8 +201,6 @@ export const LANDING_STYLES = `
   .pa-help-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--pa-r-pill); background: var(--pa-green-soft); color: var(--pa-green-dark); }
   .pa-help-card h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 16px; margin: 0; }
   .pa-help-card p { color: var(--pa-muted); font-size: 13px; line-height: 1.5; margin: 0; }
-  .pa-help-card-off { opacity: .5; cursor: not-allowed; }
-  .pa-help-soon { align-self: flex-start; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--pa-muted); background: var(--pa-navy-soft); padding: 3px 8px; border-radius: var(--pa-r-pill); }
   .pa-nav a[aria-current="page"] { color: var(--pa-navy); font-weight: 600; }
 
   .pa-help-list { margin-top: 24px; border-top: 1px solid var(--pa-line); }

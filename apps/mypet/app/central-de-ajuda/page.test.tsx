@@ -18,10 +18,8 @@ describe("CentralDeAjudaPage", () => {
     expect(screen.getByRole("link", { name: /Preços/ })).toHaveAttribute("href", "/central-de-ajuda/c/precos");
   });
 
-  it("mostra categoria sem artigo publicado desativada, sem link", async () => {
+  it("oculta categoria sem artigo publicado", async () => {
     render(await CentralDeAjudaPage());
-    expect(screen.getByText("Notas fiscais")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Notas fiscais/ })).toBeNull();
-    expect(screen.getByText("Em breve")).toBeInTheDocument();
+    expect(screen.queryByText("Notas fiscais")).toBeNull();
   });
 });
