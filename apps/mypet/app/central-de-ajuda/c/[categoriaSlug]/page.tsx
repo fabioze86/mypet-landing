@@ -1,13 +1,27 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCategoriaAjudaBySlug, getArtigosAjudaPublicadosPorCategoria } from "@mypet/core/help-center";
+import {
+  getCategoriasAjuda,
+  getCategoriaAjudaBySlug,
+  getArtigosAjudaPublicadosPorCategoria,
+  getCategoriaIdsComArtigosPublicados,
+} from "@mypet/core/help-center";
 import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { LANDING_STYLES } from "../../../_components/pre-access/styles";
+import { renderizarMarkdown } from "../../markdown";
 
 const { name: SITE_NAME, logo } = clientConfig;
+
+const LINKS_RAPIDOS = ["primeiros-passos", "cadastro", "catalogo"];
+
+export async function generateStaticParams() {
+  const [categorias, ativas] = await Promise.all([getCategoriasAjuda(), getCategoriaIdsComArtigosPublicados()]);
+  const params = categorias.filter((c) => ativas.includes(c.id)).map((c) => ({ categoriaSlug: c.slug }));
+  // Com cacheComponents, uma lista vazia quebra o build; o placeholder cai no notFound().
+  return params.length > 0 ? params : [{ categoriaSlug: "__placeholder__" }];
+}
 
 export async function generateMetadata({
   params,
@@ -23,11 +37,26 @@ export async function generateMetadata({
   };
 }
 
-export default function CategoriaAjudaPage({
+export default async function CategoriaAjudaPage({
   params,
 }: {
   params: Promise<{ categoriaSlug: string }>;
 }) {
+  const { categoriaSlug } = await params;
+  const categoria = await getCategoriaAjudaBySlug(categoriaSlug);
+  if (!categoria) notFound();
+
+  const [artigos, categorias, ativas] = await Promise.all([
+    getArtigosAjudaPublicadosPorCategoria(categoria.id),
+    getCategoriasAjuda(),
+    getCategoriaIdsComArtigosPublicados(),
+  ]);
+  if (artigos.length === 0) notFound();
+
+  const linksRapidos = LINKS_RAPIDOS.map((slug) => categorias.find((c) => c.slug === slug)).filter(
+    (c): c is NonNullable<typeof c> => !!c && ativas.includes(c.id),
+  );
+
   return (
     <>
       <style>{LANDING_STYLES}</style>
@@ -38,16 +67,44 @@ export default function CategoriaAjudaPage({
             <span aria-hidden>{logo.emoji}</span>
             <span>{SITE_NAME}</span>
           </a>
-          <nav className="pa-nav" aria-label="Seções da página">
+          <nav className="pa-nav" aria-label="Categorias da central de ajuda">
+            {linksRapidos.map((c) => (
+              <Link
+                key={c.id}
+                href={`/central-de-ajuda/c/${c.slug}`}
+                aria-current={c.id === categoria.id ? "page" : undefined}
+              >
+                {c.titulo}
+              </Link>
+            ))}
             <a href="/central-de-ajuda/busca" className="pa-nav-cta">Buscar</a>
           </nav>
         </div>
       </header>
 
       <main>
-        <Suspense fallback={<p className="pa-help-empty">Carregando categoria…</p>}>
-          <CategoriaAjudaPageBody params={params} />
-        </Suspense>
+        <section className="pa-section" aria-labelledby="categoria-title">
+          <div className="pa-wrap" style={{ maxWidth: 820 }}>
+            <Link href="/central-de-ajuda" className="pa-cadastro-back">&larr; Central de ajuda</Link>
+            <h1 id="categoria-title" className="pa-h2" style={{ marginTop: 16 }}>{categoria.titulo}</h1>
+            <p className="pa-sec-lead">{categoria.descricao}</p>
+
+            <div className="pa-help-faq">
+              {artigos.map((artigo) => (
+                <details key={artigo.id} id={artigo.slug}>
+                  <summary>
+                    <span className="pa-help-list-title">{artigo.titulo}</span>
+                    <span className="pa-help-list-sub">{artigo.resumo}</span>
+                  </summary>
+                  <div
+                    className="pa-help-article pa-help-faq-body"
+                    dangerouslySetInnerHTML={{ __html: renderizarMarkdown(artigo.corpoMarkdown) }}
+                  />
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="pa-footer">
@@ -60,40 +117,5 @@ export default function CategoriaAjudaPage({
         </div>
       </footer>
     </>
-  );
-}
-
-export async function CategoriaAjudaPageBody({
-  params,
-}: {
-  params: Promise<{ categoriaSlug: string }>;
-}) {
-  const { categoriaSlug } = await params;
-  const categoria = await getCategoriaAjudaBySlug(categoriaSlug);
-  if (!categoria) notFound();
-
-  const artigos = await getArtigosAjudaPublicadosPorCategoria(categoria.id);
-
-  return (
-    <section className="pa-section" aria-labelledby="categoria-title">
-      <div className="pa-wrap" style={{ maxWidth: 820 }}>
-        <Link href="/central-de-ajuda" className="pa-cadastro-back">&larr; Central de ajuda</Link>
-        <h1 id="categoria-title" className="pa-h2" style={{ marginTop: 16 }}>{categoria.titulo}</h1>
-        <p className="pa-sec-lead">{categoria.descricao}</p>
-
-        {artigos.length === 0 ? (
-          <p className="pa-help-empty">Nenhum artigo publicado nesta categoria ainda.</p>
-        ) : (
-          <div className="pa-help-list">
-            {artigos.map((artigo) => (
-              <Link key={artigo.id} href={`/central-de-ajuda/a/${artigo.slug}`}>
-                <span className="pa-help-list-title">{artigo.titulo}</span>
-                <span className="pa-help-list-sub">{artigo.resumo}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
   );
 }

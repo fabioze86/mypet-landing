@@ -201,6 +201,9 @@ export const LANDING_STYLES = `
   .pa-help-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--pa-r-pill); background: var(--pa-green-soft); color: var(--pa-green-dark); }
   .pa-help-card h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 16px; margin: 0; }
   .pa-help-card p { color: var(--pa-muted); font-size: 13px; line-height: 1.5; margin: 0; }
+  .pa-help-card-off { opacity: .5; cursor: not-allowed; }
+  .pa-help-soon { align-self: flex-start; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--pa-muted); background: var(--pa-navy-soft); padding: 3px 8px; border-radius: var(--pa-r-pill); }
+  .pa-nav a[aria-current="page"] { color: var(--pa-navy); font-weight: 600; }
 
   .pa-help-list { margin-top: 24px; border-top: 1px solid var(--pa-line); }
   .pa-help-list a { display: block; padding: 18px 4px; border-bottom: 1px solid var(--pa-line); text-decoration: none; }
@@ -208,6 +211,16 @@ export const LANDING_STYLES = `
   .pa-help-list-title { display: block; font-family: var(--pa-geist); font-weight: 600; font-size: 15px; color: var(--pa-navy); }
   .pa-help-list-sub { display: block; margin-top: 4px; color: var(--pa-muted); font-size: 13px; }
   .pa-help-empty { color: var(--pa-muted); font-size: 14px; padding: 24px 0; }
+
+  .pa-help-faq { margin-top: 24px; border-top: 1px solid var(--pa-line); }
+  .pa-help-faq details { border-bottom: 1px solid var(--pa-line); }
+  .pa-help-faq summary { position: relative; display: block; padding: 18px 40px 18px 4px; cursor: pointer; list-style: none; }
+  .pa-help-faq summary::-webkit-details-marker { display: none; }
+  .pa-help-faq summary::after { content: "+"; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 22px; line-height: 1; color: var(--pa-green-dark); transition: transform .2s; }
+  .pa-help-faq details[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+  .pa-help-faq summary:hover .pa-help-list-title { color: var(--pa-green-dark); }
+  .pa-help-faq summary:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
+  .pa-help-faq-body { padding: 0 4px 20px; }
 
   .pa-help-article { max-width: 68ch; }
   .pa-help-article h1 { font-family: var(--pa-geist); font-weight: 700; color: var(--pa-navy); font-size: clamp(24px, 3.2vw, 32px); margin: 0 0 20px; }

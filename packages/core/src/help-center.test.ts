@@ -36,6 +36,7 @@ import {
   getCategoriaAjudaBySlug,
   getArtigosAjudaPublicadosPorCategoria,
   getArtigoAjudaPublicadoBySlug,
+  getCategoriaIdsComArtigosPublicados,
   buscarArtigosAjudaPublicados,
 } from "./help-center";
 
@@ -70,12 +71,23 @@ describe("getCategoriaAjudaBySlug", () => {
 });
 
 describe("getArtigosAjudaPublicadosPorCategoria", () => {
-  it("filtra por categoria_id e por status publicado", async () => {
-    rows = [{ id: "a1", categoria_id: "c1", slug: "pedido-minimo", titulo: "Pedido mínimo", resumo: "r", ordem: 0 }];
+  it("filtra por categoria_id e por status publicado, incluindo o corpo", async () => {
+    rows = [{ id: "a1", categoria_id: "c1", slug: "pedido-minimo", titulo: "Pedido mínimo", resumo: "r", ordem: 0, corpo_markdown: "## Olá" }];
     const result = await getArtigosAjudaPublicadosPorCategoria("c1");
     expect(calls["eq"]).toContainEqual(["categoria_id", "c1"]);
     expect(calls["eq"]).toContainEqual(["status", "publicado"]);
-    expect(result).toEqual([{ id: "a1", categoriaId: "c1", slug: "pedido-minimo", titulo: "Pedido mínimo", resumo: "r", ordem: 0 }]);
+    expect(result).toEqual([
+      { id: "a1", categoriaId: "c1", slug: "pedido-minimo", titulo: "Pedido mínimo", resumo: "r", ordem: 0, corpoMarkdown: "## Olá" },
+    ]);
+  });
+});
+
+describe("getCategoriaIdsComArtigosPublicados", () => {
+  it("devolve os ids de categoria sem repetição, só de artigos publicados", async () => {
+    rows = [{ categoria_id: "c1" }, { categoria_id: "c2" }, { categoria_id: "c1" }];
+    const result = await getCategoriaIdsComArtigosPublicados();
+    expect(calls["eq"]).toContainEqual(["status", "publicado"]);
+    expect(result).toEqual(["c1", "c2"]);
   });
 });
 

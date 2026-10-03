@@ -112,7 +112,7 @@ export async function getCategoriaAjudaBySlug(slug: string): Promise<CategoriaAj
 
 export async function getArtigosAjudaPublicadosPorCategoria(
   categoriaId: string,
-): Promise<ArtigoAjudaResumo[]> {
+): Promise<ArtigoAjuda[]> {
   "use cache";
   cacheLife("days");
   cacheTag("central-ajuda");
@@ -120,7 +120,7 @@ export async function getArtigosAjudaPublicadosPorCategoria(
   const supabase = getHubClient();
   const { data, error } = await supabase
     .from("artigos_ajuda")
-    .select(ARTIGO_RESUMO_SELECT)
+    .select(ARTIGO_SELECT)
     .eq("categoria_id", categoriaId)
     .eq("status", "publicado")
     .order("ordem", { ascending: true });
@@ -129,7 +129,25 @@ export async function getArtigosAjudaPublicadosPorCategoria(
     console.error("[help-center] erro ao listar artigos:", error.message);
     return [];
   }
-  return ((data as RawArtigoResumo[] | null) ?? []).map(mapArtigoResumo);
+  return ((data as RawArtigo[] | null) ?? []).map(mapArtigo);
+}
+
+export async function getCategoriaIdsComArtigosPublicados(): Promise<string[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("central-ajuda");
+
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("artigos_ajuda")
+    .select("categoria_id")
+    .eq("status", "publicado");
+
+  if (error) {
+    console.error("[help-center] erro ao listar categorias com artigos:", error.message);
+    return [];
+  }
+  return [...new Set(((data as { categoria_id: string }[] | null) ?? []).map((row) => row.categoria_id))];
 }
 
 export async function getArtigoAjudaPublicadoBySlug(slug: string): Promise<ArtigoAjuda | null> {
