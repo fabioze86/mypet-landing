@@ -26,4 +26,21 @@ describe("proxy", () => {
     const res = await proxy(fakeRequest("https://app.test/loja", "good"));
     expect(res.headers.get("location")).toBeNull();
   });
+
+  it("redireciona o catálogo digital anônimo para /", async () => {
+    for (const path of ["/catalogo", "/catalogo/index.html"]) {
+      const res = await proxy(fakeRequest(`https://app.test${path}`));
+      expect(res.headers.get("location")).toBe("https://app.test/");
+    }
+  });
+
+  it("deixa passar o catálogo digital com cookie válido", async () => {
+    const res = await proxy(fakeRequest("https://app.test/catalogo", "good"));
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("não protege rotas parecidas como /catalogos", async () => {
+    const res = await proxy(fakeRequest("https://app.test/catalogos"));
+    expect(res.headers.get("location")).toBeNull();
+  });
 });
