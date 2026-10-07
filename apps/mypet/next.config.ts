@@ -5,8 +5,12 @@ const nextConfig: NextConfig = {
   transpilePackages: ["@mypet/core"],
   // Catálogo digital: HTML estático gerado em public/catalogo/index.html
   // (gerador em MarketingOS/tmp/catalogo-digital). Deixa /catalogo abrir direto.
+  // Show Room: landing estática e pública em public/show-room/index.html.
   async rewrites() {
-    return [{ source: "/catalogo", destination: "/catalogo/index.html" }];
+    return [
+      { source: "/catalogo", destination: "/catalogo/index.html" },
+      { source: "/show-room", destination: "/show-room/index.html" },
+    ];
   },
   images: {
     remotePatterns: [
