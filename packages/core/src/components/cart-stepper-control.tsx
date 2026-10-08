@@ -61,11 +61,11 @@ export function CartStepperControl({ product }: { product: Omit<CartItem, "qty">
         borderRadius: 10,
       }}
     >
-      <button type="button" aria-label="Diminuir quantidade" onClick={() => updateQty(product.id, qty - 1)} style={stepButton}>
+      <button type="button" aria-label={`Diminuir quantidade de ${product.name}`} onClick={() => updateQty(product.id, qty - 1)} style={stepButton}>
         −
       </button>
       <span aria-live="polite" style={{ color: palette.white, fontSize: 15, fontWeight: 900 }}>{qty}</span>
-      <button type="button" aria-label="Aumentar quantidade" onClick={() => updateQty(product.id, qty + 1)} style={stepButton}>
+      <button type="button" aria-label={`Aumentar quantidade de ${product.name}`} onClick={() => updateQty(product.id, qty + 1)} style={stepButton}>
         +
       </button>
     </div>

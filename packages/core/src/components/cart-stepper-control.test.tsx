@@ -38,7 +38,7 @@ describe("CartStepperControl", () => {
     renderControl();
     fireEvent.click(screen.getByRole("button", { name: "Adicionar Coleira P" }));
     expect(screen.getByText("1")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Aumentar quantidade" }));
+    fireEvent.click(screen.getByRole("button", { name: "Aumentar quantidade de Coleira P" }));
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem("mypet_cart") ?? "{}").items[0]).toMatchObject({ id: "p1", qty: 2, unitPrice: 9.9 });
   });
@@ -46,7 +46,7 @@ describe("CartStepperControl", () => {
   it("remove do carrinho ao diminuir de 1 para 0", () => {
     renderControl();
     fireEvent.click(screen.getByRole("button", { name: "Adicionar Coleira P" }));
-    fireEvent.click(screen.getByRole("button", { name: "Diminuir quantidade" }));
+    fireEvent.click(screen.getByRole("button", { name: "Diminuir quantidade de Coleira P" }));
     expect(screen.getByRole("button", { name: "Adicionar Coleira P" })).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem("mypet_cart") ?? "{}").items).toEqual([]);
   });

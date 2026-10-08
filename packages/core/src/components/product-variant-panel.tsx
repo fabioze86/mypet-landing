@@ -90,7 +90,9 @@ function PurchaseGrid({
   const cartId = variantOverride?.id ?? product.id;
   const cartName = variantOverride?.name ?? product.name;
   const priceLabel = product.variants.find((variant) => variant.id === cartId)?.priceLabel ?? product.priceLabel;
-  const unitPrice = product.variants.find((variant) => variant.id === cartId)?.salePrice ?? product.salePrice ?? undefined;
+  // Só o próprio produto cai no preço do pai; variação sem preço fica "a consultar".
+  const variantPrice = product.variants.find((variant) => variant.id === cartId)?.salePrice;
+  const unitPrice = (cartId === product.id ? variantPrice ?? product.salePrice : variantPrice) ?? undefined;
 
   return (
     <div className="pdp-purchase-grid">
