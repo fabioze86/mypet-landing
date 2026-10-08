@@ -291,9 +291,6 @@ export default async function Home({
           .footer-row { flex-direction: column; align-items: flex-start; }
         }
 
-        @media (max-width: 768px) {
-          .catalog-search { top: 56px !important; }
-        }
       `}</style>
 
       <LeadGateProvider>

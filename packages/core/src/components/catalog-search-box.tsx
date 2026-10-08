@@ -59,7 +59,7 @@ export function CatalogSearchBox({
   };
 
   return (
-    <div className="catalog-search" style={{ position: "sticky", top: 64, zIndex: 90, background: palette.gray50, padding: "10px 16px" }}>
+    <div className="catalog-search" style={{ position: "sticky", top: "var(--site-nav-height, 64px)", zIndex: 90, background: palette.gray50, padding: "10px 16px" }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         <input
           type="search"

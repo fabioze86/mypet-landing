@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useClientConfig } from "../theme";
 import { CartBadge } from "./cart-badge";
@@ -28,6 +29,26 @@ export function SiteNav({
 }) {
   const { name, tagline, palette, logo } = useClientConfig();
   const tree = buildCategoryTree(categories);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Publica a altura real da barra (a linha do mega-menu pode quebrar em mais
+  // de uma linha) para elementos fixos logo abaixo, como a busca.
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty("--site-nav-height", `${el.getBoundingClientRect().height}px`);
+    publish();
+    if (typeof ResizeObserver === "undefined") {
+      return () => root.style.removeProperty("--site-nav-height");
+    }
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--site-nav-height");
+    };
+  }, []);
 
   // No mobile os links de texto saem da barra e vão para o menu (☰), para a
   // marca e o carrinho não disputarem espaço com eles.
@@ -39,7 +60,7 @@ export function SiteNav({
   ];
 
   return (
-    <nav style={{ background: palette.white, borderBottom: `1px solid ${palette.gray200}`, position: "sticky", top: 0, zIndex: 100 }}>
+    <nav ref={navRef} style={{ background: palette.white, borderBottom: `1px solid ${palette.gray200}`, position: "sticky", top: 0, zIndex: 100 }}>
       <div className="site-nav-shell" style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <div className="site-nav-brand-area" style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           <div className="site-nav-mobile-trigger">
@@ -110,6 +131,7 @@ export function SiteNav({
       )}
 
       <style>{`
+        :root { --site-nav-height: ${showMegaMenu ? 109 : 65}px; }
         .site-nav-mobile-trigger { display: none; }
         .site-nav-name,
         .site-nav-tagline {
@@ -118,6 +140,7 @@ export function SiteNav({
           white-space: nowrap;
         }
         @media (max-width: 768px) {
+          :root { --site-nav-height: 57px; }
           .site-nav-mega-menu-row { display: none; }
           .site-nav-mobile-trigger { display: flex; }
           .site-nav-shell {

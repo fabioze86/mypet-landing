@@ -104,3 +104,12 @@ describe("CatalogSearchBox", () => {
     expect(input).toHaveValue("areia");
   });
 });
+
+describe("CatalogSearchBox — posição fixa", () => {
+  it("gruda logo abaixo da altura real do SiteNav", () => {
+    const { container } = renderBox();
+    const wrapper = container.querySelector(".catalog-search") as HTMLElement;
+    expect(wrapper.style.position).toBe("sticky");
+    expect(wrapper.style.top).toBe("var(--site-nav-height, 64px)");
+  });
+});
