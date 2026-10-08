@@ -22,6 +22,8 @@ describe("registerOrder", () => {
 
     const [url, init] = fetchImpl.mock.calls[0];
     expect(url).toBe("/api/pedidos");
+    expect(init.headers).toEqual({ "Content-Type": "application/json" });
+    expect(init.signal).toBeInstanceOf(AbortSignal);
     expect(JSON.parse(init.body)).toEqual({ items: [{ id: "p1", qty: 2 }, { id: "p2", qty: 1 }], customer });
     expect(result).toEqual({ kind: "ok", number: 1042, prices: new Map([["p1", 9.9], ["p2", null]]), unavailableIds: [] });
   });
@@ -51,6 +53,24 @@ describe("registerOrder", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     expect(await registerOrder(items, customer, vi.fn().mockResolvedValue(jsonResponse(500, { error: "x" })))).toEqual({ kind: "failed" });
     expect(await registerOrder(items, customer, vi.fn().mockRejectedValue(new Error("offline")))).toEqual({ kind: "failed" });
+  });
+});
+
+describe("registerOrder — timeout", () => {
+  it("usa um timeout de 8s e trata o estouro como falha", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const fetchImpl = vi.fn().mockRejectedValue(new DOMException("The operation timed out.", "TimeoutError"));
+
+    expect(await registerOrder(items, customer, fetchImpl)).toEqual({ kind: "failed" });
+    expect(timeout).toHaveBeenCalledWith(8000);
+    timeout.mockRestore();
+  });
+
+  it("abort também vira falha", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchImpl = vi.fn().mockRejectedValue(new DOMException("Aborted", "AbortError"));
+    expect(await registerOrder(items, customer, fetchImpl)).toEqual({ kind: "failed" });
   });
 });
 

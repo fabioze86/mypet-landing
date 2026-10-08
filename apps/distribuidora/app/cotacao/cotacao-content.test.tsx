@@ -106,6 +106,21 @@ describe("CotacaoContent", () => {
     expect(message).toContain(`Coleira (SKU COL-1) — 2 × ${formatPrice(10)} = ${formatPrice(20)}`);
   });
 
+  it("ignora o segundo envio enquanto o primeiro está em andamento", async () => {
+    vi.spyOn(window, "open").mockReturnValue(null);
+    let finish: (value: unknown) => void = () => {};
+    mocks.registerOrder.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+
+    render(<CotacaoContent palette={palette} />);
+    fillAndSubmit();
+    const form = screen.getByRole("button", { name: /Registrando pedido|Enviar pedido/i }).closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await act(async () => finish({ kind: "failed" }));
+
+    expect(mocks.registerOrder).toHaveBeenCalledOnce();
+  });
+
   it("erro de validação aparece no formulário e não abre o WhatsApp", async () => {
     const open = vi.spyOn(window, "open").mockReturnValue(null);
     mocks.registerOrder.mockResolvedValue({ kind: "invalid", error: "Um dos produtos não está mais disponível." });

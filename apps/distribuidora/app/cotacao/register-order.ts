@@ -8,6 +8,8 @@ export type RegisterOrderResult =
 
 // Grava o pedido antes de abrir o WhatsApp. Só "invalid" deve impedir o envio;
 // em "failed" (rede/5xx/409 nada disponível) o pedido segue pelo WhatsApp sem número.
+const REQUEST_TIMEOUT_MS = 8000;
+
 export async function registerOrder(
   items: CartItem[],
   customer: QuoteCustomer,
@@ -18,6 +20,8 @@ export async function registerOrder(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: items.map((item) => ({ id: item.id, qty: item.qty })), customer }),
+      // Servidor lento não segura o cliente: estouro vira "failed" e o WhatsApp abre.
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     const data = await res.json().catch(() => ({}));
 

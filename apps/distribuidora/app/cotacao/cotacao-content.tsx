@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@mypet/core/components/cart-provider";
 import { cartTotals } from "@mypet/core/cart";
@@ -17,6 +17,8 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   const [form, setForm] = useState({ nome: "", empresa: "", whatsapp: "", cnpj: "" });
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Guarda síncrona contra duplo toque: o disabled do botão só vale após o render.
+  const inFlight = useRef(false);
 
   if (cart.items.length === 0) {
     return (
@@ -39,6 +41,8 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (inFlight.current) return;
+    inFlight.current = true;
     setSubmitError("");
     setSubmitting(true);
 
@@ -46,6 +50,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     if (result.kind === "invalid") {
       setSubmitError(result.error);
       setSubmitting(false);
+      inFlight.current = false;
       return;
     }
 
