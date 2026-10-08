@@ -52,9 +52,11 @@ async function applyStartingVariantPrices(items: CatalogResult["items"], channel
 
   const variants = data as unknown as RawCatalogVariantPriceRow[];
   const lowestPriceByParent = new Map<string, number>();
+  const parentsWithVariants = new Set<string>();
 
   for (const variant of variants) {
     if (!variant.parent_product_id) continue;
+    parentsWithVariants.add(variant.parent_product_id);
     const raw = variant.product_channel_prices?.find((price) => price.sale_price != null)?.sale_price;
     const rawPrice = raw == null ? null : Number(raw);
     if (rawPrice == null || !Number.isFinite(rawPrice)) continue;
@@ -66,10 +68,11 @@ async function applyStartingVariantPrices(items: CatalogResult["items"], channel
   }
 
   return items.map((item) => {
+    const flagged = parentsWithVariants.has(item.id) ? { ...item, hasVariants: true as const } : item;
     const lowestPrice = lowestPriceByParent.get(item.id);
     return lowestPrice == null
-      ? item
-      : { ...item, salePrice: lowestPrice, priceLabel: `A partir de ${formatPrice(lowestPrice)}` };
+      ? flagged
+      : { ...flagged, salePrice: lowestPrice, priceLabel: `A partir de ${formatPrice(lowestPrice)}` };
   });
 }
 

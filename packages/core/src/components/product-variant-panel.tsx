@@ -90,6 +90,7 @@ function PurchaseGrid({
   const cartId = variantOverride?.id ?? product.id;
   const cartName = variantOverride?.name ?? product.name;
   const priceLabel = product.variants.find((variant) => variant.id === cartId)?.priceLabel ?? product.priceLabel;
+  const unitPrice = product.variants.find((variant) => variant.id === cartId)?.salePrice ?? product.salePrice ?? undefined;
 
   return (
     <div className="pdp-purchase-grid">
@@ -194,7 +195,7 @@ function PurchaseGrid({
                 </div>
               )}
 
-              <AddToCartControl product={{ id: cartId, name: cartName, sku, brand: product.brand, img }} />
+              <AddToCartControl product={{ id: cartId, name: cartName, sku, brand: product.brand, img, unitPrice }} />
             </div>
           </>
         )}

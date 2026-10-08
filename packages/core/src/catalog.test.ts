@@ -133,6 +133,7 @@ describe("queryCatalog", () => {
       img: "https://img/1",
       category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
     });
+    for (const item of result.items) expect(item.hasVariants).toBeUndefined();
   });
 });
 
@@ -168,6 +169,7 @@ describe("preço inicial de produto-pai", () => {
     expect(result.items[0]).toMatchObject({
       salePrice: 59.9,
       priceLabel: "A partir de R$ 59,90",
+      hasVariants: true,
     });
   });
 });

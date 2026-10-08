@@ -55,7 +55,7 @@ export function VariantTable({
           </div>
           <div style={{ flexShrink: 0 }}>
             <AddToCartControl
-              product={{ id: variant.id, name: variant.name, sku: variant.sku, brand, img: variant.img }}
+              product={{ id: variant.id, name: variant.name, sku: variant.sku, brand, img: variant.img, unitPrice: variant.salePrice ?? undefined }}
             />
           </div>
         </li>

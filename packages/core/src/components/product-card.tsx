@@ -6,9 +6,10 @@ import { badgeStyle, useClientConfig } from "../theme";
 import { showsListPrice } from "../features";
 import { PriceLockSlot } from "./lead-gate";
 import { AddToCartControl } from "./add-to-cart-control";
+import { CartStepperControl } from "./cart-stepper-control";
 import type { CatalogProduct } from "../catalog-utils";
 
-export function ProductCard({ product }: { product: CatalogProduct }) {
+export function ProductCard({ product, addControl = "default" }: { product: CatalogProduct; addControl?: "default" | "stepper" }) {
   const { palette, features } = useClientConfig();
   const style = product.badge ? badgeStyle(product.badge.code, palette) : null;
   return (
@@ -70,17 +71,40 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         ) : (
           <PriceLockSlot priceLabel={product.priceLabel} category={product.category} />
         )}
-        <AddToCartControl
-          product={{
+        {(() => {
+          const cartProduct = {
             id: product.id,
             name: product.name,
             sku: product.sku,
             brand: product.brand,
             img: product.img,
             unitPrice: product.salePrice ?? undefined,
-          }}
-          compact
-        />
+          };
+          if (addControl !== "stepper") return <AddToCartControl product={cartProduct} compact />;
+          if (product.hasVariants) {
+            return (
+              <Link
+                href={`/produtos/${product.id}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 38,
+                  marginTop: 8,
+                  border: `1.5px solid ${palette.pink}`,
+                  borderRadius: 10,
+                  color: palette.pink,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  textDecoration: "none",
+                }}
+              >
+                Ver opções
+              </Link>
+            );
+          }
+          return <CartStepperControl product={cartProduct} />;
+        })()}
       </div>
     </div>
   );

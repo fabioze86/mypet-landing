@@ -53,6 +53,8 @@ export type CatalogProduct = {
   category: RawCategory | null;
   salePrice: number | null;
   priceLabel: string | null;
+  /** Produto-pai com variações no canal: escolha de variação acontece na página do produto. */
+  hasVariants?: true;
 };
 
 export type CatalogResult = {

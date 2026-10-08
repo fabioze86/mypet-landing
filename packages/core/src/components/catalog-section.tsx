@@ -10,12 +10,14 @@ export async function CatalogSection({
   page: pageRaw,
   channel,
   palette,
+  addControl = "default",
 }: {
   q?: string;
   brand?: string;
   page?: string;
   channel: string;
   palette: Palette;
+  addControl?: "default" | "stepper";
 }) {
   const page = parsePage(pageRaw);
   const [catalog, brands] = await Promise.all([
@@ -62,7 +64,7 @@ export async function CatalogSection({
       ) : (
         <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 260px))", gap: 22 }}>
           {catalog.items.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} addControl={addControl} />
           ))}
         </div>
       )}
