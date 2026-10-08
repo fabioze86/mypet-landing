@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Palette } from "@mypet/core/theme";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
+import { CatalogSearchBox } from "@mypet/core/components/catalog-search-box";
 import { getProductCount, getChannelCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { CategoryChips } from "@mypet/core/components/category-chips";
@@ -62,7 +63,7 @@ async function CatalogContent({
       <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
         Mais de {totalLabel} produtos disponíveis no atacado
       </p>
-      <CatalogSection q={q} brand={brand} page={page} channel={channel} palette={palette} />
+      <CatalogSection q={q} brand={brand} page={page} channel={channel} palette={palette} addControl="stepper" liveSearch />
     </>
   );
 }
@@ -78,7 +79,7 @@ async function DynamicCatalog({
 }) {
   const sp = await searchParams;
   return (
-    <section id="catalogo" style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 80px" }}>
+    <section id="catalogo" style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 16px 80px" }}>
       <div style={{ marginBottom: 28 }}>
         <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
       </div>
@@ -87,6 +88,15 @@ async function DynamicCatalog({
       </Suspense>
     </section>
   );
+}
+
+async function SearchSlot({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; brand?: string }>;
+}) {
+  const sp = await searchParams;
+  return <CatalogSearchBox key={sp.q ?? ""} initialQuery={sp.q} brand={sp.brand} />;
 }
 
 export async function generateMetadata() {
@@ -280,12 +290,21 @@ export default async function Home({
           .modal { padding: 28px 20px; }
           .footer-row { flex-direction: column; align-items: flex-start; }
         }
+
+        @media (max-width: 768px) {
+          .catalog-search { top: 56px !important; }
+        }
       `}</style>
 
       <LeadGateProvider>
 
         {/* NAV */}
         <SiteNav categories={categories} />
+
+        {/* BUSCA — primeiro elemento abaixo da navegação */}
+        <Suspense fallback={<CatalogSearchBox />}>
+          <SearchSlot searchParams={searchParams} />
+        </Suspense>
 
         {/* CATEGORY CHIPS */}
         <CategoryChips categories={categories} />

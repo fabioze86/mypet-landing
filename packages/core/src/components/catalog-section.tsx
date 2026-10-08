@@ -11,6 +11,7 @@ export async function CatalogSection({
   channel,
   palette,
   addControl = "default",
+  liveSearch = false,
 }: {
   q?: string;
   brand?: string;
@@ -18,6 +19,7 @@ export async function CatalogSection({
   channel: string;
   palette: Palette;
   addControl?: "default" | "stepper";
+  liveSearch?: boolean;
 }) {
   const page = parsePage(pageRaw);
   const [catalog, brands] = await Promise.all([
@@ -28,6 +30,7 @@ export async function CatalogSection({
   return (
     <>
       {/* controles */}
+      {!liveSearch && (
       <form method="get" style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>
         <input
           name="q"
@@ -51,6 +54,7 @@ export async function CatalogSection({
           Filtrar
         </button>
       </form>
+      )}
 
       <p style={{ fontSize: 14, color: palette.gray600, marginBottom: 20 }}>
         {catalog.total} produtos{brand ? ` da marca ${brand}` : ""}{q ? ` para "${q}"` : ""}
