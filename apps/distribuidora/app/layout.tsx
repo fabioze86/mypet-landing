@@ -60,10 +60,11 @@ export default function RootLayout({
             {/* usePathname em rota com parâmetro dinâmico exige Suspense com cacheComponents. */}
             <Suspense fallback={null}>
               <CartBar />
+              {/* Dentro do CartProvider para subir acima da CartBar. */}
+              <InstallPrompt />
             </Suspense>
           </CartProvider>
           <RegisterSW />
-          <InstallPrompt />
           <Analytics />
         </ClientConfigProvider>
       </body>

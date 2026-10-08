@@ -12,7 +12,7 @@ const cart = vi.hoisted(() => ({ items: [] as CartItem[] }));
 vi.mock("./cart-provider", () => ({ useCart: () => ({ cart }) }));
 
 import { ClientConfigProvider, type ClientConfig } from "../theme";
-import { CartBar } from "./cart-bar";
+import { CART_BAR_HEIGHT, CartBar, useCartBarVisible } from "./cart-bar";
 
 const config: ClientConfig = {
   name: "Teste", tagline: "t", domain: "t.com", catalogChannel: "mypetbrasil", logo: { emoji: "🐾" },
@@ -76,5 +76,30 @@ describe("CartBar", () => {
     const link = screen.getByRole("link");
     expect(link).toHaveTextContent("1 item");
     expect(link).not.toHaveTextContent("R$");
+  });
+});
+
+describe("useCartBarVisible", () => {
+  function Probe() {
+    return createElement("span", { "data-testid": "probe" }, String(useCartBarVisible()));
+  }
+
+  it("acompanha a visibilidade da barra", () => {
+    render(createElement(Probe));
+    expect(screen.getByTestId("probe")).toHaveTextContent("false");
+    cleanup();
+
+    cart.items = [{ ...base, id: "a", name: "A", qty: 1 }];
+    render(createElement(Probe));
+    expect(screen.getByTestId("probe")).toHaveTextContent("true");
+    cleanup();
+
+    nav.pathname = "/cotacao";
+    render(createElement(Probe));
+    expect(screen.getByTestId("probe")).toHaveTextContent("false");
+  });
+
+  it("exporta a altura da barra", () => {
+    expect(CART_BAR_HEIGHT).toBe(60);
   });
 });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useClientConfig } from "@mypet/core/theme";
 import { subscribeToPush } from "@mypet/core/push";
+import { CART_BAR_HEIGHT, useCartBarVisible } from "@mypet/core/components/cart-bar";
 
 const DISMISS_KEY = "mypet_pwa_install_dismissed_at";
 const DISMISS_DAYS = 7;
@@ -58,6 +59,9 @@ function requestPushSubscription() {
 
 export default function InstallPrompt() {
   const clientConfig = useClientConfig();
+  // Com a barra do carrinho no rodapé, o banner sobe para não cobri-la.
+  const cartBarVisible = useCartBarVisible();
+  const bottom = cartBarVisible ? `calc(${CART_BAR_HEIGHT}px + env(safe-area-inset-bottom))` : 0;
   const [deferredEvent, setDeferredEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [showNotifyButton, setShowNotifyButton] = useState(false);
@@ -129,8 +133,8 @@ export default function InstallPrompt() {
       <div
         role="dialog"
         aria-label="Ativar notificações"
-        style={{ background: clientConfig.palette.navy }}
-        className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 px-4 py-3 text-white shadow-lg"
+        style={{ background: clientConfig.palette.navy, bottom }}
+        className="fixed inset-x-0 z-50 flex items-center justify-between gap-3 px-4 py-3 text-white shadow-lg"
       >
         <span className="min-w-0 text-sm leading-snug">
           Ative os avisos para receber promoções direto no seu celular.
@@ -167,8 +171,8 @@ export default function InstallPrompt() {
     <div
       role="dialog"
       aria-label="Instalar aplicativo"
-      style={{ background: clientConfig.palette.navy }}
-      className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between gap-3 px-4 py-3 text-white shadow-lg"
+      style={{ background: clientConfig.palette.navy, bottom }}
+      className="fixed inset-x-0 z-50 flex items-center justify-between gap-3 px-4 py-3 text-white shadow-lg"
     >
       <span className="min-w-0 text-sm leading-snug">{message}</span>
       <div className="flex shrink-0 items-center gap-2">

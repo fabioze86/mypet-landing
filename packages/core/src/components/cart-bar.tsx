@@ -7,17 +7,26 @@ import { useCart } from "./cart-provider";
 import { cartTotals } from "../cart";
 import { formatPrice } from "../catalog-utils";
 
-const BAR_HEIGHT = 60;
+export const CART_BAR_HEIGHT = 60;
+const DEFAULT_HREF = "/cotacao";
+
+// Se a barra está na tela: outros elementos fixos no rodapé (ex.: banner de
+// instalação) usam isso para ficar acima dela.
+export function useCartBarVisible(href: string = DEFAULT_HREF): boolean {
+  const { cart } = useCart();
+  const pathname = usePathname();
+  return cartTotals(cart.items).totalUnits > 0 && pathname !== href;
+}
 
 // Barra fixa no rodapé com unidades e total do carrinho; o espaçador no fluxo
 // evita que a barra cubra o fim da página.
-export function CartBar({ href = "/cotacao" }: { href?: string }) {
+export function CartBar({ href = DEFAULT_HREF }: { href?: string }) {
   const { cart } = useCart();
   const { palette } = useClientConfig();
-  const pathname = usePathname();
+  const visible = useCartBarVisible(href);
   const totals = cartTotals(cart.items);
 
-  if (totals.totalUnits === 0 || pathname === href) return null;
+  if (!visible) return null;
 
   const unitsLabel = `${totals.totalUnits} ${totals.totalUnits === 1 ? "item" : "itens"}`;
   const valueLabel = totals.pricedLines > 0 ? ` · ${formatPrice(totals.totalValue)}` : "";
@@ -25,7 +34,7 @@ export function CartBar({ href = "/cotacao" }: { href?: string }) {
 
   return (
     <>
-      <div aria-hidden style={{ height: `calc(${BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
+      <div aria-hidden style={{ height: `calc(${CART_BAR_HEIGHT}px + env(safe-area-inset-bottom))` }} />
       <Link
         href={href}
         style={{
@@ -34,7 +43,7 @@ export function CartBar({ href = "/cotacao" }: { href?: string }) {
           right: 0,
           bottom: 0,
           zIndex: 40,
-          minHeight: BAR_HEIGHT,
+          minHeight: CART_BAR_HEIGHT,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
