@@ -214,6 +214,7 @@ async function CategoryListingResolved({
       palette={palette}
       domain={clientConfig.domain}
       useChannelCategories={useChannelCategories}
+      addControl="stepper"
     />
   );
 }

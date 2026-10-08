@@ -16,6 +16,7 @@ export async function CategoryListing({
   palette,
   domain,
   useChannelCategories = false,
+  addControl = "default",
 }: {
   slug: string;
   page?: string;
@@ -23,6 +24,8 @@ export async function CategoryListing({
   palette: Palette;
   domain: string;
   useChannelCategories?: boolean;
+  /** "stepper": card com − N + e "Ver opções" para produto com variações. */
+  addControl?: "default" | "stepper";
 }) {
   const page = parsePage(pageRaw);
   const categories = useChannelCategories ? await getChannelCategories(channel) : await getCategories();
@@ -117,7 +120,7 @@ export async function CategoryListing({
       ) : (
         <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 22 }}>
           {catalog.items.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} addControl={addControl} />
           ))}
         </div>
       )}
