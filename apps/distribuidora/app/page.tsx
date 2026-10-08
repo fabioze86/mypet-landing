@@ -96,7 +96,7 @@ async function SearchSlot({
   searchParams: Promise<{ q?: string; brand?: string }>;
 }) {
   const sp = await searchParams;
-  return <CatalogSearchBox key={sp.q ?? ""} initialQuery={sp.q} brand={sp.brand} />;
+  return <CatalogSearchBox initialQuery={sp.q} brand={sp.brand} />;
 }
 
 export async function generateMetadata() {

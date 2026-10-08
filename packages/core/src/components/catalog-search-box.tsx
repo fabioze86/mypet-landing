@@ -23,6 +23,17 @@ export function CatalogSearchBox({
   const [value, setValue] = useState(initialQuery);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const lastPushed = useRef(initialQuery.trim());
+
+  // Navegação externa (voltar/avançar): sincroniza o campo, sem atropelar o
+  // que a própria caixa acabou de enviar.
+  useEffect(() => {
+    if (initialQuery !== lastPushed.current) {
+      lastPushed.current = initialQuery;
+      setValue(initialQuery);
+    }
+  }, [initialQuery]);
+
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
@@ -31,7 +42,10 @@ export function CatalogSearchBox({
     setValue(next);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
-      const query = buildCatalogQuery({ q: next.trim() || undefined, brand });
+      const trimmed = next.trim();
+      if (trimmed === lastPushed.current) return;
+      lastPushed.current = trimmed;
+      const query = buildCatalogQuery({ q: trimmed || undefined, brand });
       router.replace(`${pathname}${query}`, { scroll: false });
     }, debounceMs);
   };

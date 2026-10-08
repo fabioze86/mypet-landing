@@ -60,4 +60,31 @@ describe("CatalogSearchBox", () => {
     act(() => { vi.advanceTimersByTime(300); });
     expect(nav.replace).toHaveBeenCalledWith("/", { scroll: false });
   });
+
+  it("não repete a navegação quando o texto aparado não mudou", () => {
+    renderBox({ initialQuery: "coleira" });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Buscar produtos" }), { target: { value: "coleira " } });
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(nav.replace).not.toHaveBeenCalled();
+  });
+
+  it("não sobrescreve o que o usuário digitou quando a prop volta com a busca já enviada", () => {
+    const wrap = (initialQuery?: string) =>
+      createElement(ClientConfigProvider, { config }, createElement(CatalogSearchBox, { initialQuery }));
+    const { rerender } = render(wrap(undefined));
+    const input = screen.getByRole("searchbox", { name: "Buscar produtos" });
+    fireEvent.change(input, { target: { value: "co" } });
+    act(() => { vi.advanceTimersByTime(300); });
+    fireEvent.change(input, { target: { value: "col" } });
+    rerender(wrap("co"));
+    expect(input).toHaveValue("col");
+  });
+
+  it("acompanha navegação externa (voltar no histórico)", () => {
+    const wrap = (initialQuery?: string) =>
+      createElement(ClientConfigProvider, { config }, createElement(CatalogSearchBox, { initialQuery }));
+    const { rerender } = render(wrap("coleira"));
+    rerender(wrap("areia"));
+    expect(screen.getByRole("searchbox", { name: "Buscar produtos" })).toHaveValue("areia");
+  });
 });
