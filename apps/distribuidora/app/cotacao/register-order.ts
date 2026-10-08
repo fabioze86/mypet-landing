@@ -2,12 +2,12 @@ import type { CartItem } from "@mypet/core/cart";
 import type { QuoteCustomer } from "@mypet/core/whatsapp";
 
 export type RegisterOrderResult =
-  | { kind: "ok"; number: number; prices: Map<string, number | null> }
+  | { kind: "ok"; number: number; prices: Map<string, number | null>; unavailableIds: string[] }
   | { kind: "invalid"; error: string }
   | { kind: "failed" };
 
 // Grava o pedido antes de abrir o WhatsApp. Só "invalid" deve impedir o envio;
-// em "failed" (rede/5xx) o pedido segue pelo WhatsApp sem número.
+// em "failed" (rede/5xx/409 nada disponível) o pedido segue pelo WhatsApp sem número.
 export async function registerOrder(
   items: CartItem[],
   customer: QuoteCustomer,
@@ -25,7 +25,14 @@ export async function registerOrder(
       const prices = new Map<string, number | null>(
         ((data.items ?? []) as { id: string; unitPrice: number | null }[]).map((item) => [item.id, item.unitPrice]),
       );
-      return { kind: "ok", number: data.number, prices };
+      const unavailableIds = Array.isArray(data.unavailableIds)
+        ? (data.unavailableIds as unknown[]).filter((id): id is string => typeof id === "string")
+        : [];
+      return { kind: "ok", number: data.number, prices, unavailableIds };
+    }
+    if (res.status === 409) {
+      // Nenhum item disponível: o pedido não foi gravado, mas a venda segue pelo WhatsApp.
+      return { kind: "failed" };
     }
     if (res.status === 400) {
       return { kind: "invalid", error: typeof data.error === "string" ? data.error : "Confira os dados e tente novamente." };
@@ -38,8 +45,15 @@ export async function registerOrder(
   }
 }
 
-export function applyServerPrices(items: CartItem[], prices: Map<string, number | null>): CartItem[] {
-  return items.map((item) =>
-    prices.has(item.id) ? { ...item, unitPrice: prices.get(item.id) ?? undefined } : item,
-  );
+// Itens indisponíveis perdem o preço (saem como "a consultar" na mensagem).
+export function applyServerPrices(
+  items: CartItem[],
+  prices: Map<string, number | null>,
+  unavailableIds: string[] = [],
+): CartItem[] {
+  const unavailable = new Set(unavailableIds);
+  return items.map((item) => {
+    if (unavailable.has(item.id)) return { ...item, unitPrice: undefined };
+    return prices.has(item.id) ? { ...item, unitPrice: prices.get(item.id) ?? undefined } : item;
+  });
 }

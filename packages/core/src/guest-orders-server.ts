@@ -126,10 +126,14 @@ export function createOrdersPostHandler(opts: { orderChannel: Channel; priceChan
     const priced = await getPricedProducts(supabase, items.map((item) => item.id), opts.priceChannel);
     if (!priced) return Response.json({ error: ORDER_ERROR }, { status: 500 });
 
-    if (items.some((item) => !priced.has(item.id))) {
+    // Item fora do canal/inativo não bloqueia a venda: o pedido grava só o que
+    // está disponível e o cliente envia o resto como "a consultar".
+    const available = items.filter((item) => priced.has(item.id));
+    const unavailableIds = items.filter((item) => !priced.has(item.id)).map((item) => item.id);
+    if (available.length === 0) {
       return Response.json(
-        { error: "Um dos produtos não está mais disponível. Remova-o do carrinho e tente novamente." },
-        { status: 400 },
+        { error: "Nenhum produto do carrinho está disponível no momento.", unavailableIds },
+        { status: 409 },
       );
     }
 
@@ -152,7 +156,7 @@ export function createOrdersPostHandler(opts: { orderChannel: Channel; priceChan
       return Response.json({ error: ORDER_ERROR }, { status: 500 });
     }
 
-    const lines = items.map((item) => {
+    const lines = available.map((item) => {
       const product = priced.get(item.id) as PricedProduct;
       return { ...item, name: product.name, unitPrice: product.unitPrice };
     });
@@ -179,6 +183,7 @@ export function createOrdersPostHandler(opts: { orderChannel: Channel; priceChan
       number: Number(order.number),
       items: lines.map((line) => ({ id: line.id, unitPrice: line.unitPrice })),
       total: Math.round(total * 100) / 100,
+      unavailableIds,
     });
   };
 }

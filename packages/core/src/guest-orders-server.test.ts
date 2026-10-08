@@ -140,12 +140,36 @@ describe("createOrdersPostHandler — validação", () => {
     const res = await POST(fakeRequest({ items, customer }));
     expect(res.status).toBe(400);
   });
+});
 
-  it("responde 400 quando um produto não pertence ao canal", async () => {
+describe("createOrdersPostHandler — itens indisponíveis", () => {
+  it("grava só as linhas disponíveis e devolve as indisponíveis", async () => {
     state.products = [state.products[0]];
+    const res = await POST(fakeRequest({ items: [{ id: P1, qty: 2 }, { id: P2, qty: 1 }], customer }));
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      number: 1042,
+      items: [{ id: P1, unitPrice: 9.9 }],
+      total: 19.8,
+      unavailableIds: [P2],
+    });
+    expect(state.itemsInsert).toHaveBeenCalledWith([
+      { order_id: "o1", product_id: P1, product_name_snapshot: "Coleira P", qty: 2, unit_price: 9.9 },
+    ]);
+  });
+
+  it("responde 409 sem gravar quando nenhum produto está disponível", async () => {
+    state.products = [];
     const res = await POST(fakeRequest({ items: [{ id: P1, qty: 1 }, { id: P2, qty: 1 }], customer }));
-    expect(res.status).toBe(400);
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({
+      error: "Nenhum produto do carrinho está disponível no momento.",
+      unavailableIds: [P1, P2],
+    });
     expect(state.orderInsert).not.toHaveBeenCalled();
+    expect(state.itemsInsert).not.toHaveBeenCalled();
   });
 });
 
@@ -160,6 +184,7 @@ describe("createOrdersPostHandler — gravação", () => {
       number: 1042,
       items: [{ id: P1, unitPrice: 9.9 }, { id: P2, unitPrice: null }],
       total: 118.8,
+      unavailableIds: [],
     });
     expect(state.productsQuery).toContainEqual(["eq", "product_channel_links.channel", "mypetbrasil"]);
     expect(state.orderInsert).toHaveBeenCalledWith({

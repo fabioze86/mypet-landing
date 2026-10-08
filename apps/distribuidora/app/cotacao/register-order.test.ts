@@ -23,7 +23,23 @@ describe("registerOrder", () => {
     const [url, init] = fetchImpl.mock.calls[0];
     expect(url).toBe("/api/pedidos");
     expect(JSON.parse(init.body)).toEqual({ items: [{ id: "p1", qty: 2 }, { id: "p2", qty: 1 }], customer });
-    expect(result).toEqual({ kind: "ok", number: 1042, prices: new Map([["p1", 9.9], ["p2", null]]) });
+    expect(result).toEqual({ kind: "ok", number: 1042, prices: new Map([["p1", 9.9], ["p2", null]]), unavailableIds: [] });
+  });
+
+  it("devolve as ids indisponíveis informadas pelo servidor", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse(200, { number: 1043, items: [{ id: "p2", unitPrice: 5 }], total: 5, unavailableIds: ["p1"] }),
+    );
+    expect(await registerOrder(items, customer, fetchImpl)).toEqual({
+      kind: "ok", number: 1043, prices: new Map([["p2", 5]]), unavailableIds: ["p1"],
+    });
+  });
+
+  it("409 (nada disponível) vira falha, sem bloquear o envio", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      jsonResponse(409, { error: "Nenhum produto do carrinho está disponível no momento.", unavailableIds: ["p1", "p2"] }),
+    );
+    expect(await registerOrder(items, customer, fetchImpl)).toEqual({ kind: "failed" });
   });
 
   it("400 vira erro de validação com a mensagem do servidor", async () => {
@@ -43,5 +59,11 @@ describe("applyServerPrices", () => {
     const result = applyServerPrices(items, new Map([["p1", 9.9], ["p2", null]]));
     expect(result[0].unitPrice).toBe(9.9);
     expect(result[1].unitPrice).toBeUndefined();
+  });
+
+  it("remove o preço dos itens indisponíveis (saem como a consultar)", () => {
+    const result = applyServerPrices(items, new Map([["p2", 5]]), ["p1"]);
+    expect(result[0].unitPrice).toBeUndefined();
+    expect(result[1].unitPrice).toBe(5);
   });
 });

@@ -67,7 +67,7 @@ describe("CotacaoContent", () => {
 
   it("grava o pedido e abre o WhatsApp com número e preço do servidor", async () => {
     const open = vi.spyOn(window, "open").mockReturnValue(null);
-    mocks.registerOrder.mockResolvedValue({ kind: "ok", number: 1042, prices: new Map([["p1", 12], ["p2", null]]) });
+    mocks.registerOrder.mockResolvedValue({ kind: "ok", number: 1042, prices: new Map([["p1", 12], ["p2", null]]), unavailableIds: [] });
 
     render(<CotacaoContent palette={palette} />);
     await act(async () => fillAndSubmit());
@@ -79,6 +79,19 @@ describe("CotacaoContent", () => {
     expect(message).toContain("Guia — Qtd: 1 (a consultar)");
     expect(message).toContain("Nome: Fabio");
     expect(mocks.clear).toHaveBeenCalledOnce();
+  });
+
+  it("item indisponível segue na mensagem como a consultar", async () => {
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    mocks.registerOrder.mockResolvedValue({ kind: "ok", number: 1043, prices: new Map([["p2", 5]]), unavailableIds: ["p1"] });
+
+    render(<CotacaoContent palette={palette} />);
+    await act(async () => fillAndSubmit());
+
+    const message = sentMessage(open);
+    expect(message.split("\n")[0]).toBe("Pedido #1043");
+    expect(message).toContain("Coleira (SKU COL-1) — Qtd: 2 (a consultar)");
+    expect(message).toContain(`Guia — 1 × ${formatPrice(5)} = ${formatPrice(5)}`);
   });
 
   it("se a gravação falhar, abre o WhatsApp mesmo assim sem número", async () => {

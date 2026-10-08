@@ -49,7 +49,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       return;
     }
 
-    const items = result.kind === "ok" ? applyServerPrices(cart.items, result.prices) : cart.items;
+    const items = result.kind === "ok" ? applyServerPrices(cart.items, result.prices, result.unavailableIds) : cart.items;
     const message = buildQuoteMessage(items, form, ORDER_INTRO, {
       showPrices: true,
       orderNumber: result.kind === "ok" ? result.number : undefined,
