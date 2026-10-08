@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Nunito, Nunito_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
@@ -56,7 +57,10 @@ export default function RootLayout({
         <ClientConfigProvider config={clientConfig}>
           <CartProvider>
             {children}
-            <CartBar />
+            {/* usePathname em rota com parâmetro dinâmico exige Suspense com cacheComponents. */}
+            <Suspense fallback={null}>
+              <CartBar />
+            </Suspense>
           </CartProvider>
           <RegisterSW />
           <InstallPrompt />
