@@ -98,7 +98,7 @@ export default async function CotacaoPage() {
           </Link>
 
           <h1 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.navy, marginBottom: 24 }}>
-            Sua cotação
+            Seu pedido
           </h1>
 
           <CotacaoContent palette={PALETTE} />
