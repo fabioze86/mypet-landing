@@ -76,3 +76,26 @@ export function updateQty(cart: Cart, id: string, qty: number, campaignId?: stri
 export function totalItems(cart: Cart): number {
   return cart.items.reduce((sum, item) => sum + item.qty, 0);
 }
+
+export type CartTotals = {
+  totalUnits: number;
+  totalValue: number;
+  pricedLines: number;
+  unpricedLines: number;
+};
+
+export function cartTotals(items: CartItem[]): CartTotals {
+  const totals = items.reduce<CartTotals>(
+    (acc, item) => {
+      const priced = typeof item.unitPrice === "number" && Number.isFinite(item.unitPrice);
+      return {
+        totalUnits: acc.totalUnits + item.qty,
+        totalValue: priced ? acc.totalValue + (item.unitPrice as number) * item.qty : acc.totalValue,
+        pricedLines: acc.pricedLines + (priced ? 1 : 0),
+        unpricedLines: acc.unpricedLines + (priced ? 0 : 1),
+      };
+    },
+    { totalUnits: 0, totalValue: 0, pricedLines: 0, unpricedLines: 0 },
+  );
+  return { ...totals, totalValue: Math.round(totals.totalValue * 100) / 100 };
+}

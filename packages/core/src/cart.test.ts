@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { addItem, removeItem, updateQty, totalItems, type Cart } from "./cart";
+import { addItem, removeItem, updateQty, totalItems, cartTotals, type Cart } from "./cart";
 
 const emptyCart: Cart = { items: [] };
 const product = { id: "p1", name: "RAÇÃO X", sku: "100", brand: "NAPI", img: "/img.jpg" };
@@ -187,5 +187,29 @@ it("preserva os campos opcionais de campanha ao adicionar um item", () => {
     unitPrice: 199,
     listPrice: 299,
     qty: 2,
+  });
+});
+
+describe("cartTotals", () => {
+  const base = { name: "X", sku: "1", brand: null, img: "/x.jpg" };
+
+  it("carrinho vazio zera tudo", () => {
+    expect(cartTotals([])).toEqual({ totalUnits: 0, totalValue: 0, pricedLines: 0, unpricedLines: 0 });
+  });
+
+  it("soma unidades e valor dos itens com preço", () => {
+    const totals = cartTotals([
+      { ...base, id: "a", qty: 3, unitPrice: 9.9 },
+      { ...base, id: "b", qty: 2, unitPrice: 0.1 },
+    ]);
+    expect(totals).toEqual({ totalUnits: 5, totalValue: 29.9, pricedLines: 2, unpricedLines: 0 });
+  });
+
+  it("itens sem preço entram nas unidades mas não no valor", () => {
+    const totals = cartTotals([
+      { ...base, id: "a", qty: 2, unitPrice: 10 },
+      { ...base, id: "b", qty: 4 },
+    ]);
+    expect(totals).toEqual({ totalUnits: 6, totalValue: 20, pricedLines: 1, unpricedLines: 1 });
   });
 });
