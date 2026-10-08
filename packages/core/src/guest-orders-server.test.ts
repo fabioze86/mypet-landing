@@ -13,6 +13,7 @@ const state = vi.hoisted(() => ({
   orderDelete: vi.fn(),
   user: null as null | { id: string },
   buyer: null as null | { id: string },
+  clientError: null as null | Error,
 }));
 
 function productsChain() {
@@ -30,7 +31,9 @@ function productsChain() {
 }
 
 vi.mock("./supabase", () => ({
-  getHubServiceClient: () => ({
+  getHubServiceClient: () => {
+    if (state.clientError) throw state.clientError;
+    return {
     from: (table: string) => {
       if (table === "products") return productsChain();
       if (table === "orders") {
@@ -61,7 +64,8 @@ vi.mock("./supabase", () => ({
       }
       throw new Error(`tabela inesperada: ${table}`);
     },
-  }),
+    };
+  },
 }));
 
 vi.mock("./supabase-server", () => ({
@@ -77,8 +81,9 @@ const P1 = "11111111-1111-4111-8111-111111111111";
 const P2 = "22222222-2222-4222-8222-222222222222";
 const customer = { nome: "João", empresa: "Pet X", whatsapp: "11999999999", cnpj: "" };
 
-function fakeRequest(body: unknown): NextRequest {
-  return { json: async () => body } as unknown as NextRequest;
+function fakeRequest(body: unknown, headers: Record<string, string> = {}): NextRequest {
+  const all = new Headers({ "content-type": "application/json", host: "loja.exemplo.com", ...headers });
+  return { json: async () => body, headers: all, nextUrl: { host: "loja.exemplo.com" } } as unknown as NextRequest;
 }
 
 const POST = createOrdersPostHandler({ orderChannel: "distribuidora", priceChannel: "mypetbrasil" });
@@ -95,6 +100,7 @@ beforeEach(() => {
   state.itemsError = null;
   state.user = null;
   state.buyer = null;
+  state.clientError = null;
   state.orderInsert.mockReset();
   state.itemsInsert.mockReset();
   state.orderDelete.mockReset();
@@ -128,7 +134,8 @@ describe("createOrdersPostHandler — validação", () => {
   });
 
   it("responde 400 quando o corpo não é JSON", async () => {
-    const req = { json: async () => { throw new Error("bad"); } } as unknown as NextRequest;
+    const req = fakeRequest(null);
+    (req as unknown as { json: () => Promise<unknown> }).json = async () => { throw new Error("bad"); };
     expect((await POST(req)).status).toBe(400);
   });
 
@@ -139,6 +146,54 @@ describe("createOrdersPostHandler — validação", () => {
     }));
     const res = await POST(fakeRequest({ items, customer }));
     expect(res.status).toBe(400);
+  });
+});
+
+describe("createOrdersPostHandler — cabeçalhos", () => {
+  const body = { items: [{ id: P1, qty: 1 }], customer };
+
+  it("responde 415 quando o Content-Type não é JSON", async () => {
+    const res = await POST(fakeRequest(body, { "content-type": "text/plain" }));
+    expect(res.status).toBe(415);
+    expect(state.orderInsert).not.toHaveBeenCalled();
+  });
+
+  it("aceita Content-Type JSON com charset", async () => {
+    const res = await POST(fakeRequest(body, { "content-type": "application/json; charset=utf-8" }));
+    expect(res.status).toBe(200);
+  });
+
+  it("responde 403 quando o Origin é de outro host", async () => {
+    const res = await POST(fakeRequest(body, { origin: "https://outro-site.com" }));
+    expect(res.status).toBe(403);
+    expect(state.orderInsert).not.toHaveBeenCalled();
+  });
+
+  it("responde 403 quando o Origin é inválido", async () => {
+    const res = await POST(fakeRequest(body, { origin: "null" }));
+    expect(res.status).toBe(403);
+  });
+
+  it("aceita Origin do mesmo host", async () => {
+    const res = await POST(fakeRequest(body, { origin: "https://loja.exemplo.com" }));
+    expect(res.status).toBe(200);
+  });
+
+  it("aceita requisição sem Origin (server-side)", async () => {
+    const res = await POST(fakeRequest(body));
+    expect(res.status).toBe(200);
+  });
+});
+
+describe("createOrdersPostHandler — configuração", () => {
+  it("responde 500 genérico quando o Supabase não está configurado", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    state.clientError = new Error("SUPABASE_URL ausente");
+    const res = await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer }));
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: "Não foi possível registrar seu pedido. Tente novamente em instantes." });
+    expect(spy).toHaveBeenCalledWith("[guest-orders] configuração do Supabase ausente", expect.anything());
+    spy.mockRestore();
   });
 });
 

@@ -109,8 +109,34 @@ async function currentBuyerId(): Promise<string | null> {
   }
 }
 
+// Endpoint anônimo: só aceita JSON e, quando o navegador manda Origin, só do
+// próprio site (sem Origin, ex. chamada server-side, é permitido).
+function rejectForeignRequest(req: NextRequest): Response | null {
+  const contentType = req.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().startsWith("application/json")) {
+    return Response.json({ error: "Pedido inválido." }, { status: 415 });
+  }
+  const origin = req.headers.get("origin");
+  if (origin !== null) {
+    const host = req.headers.get("host") ?? req.nextUrl?.host;
+    let originHost: string | null = null;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      originHost = null;
+    }
+    if (!originHost || !host || originHost !== host) {
+      return Response.json({ error: "Origem não permitida." }, { status: 403 });
+    }
+  }
+  return null;
+}
+
 export function createOrdersPostHandler(opts: { orderChannel: Channel; priceChannel: string }) {
   return async function POST(req: NextRequest): Promise<Response> {
+    const rejected = rejectForeignRequest(req);
+    if (rejected) return rejected;
+
     let body: unknown;
     try {
       body = await req.json();
@@ -122,7 +148,13 @@ export function createOrdersPostHandler(opts: { orderChannel: Channel; priceChan
     if (!parsed.ok) return Response.json({ error: parsed.error }, { status: 400 });
     const { items, customer } = parsed.value;
 
-    const supabase = getHubServiceClient();
+    let supabase: SupabaseClient;
+    try {
+      supabase = getHubServiceClient();
+    } catch (err) {
+      console.error("[guest-orders] configuração do Supabase ausente", err instanceof Error ? err.message : err);
+      return Response.json({ error: ORDER_ERROR }, { status: 500 });
+    }
     const priced = await getPricedProducts(supabase, items.map((item) => item.id), opts.priceChannel);
     if (!priced) return Response.json({ error: ORDER_ERROR }, { status: 500 });
 
