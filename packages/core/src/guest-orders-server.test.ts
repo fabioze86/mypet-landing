@@ -115,6 +115,23 @@ describe("createOrdersPostHandler — validação", () => {
     expect(state.orderInsert).not.toHaveBeenCalled();
   });
 
+  it("responde 400 quando nome é longo demais", async () => {
+    const res = await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer: { ...customer, nome: "a".repeat(121) } }));
+    expect(res.status).toBe(400);
+    expect(state.orderInsert).not.toHaveBeenCalled();
+  });
+
+  it("responde 400 quando a soma de linhas repetidas passa do limite", async () => {
+    const res = await POST(fakeRequest({ items: [{ id: P1, qty: 9999 }, { id: P1, qty: 9999 }], customer }));
+    expect(res.status).toBe(400);
+    expect(state.orderInsert).not.toHaveBeenCalled();
+  });
+
+  it("responde 400 quando o corpo não é JSON", async () => {
+    const req = { json: async () => { throw new Error("bad"); } } as unknown as NextRequest;
+    expect((await POST(req)).status).toBe(400);
+  });
+
   it("responde 400 quando há mais de 200 linhas", async () => {
     const items = Array.from({ length: 201 }, (_, i) => ({
       id: `${String(i).padStart(8, "0")}-1111-4111-8111-111111111111`,
@@ -160,6 +177,11 @@ describe("createOrdersPostHandler — gravação", () => {
     ]);
   });
 
+  it("grava o cnpj preenchido", async () => {
+    await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer: { ...customer, cnpj: "12.345.678/0001-90" } }));
+    expect(state.orderInsert).toHaveBeenCalledWith(expect.objectContaining({ customer_cnpj: "12.345.678/0001-90" }));
+  });
+
   it("soma linhas repetidas do mesmo produto", async () => {
     await POST(fakeRequest({ items: [{ id: P1, qty: 2 }, { id: P1, qty: 3 }], customer }));
     expect(state.itemsInsert).toHaveBeenCalledWith([
@@ -194,9 +216,11 @@ describe("createOrdersPostHandler — gravação", () => {
   });
 
   it("apaga o pedido órfão quando os itens falham", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     state.itemsError = { message: "falhou" };
     const res = await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer }));
     expect(res.status).toBe(500);
     expect(state.orderDelete).toHaveBeenCalledWith("id", "o1");
+    spy.mockRestore();
   });
 });

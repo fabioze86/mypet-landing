@@ -8,6 +8,9 @@ import type { Channel } from "./channels";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_LINES = 200;
 const MAX_QTY = 9999;
+const MAX_NAME = 120;
+const MAX_WHATSAPP = 30;
+const MAX_CNPJ = 30;
 const ORDER_ERROR = "Não foi possível registrar seu pedido. Tente novamente em instantes.";
 
 type GuestOrderLine = { id: string; qty: number };
@@ -29,6 +32,11 @@ function parseGuestOrder(body: unknown): { ok: true; value: GuestOrder } | { ok:
     return { ok: false, error: "Preencha nome, empresa e WhatsApp." };
   }
 
+  const cnpj = text(customer?.cnpj);
+  if (nome.length > MAX_NAME || empresa.length > MAX_NAME || whatsapp.length > MAX_WHATSAPP || cnpj.length > MAX_CNPJ) {
+    return { ok: false, error: "Algum dado está longo demais." };
+  }
+
   if (!Array.isArray(items) || items.length === 0) return { ok: false, error: "O carrinho está vazio." };
   if (items.length > MAX_LINES) return { ok: false, error: "O pedido tem itens demais." };
 
@@ -39,14 +47,16 @@ function parseGuestOrder(body: unknown): { ok: true; value: GuestOrder } | { ok:
     if (!UUID_RE.test(id) || typeof qty !== "number" || !Number.isInteger(qty) || qty < 1 || qty > MAX_QTY) {
       return { ok: false, error: "Há um item inválido no carrinho." };
     }
-    qtyById.set(id, (qtyById.get(id) ?? 0) + qty);
+    const merged = (qtyById.get(id) ?? 0) + qty;
+    if (merged > MAX_QTY) return { ok: false, error: "Há um item inválido no carrinho." };
+    qtyById.set(id, merged);
   }
 
   return {
     ok: true,
     value: {
       items: [...qtyById].map(([id, qty]) => ({ id, qty })),
-      customer: { nome, empresa, whatsapp, cnpj: text(customer?.cnpj) || null },
+      customer: { nome, empresa, whatsapp, cnpj: cnpj || null },
     },
   };
 }
@@ -87,9 +97,14 @@ async function currentBuyerId(): Promise<string | null> {
     const auth = await createServerSupabaseClient();
     const { data: { user } } = await auth.auth.getUser();
     if (!user) return null;
-    const { data: buyer } = await auth.from("buyers").select("id").eq("id", user.id).maybeSingle();
+    const { data: buyer, error } = await auth.from("buyers").select("id").eq("id", user.id).maybeSingle();
+    if (error) {
+      console.error("[guest-orders] erro ao buscar buyer:", error.message);
+      return null;
+    }
     return buyer ? user.id : null;
-  } catch {
+  } catch (err) {
+    console.error("[guest-orders] erro ao ler sessão:", err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -154,7 +169,8 @@ export function createOrdersPostHandler(opts: { orderChannel: Channel; priceChan
 
     if (itemsError) {
       console.error("[guest-orders] erro ao gravar itens:", itemsError.message);
-      await supabase.from("orders").delete().eq("id", order.id);
+      const { error: deleteError } = await supabase.from("orders").delete().eq("id", order.id);
+      if (deleteError) console.error("[guest-orders] erro ao apagar pedido órfão:", deleteError.message);
       return Response.json({ error: ORDER_ERROR }, { status: 500 });
     }
 
