@@ -25,13 +25,21 @@ export function CatalogSearchBox({
 
   const lastPushed = useRef(initialQuery.trim());
 
-  // Navegação externa (voltar/avançar): sincroniza o campo, sem atropelar o
-  // que a própria caixa acabou de enviar.
+  const historyNav = useRef(false);
+
+  // Só o histórico do navegador (voltar/avançar) sobrescreve o campo; um eco
+  // atrasado do servidor de uma busca anterior não pode atropelar a digitação.
   useEffect(() => {
-    if (initialQuery !== lastPushed.current) {
-      lastPushed.current = initialQuery;
-      setValue(initialQuery);
-    }
+    const onPop = () => { historyNav.current = true; };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  useEffect(() => {
+    if (!historyNav.current) return;
+    historyNav.current = false;
+    setValue(initialQuery);
+    lastPushed.current = initialQuery.trim();
   }, [initialQuery]);
 
   useEffect(() => () => {

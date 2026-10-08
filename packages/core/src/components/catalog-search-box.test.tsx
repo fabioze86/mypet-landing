@@ -80,11 +80,27 @@ describe("CatalogSearchBox", () => {
     expect(input).toHaveValue("col");
   });
 
-  it("acompanha navegação externa (voltar no histórico)", () => {
+  it("ignora eco antigo do servidor (latência maior que a pausa)", () => {
+    const wrap = (initialQuery?: string) =>
+      createElement(ClientConfigProvider, { config }, createElement(CatalogSearchBox, { initialQuery }));
+    const { rerender } = render(wrap(undefined));
+    const input = screen.getByRole("searchbox", { name: "Buscar produtos" });
+    fireEvent.change(input, { target: { value: "co" } });
+    act(() => { vi.advanceTimersByTime(300); });
+    fireEvent.change(input, { target: { value: "col" } });
+    act(() => { vi.advanceTimersByTime(300); });
+    rerender(wrap("co"));
+    expect(input).toHaveValue("col");
+  });
+
+  it("acompanha navegação do histórico (voltar)", () => {
     const wrap = (initialQuery?: string) =>
       createElement(ClientConfigProvider, { config }, createElement(CatalogSearchBox, { initialQuery }));
     const { rerender } = render(wrap("coleira"));
+    const input = screen.getByRole("searchbox", { name: "Buscar produtos" });
+    fireEvent.change(input, { target: { value: "coleira p" } });
+    act(() => { window.dispatchEvent(new PopStateEvent("popstate")); });
     rerender(wrap("areia"));
-    expect(screen.getByRole("searchbox", { name: "Buscar produtos" })).toHaveValue("areia");
+    expect(input).toHaveValue("areia");
   });
 });
