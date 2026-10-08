@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildQuoteMessage, buildWhatsAppLink, buildProductInterestMessage, buildRetailQuoteMessage } from "./whatsapp";
+import { formatPrice } from "./catalog-utils";
 import type { CartItem } from "./cart";
 
 const customer = { nome: "João", empresa: "Pet Shop X", whatsapp: "11999999999" };
@@ -75,5 +76,48 @@ describe("buildRetailQuoteMessage", () => {
     expect(msg).toContain("WhatsApp: 11988887777");
     expect(msg).not.toContain("Empresa:");
     expect(msg).not.toContain("CNPJ:");
+  });
+});
+
+describe("buildQuoteMessage com options", () => {
+  const items: CartItem[] = [
+    { id: "p1", name: "COLEIRA P", sku: "COL-1", brand: null, img: "/1.jpg", qty: 12, unitPrice: 9.9 },
+    { id: "p2", name: "GUIA M", sku: "", brand: null, img: "/2.jpg", qty: 2 },
+  ];
+
+  it("sem options mantém a saída atual", () => {
+    expect(buildQuoteMessage(items, customer)).toBe(
+      [
+        "Olá! Gostaria de uma cotação de atacado:",
+        "",
+        "- COLEIRA P (SKU COL-1) — Qtd: 12",
+        "- GUIA M — Qtd: 2",
+        "",
+        "Meus dados:",
+        "Nome: João",
+        "Empresa: Pet Shop X",
+        "WhatsApp: 11999999999",
+      ].join("\n"),
+    );
+  });
+
+  it("com showPrices mostra preço por linha, a consultar e totais", () => {
+    const message = buildQuoteMessage(items, customer, "Olá! Quero fazer este pedido:", { showPrices: true });
+    expect(message).toContain(`- COLEIRA P (SKU COL-1) — 12 × ${formatPrice(9.9)} = ${formatPrice(118.8)}`);
+    expect(message).toContain("- GUIA M — Qtd: 2 (a consultar)");
+    expect(message).toContain("Total de unidades: 14");
+    expect(message).toContain(`Total: ${formatPrice(118.8)} + itens a consultar`);
+  });
+
+  it("sem nenhum preço não mostra linha de Total", () => {
+    const message = buildQuoteMessage([items[1]], customer, undefined, { showPrices: true });
+    expect(message).toContain("Total de unidades: 2");
+    expect(message).not.toContain("Total: ");
+  });
+
+  it("com orderNumber a primeira linha é o número do pedido", () => {
+    const message = buildQuoteMessage(items, customer, "Olá! Quero fazer este pedido:", { showPrices: true, orderNumber: 1042 });
+    expect(message.split("\n")[0]).toBe("Pedido #1042");
+    expect(message.split("\n")[2]).toBe("Olá! Quero fazer este pedido:");
   });
 });
