@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { requireAdminSession } from "@/lib/auth";
-import { ORDER_STATUSES, type OrderRow } from "@/lib/orders";
+import { formatPrice } from "@mypet/core/catalog-utils";
+import { ORDER_STATUSES, ORDERS_SELECT, itemUnitPrice, orderCustomer, orderTotal, type OrderRow } from "@/lib/orders";
 import { updateOrderStatus } from "./actions";
 import { OrderStatusSelect } from "./order-status-select";
 
@@ -19,7 +20,7 @@ async function PedidosContent({
 
   let query = supabase
     .from("orders")
-    .select("id, channel, status, created_at, buyers(nome, empresa, whatsapp), order_items(product_id, product_name_snapshot, qty)")
+    .select(ORDERS_SELECT)
     .order("created_at", { ascending: false });
 
   if (channel) query = query.eq("channel", channel);
@@ -57,37 +58,55 @@ async function PedidosContent({
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
             <tr>
+              <th className="px-4 py-3">Pedido</th>
               <th className="px-4 py-3">Data</th>
               <th className="px-4 py-3">Comprador</th>
               <th className="px-4 py-3">Canal</th>
               <th className="px-4 py-3">Itens</th>
+              <th className="px-4 py-3 text-right">Total</th>
               <th className="px-4 py-3">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {orders.map((order) => (
-              <tr key={order.id}>
-                <td className="px-4 py-3">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
-                <td className="px-4 py-3">
-                  {order.buyers?.nome} — {order.buyers?.empresa}
-                  <div className="text-xs text-slate-400">{order.buyers?.whatsapp}</div>
-                </td>
-                <td className="px-4 py-3">{CHANNEL_LABEL[order.channel] ?? order.channel}</td>
-                <td className="px-4 py-3">
-                  <ul className="text-xs text-slate-600">
-                    {order.order_items.map((item) => (
-                      <li key={item.product_id}>{item.product_name_snapshot} — Qtd: {item.qty}</li>
-                    ))}
-                  </ul>
-                </td>
-                <td className="px-4 py-3">
-                  <OrderStatusSelect orderId={order.id} currentStatus={order.status} action={updateOrderStatus} />
-                </td>
-              </tr>
-            ))}
+            {orders.map((order) => {
+              const customer = orderCustomer(order);
+              const total = orderTotal(order);
+              return (
+                <tr key={order.id}>
+                  <td className="px-4 py-3 font-semibold text-slate-700">{order.number != null ? `#${order.number}` : "—"}</td>
+                  <td className="px-4 py-3">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
+                  <td className="px-4 py-3">
+                    {customer.nome} — {customer.empresa}
+                    <div className="text-xs text-slate-400">{customer.whatsapp}</div>
+                    {customer.cnpj && <div className="text-xs text-slate-400">CNPJ: {customer.cnpj}</div>}
+                    {!order.buyers && <div className="text-xs text-slate-400">Sem cadastro</div>}
+                  </td>
+                  <td className="px-4 py-3">{CHANNEL_LABEL[order.channel] ?? order.channel}</td>
+                  <td className="px-4 py-3">
+                    <ul className="text-xs text-slate-600">
+                      {order.order_items.map((item) => {
+                        const unitPrice = itemUnitPrice(item);
+                        return (
+                          <li key={item.product_id}>
+                            {item.product_name_snapshot} — Qtd: {item.qty}
+                            {unitPrice !== null && <> × {formatPrice(unitPrice)}</>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-slate-700 whitespace-nowrap">
+                    {total !== null ? formatPrice(total) : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <OrderStatusSelect orderId={order.id} currentStatus={order.status} action={updateOrderStatus} />
+                  </td>
+                </tr>
+              );
+            })}
             {orders.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                   Nenhum pedido encontrado.
                 </td>
               </tr>
