@@ -10,6 +10,14 @@ export type RegisterOrderResult =
 // em "failed" (rede/5xx/409 nada disponível) o pedido segue pelo WhatsApp sem número.
 const REQUEST_TIMEOUT_MS = 8000;
 
+// AbortSignal.timeout só existe a partir do iOS 16; sem ele o pedido nunca seria gravado.
+function timeoutSignal(ms: number): AbortSignal {
+  if (typeof AbortSignal.timeout === "function") return AbortSignal.timeout(ms);
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), ms);
+  return controller.signal;
+}
+
 export async function registerOrder(
   items: CartItem[],
   customer: QuoteCustomer,
@@ -21,7 +29,7 @@ export async function registerOrder(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: items.map((item) => ({ id: item.id, qty: item.qty })), customer }),
       // Servidor lento não segura o cliente: estouro vira "failed" e o WhatsApp abre.
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: timeoutSignal(REQUEST_TIMEOUT_MS),
     });
     const data = await res.json().catch(() => ({}));
 

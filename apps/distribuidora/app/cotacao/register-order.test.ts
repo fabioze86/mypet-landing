@@ -67,6 +67,22 @@ describe("registerOrder — timeout", () => {
     timeout.mockRestore();
   });
 
+  it("navegador sem AbortSignal.timeout (iOS < 16) ainda grava o pedido", async () => {
+    const original = AbortSignal.timeout;
+    // @ts-expect-error simula navegador antigo
+    delete AbortSignal.timeout;
+    try {
+      const fetchImpl = vi.fn().mockResolvedValue(
+        jsonResponse(200, { number: 1042, items: [{ id: "p1", unitPrice: 9.9 }], total: 9.9, unavailableIds: [] }),
+      );
+      const result = await registerOrder(items, customer, fetchImpl);
+      expect(result.kind).toBe("ok");
+      expect(fetchImpl.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+    } finally {
+      AbortSignal.timeout = original;
+    }
+  });
+
   it("abort também vira falha", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const fetchImpl = vi.fn().mockRejectedValue(new DOMException("Aborted", "AbortError"));
