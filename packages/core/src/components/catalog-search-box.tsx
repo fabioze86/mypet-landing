@@ -30,7 +30,11 @@ export function CatalogSearchBox({
   // Só o histórico do navegador (voltar/avançar) sobrescreve o campo; um eco
   // atrasado do servidor de uma busca anterior não pode atropelar a digitação.
   useEffect(() => {
-    const onPop = () => { historyNav.current = true; };
+    // Voltar/avançar descarta a busca que ainda estava esperando a pausa.
+    const onPop = () => {
+      historyNav.current = true;
+      if (timer.current) clearTimeout(timer.current);
+    };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
@@ -47,6 +51,9 @@ export function CatalogSearchBox({
   }, []);
 
   const handleChange = (next: string) => {
+    // Digitação nova encerra a navegação do histórico, mesmo que ela não tenha
+    // mudado o q (sem isso um eco atrasado sobrescreveria o campo).
+    historyNav.current = false;
     setValue(next);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {

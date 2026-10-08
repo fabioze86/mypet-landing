@@ -113,3 +113,25 @@ describe("CatalogSearchBox — posição fixa", () => {
     expect(wrapper.style.top).toBe("var(--site-nav-height, 64px)");
   });
 });
+
+describe("CatalogSearchBox — voltar/avançar", () => {
+  const wrap = (initialQuery?: string) =>
+    createElement(ClientConfigProvider, { config }, createElement(CatalogSearchBox, { initialQuery }));
+
+  it("voltar cancela a busca pendente da digitação", () => {
+    render(wrap("coleira"));
+    fireEvent.change(screen.getByRole("searchbox", { name: "Buscar produtos" }), { target: { value: "coleira p" } });
+    act(() => { window.dispatchEvent(new PopStateEvent("popstate")); });
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(nav.replace).not.toHaveBeenCalled();
+  });
+
+  it("voltar que não muda o q não deixa a próxima busca à mercê de eco antigo", () => {
+    const { rerender } = render(wrap("coleira"));
+    const input = screen.getByRole("searchbox", { name: "Buscar produtos" });
+    act(() => { window.dispatchEvent(new PopStateEvent("popstate")); });
+    fireEvent.change(input, { target: { value: "col" } });
+    rerender(wrap("co"));
+    expect(input).toHaveValue("col");
+  });
+});
