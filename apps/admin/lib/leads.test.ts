@@ -45,6 +45,13 @@ describe("leadsToCsv", () => {
     );
   });
 
+  it("empresa nula vira campo vazio no CSV", () => {
+    const csv = leadsToCsv([
+      { id: "1", nome: "Ana", empresa: null, whatsapp: "5511999999999", cnpj: null, channel: "mypetbrasil", status: "novo", created_at: "2026-10-10T10:00:00Z" },
+    ]);
+    expect(csv.split("\n")[1]).toBe("2026-10-10T10:00:00Z,Ana,,5511999999999,,mypetbrasil,novo");
+  });
+
   it("retorna só o cabeçalho para lista vazia", () => {
     expect(leadsToCsv([]).trim()).toBe("data,nome,empresa,whatsapp,cnpj,canal,status");
   });

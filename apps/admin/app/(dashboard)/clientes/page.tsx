@@ -80,7 +80,7 @@ export default async function ClientesPage({
           {leads.map((lead) => (
             <tr key={lead.id} className="border-b border-slate-100">
               <td className="px-4 py-3">{lead.nome}</td>
-              <td className="px-4 py-3">{lead.empresa}</td>
+              <td className="px-4 py-3">{lead.empresa ?? "—"}</td>
               <td className="px-4 py-3">{lead.whatsapp}</td>
               <td className="px-4 py-3">{CHANNEL_LABEL[lead.channel] ?? lead.channel}</td>
               <td className="px-4 py-3">
