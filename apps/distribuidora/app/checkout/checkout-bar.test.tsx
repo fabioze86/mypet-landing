@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientConfigProvider } from "@mypet/core/theme";
-import { CartProvider } from "@mypet/core/components/cart-provider";
+import { CartProvider, useCart } from "@mypet/core/components/cart-provider";
 import { formatPrice } from "@mypet/core/catalog-utils";
 import { clientConfig } from "@/client.config";
 
@@ -20,11 +20,22 @@ import { CheckoutBar } from "./checkout-bar";
 
 const P1 = "11111111-1111-4111-8111-111111111111";
 
+function CartControls() {
+  const { updateQty, removeItem } = useCart();
+  return (
+    <>
+      <button onClick={() => updateQty(P1, 3)}>mais um</button>
+      <button onClick={() => removeItem(P1)}>remover</button>
+    </>
+  );
+}
+
 function renderBar() {
   return render(
     <ClientConfigProvider config={clientConfig}>
       <CartProvider>
         <IdentityGateProvider>
+          <CartControls />
           <CheckoutBar />
         </IdentityGateProvider>
       </CartProvider>
@@ -127,5 +138,35 @@ describe("CheckoutBar", () => {
     expect(screen.getByRole("dialog", { name: "Quase lá!" })).toBeInTheDocument();
     expect(mocks.registerOrder).not.toHaveBeenCalled();
     expect(open).not.toHaveBeenCalled();
+  });
+
+  it.each(["mais um", "remover"])("erro some quando o carrinho muda (%s)", async (control) => {
+    saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    mocks.registerOrder.mockResolvedValue({ kind: "invalid", error: "Há um item inválido no carrinho." });
+    renderBar();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Fechar pedido →" })));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: control }));
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("erro não aparece em /cotacao, onde a barra some", async () => {
+    saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    mocks.registerOrder.mockResolvedValue({ kind: "invalid", error: "Há um item inválido no carrinho." });
+    const { rerender } = renderBar();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Fechar pedido →" })));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    nav.pathname = "/cotacao";
+    rerender(
+      <ClientConfigProvider config={clientConfig}>
+        <CartProvider>
+          <IdentityGateProvider>
+            <CartControls />
+            <CheckoutBar />
+          </IdentityGateProvider>
+        </CartProvider>
+      </ClientConfigProvider>,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });

@@ -17,7 +17,11 @@ export function useCheckout() {
   const identity = useIdentity();
   const { openIdentityGate } = useIdentityGate();
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState("");
+  // Erro de validação vale para o carrinho que foi enviado: mudou o carrinho, some o aviso
+  // (derivado da assinatura, sem setState em efeito).
+  const cartSignature = cart.items.map((item) => `${item.id}:${item.qty}`).join("|");
+  const [failure, setFailure] = useState<{ error: string; signature: string } | null>(null);
+  const error = failure && failure.signature === cartSignature ? failure.error : "";
   // Guarda síncrona contra duplo toque: o disabled só vale após o render.
   const inFlight = useRef(false);
 
@@ -29,7 +33,7 @@ export function useCheckout() {
     }
     inFlight.current = true;
     setSending(true);
-    setError("");
+    setFailure(null);
 
     const result = await registerOrder(cart.items, {
       nome: identity.nome,
@@ -37,7 +41,7 @@ export function useCheckout() {
       ...(identity.cnpj ? { cnpj: identity.cnpj } : {}),
     });
     if (result.kind === "invalid") {
-      setError(result.error);
+      setFailure({ error: result.error, signature: cartSignature });
       setSending(false);
       inFlight.current = false;
       return;
@@ -58,7 +62,7 @@ export function useCheckout() {
     clear();
     setSending(false);
     inFlight.current = false;
-  }, [cart.items, clear, identity, openIdentityGate]);
+  }, [cart.items, cartSignature, clear, identity, openIdentityGate]);
 
   return { checkout, sending, error };
 }

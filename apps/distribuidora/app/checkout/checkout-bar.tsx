@@ -1,15 +1,16 @@
 "use client";
 
-import { CartBar, CART_BAR_HEIGHT } from "@mypet/core/components/cart-bar";
+import { CartBar, CART_BAR_HEIGHT, useCartBarVisible } from "@mypet/core/components/cart-bar";
 import { useClientConfig } from "@mypet/core/theme";
 import { useCheckout } from "./use-checkout";
 
 export function CheckoutBar() {
   const { checkout, sending, error } = useCheckout();
   const { palette } = useClientConfig();
+  const barVisible = useCartBarVisible();
   return (
     <>
-      {error && (
+      {error && barVisible && (
         <p
           role="alert"
           style={{
