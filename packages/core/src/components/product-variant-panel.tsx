@@ -86,7 +86,6 @@ function PurchaseGrid({
 
   const img = variantOverride?.img ?? product.img;
   const sku = variantOverride?.sku ?? product.sku;
-  const barcode = variantOverride?.barcode ?? product.barcode;
   const cartId = variantOverride?.id ?? product.id;
   const cartName = variantOverride?.name ?? product.name;
   const priceLabel = product.variants.find((variant) => variant.id === cartId)?.priceLabel ?? product.priceLabel;
@@ -129,21 +128,7 @@ function PurchaseGrid({
                 fontWeight: 600,
               }}
             >
-              SKU/Ref: {sku}
-            </span>
-          )}
-          {barcode && (
-            <span
-              style={{
-                fontSize: 13,
-                color: PALETTE.gray600,
-                background: PALETTE.gray100,
-                padding: "4px 10px",
-                borderRadius: 6,
-                fontWeight: 600,
-              }}
-            >
-              EAN/EAC: {barcode}
+              Ref: {sku}
             </span>
           )}
         </div>
