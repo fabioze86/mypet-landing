@@ -13,5 +13,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["app/**/*.test.{ts,tsx}", "*.test.ts"],
+    // Sob carga (suíte inteira em paralelo) os testes de componente passam de 5s.
+    testTimeout: 15000,
   },
 });
