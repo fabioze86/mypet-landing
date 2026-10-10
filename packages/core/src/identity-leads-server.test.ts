@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { NextRequest } from "next/server";
 
 const state = vi.hoisted(() => ({ insert: vi.fn(), error: null as null | { message: string } }));
@@ -25,6 +25,10 @@ function fakeRequest(body: unknown, headers: Record<string, string> = {}): NextR
 }
 
 const POST = createIdentityLeadHandler("mypetbrasil");
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 beforeEach(() => {
   state.insert.mockReset();
