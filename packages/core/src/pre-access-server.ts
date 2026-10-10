@@ -1,3 +1,4 @@
+import { isValidCnpj } from "./br-validation";
 import { getHubServiceClient } from "./supabase";
 
 export type PreAccessInput = { cnpj: string; whatsapp: string; email?: string | null };
@@ -35,24 +36,6 @@ export function normalizePreAccessInput(input: unknown): NormalizedInput {
     whatsapp: /^\d{10,11}$/.test(whatsapp) ? `55${whatsapp}` : whatsapp,
     email: email.length > 0 ? email : null,
   };
-}
-
-function isValidCnpj(cnpj: string): boolean {
-  if (!/^\d{14}$/.test(cnpj) || /^(\d)\1{13}$/.test(cnpj)) return false;
-  const digit = (length: number) => {
-    let weight = length - 7;
-    const sum = cnpj
-      .slice(0, length)
-      .split("")
-      .reduce((total, char) => {
-        const next = total + Number(char) * weight;
-        weight = weight === 2 ? 9 : weight - 1;
-        return next;
-      }, 0);
-    const remainder = sum % 11;
-    return remainder < 2 ? 0 : 11 - remainder;
-  };
-  return digit(12) === Number(cnpj[12]) && digit(13) === Number(cnpj[13]);
 }
 
 function isValidEmail(email: string): boolean {

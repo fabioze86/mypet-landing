@@ -13,6 +13,7 @@
     "./balcao-calc": "./src/balcao-calc.ts",
     "./balcao-server": "./src/balcao-server.ts",
     "./banners": "./src/banners.ts",
+    "./br-validation": "./src/br-validation.ts",
     "./buyers-server": "./src/buyers-server.ts",
     "./catalog": "./src/catalog.ts",
     "./catalog-revalidation": "./src/catalog-revalidation.ts",
