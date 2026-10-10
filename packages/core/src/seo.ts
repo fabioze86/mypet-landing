@@ -89,3 +89,18 @@ export function organizationJsonLd(config: ClientConfig) {
     logo: canonicalUrl(config.domain, "/opengraph-image"),
   };
 }
+
+/** Normaliza uma descrição (remove HTML, colapsa espaços) e trunca para meta description. */
+export function metaDescription(
+  raw: string | null | undefined,
+  fallback: string,
+  maxLen = 155,
+): string {
+  const text = (raw ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!text) return fallback;
+  if (text.length <= maxLen) return text;
+  const truncated = text.slice(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(" ");
+  const base = lastSpace > 40 ? truncated.slice(0, lastSpace) : truncated;
+  return `${base.trim()}…`;
+}

@@ -5,6 +5,7 @@ import {
   canonicalUrl,
   organizationJsonLd,
   jsonLdScript,
+  metaDescription,
   type PdpProductForSeo,
 } from "./seo";
 import type { ClientConfig } from "./theme";
@@ -92,5 +93,20 @@ describe("organizationJsonLd", () => {
       url: "https://mypetbrasil.com.br",
       logo: "https://mypetbrasil.com.br/opengraph-image",
     });
+  });
+});
+
+describe("metaDescription", () => {
+  it("usa o fallback quando vazio", () => {
+    expect(metaDescription("", "fallback")).toBe("fallback");
+    expect(metaDescription(null, "fallback")).toBe("fallback");
+  });
+  it("remove HTML e colapsa espaços", () => {
+    expect(metaDescription("<p>Olá  <b>mundo</b></p>", "fb")).toBe("Olá mundo");
+  });
+  it("trunca em ~155 chars com reticências", () => {
+    const out = metaDescription("x".repeat(200), "fb");
+    expect(out.endsWith("…")).toBe(true);
+    expect(out.length).toBeLessThanOrEqual(156);
   });
 });
