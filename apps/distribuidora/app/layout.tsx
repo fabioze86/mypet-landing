@@ -9,6 +9,7 @@ import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import RegisterSW from "./components/register-sw";
 import InstallPrompt from "./components/install-prompt";
+import { IdentityGateProvider } from "./identity/identity-gate";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -56,13 +57,15 @@ export default function RootLayout({
         />
         <ClientConfigProvider config={clientConfig}>
           <CartProvider>
-            {children}
-            {/* usePathname em rota com parâmetro dinâmico exige Suspense com cacheComponents. */}
-            <Suspense fallback={null}>
-              <CartBar />
-              {/* Dentro do CartProvider para subir acima da CartBar. */}
-              <InstallPrompt />
-            </Suspense>
+            <IdentityGateProvider>
+              {children}
+              {/* usePathname em rota com parâmetro dinâmico exige Suspense com cacheComponents. */}
+              <Suspense fallback={null}>
+                <CartBar />
+                {/* Dentro do CartProvider para subir acima da CartBar. */}
+                <InstallPrompt />
+              </Suspense>
+            </IdentityGateProvider>
           </CartProvider>
           <RegisterSW />
           <Analytics />
