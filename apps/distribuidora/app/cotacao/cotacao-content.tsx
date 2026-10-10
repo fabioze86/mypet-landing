@@ -1,24 +1,20 @@
 "use client";
 
-import { useRef, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@mypet/core/components/cart-provider";
 import { cartTotals } from "@mypet/core/cart";
 import { formatPrice } from "@mypet/core/catalog-utils";
-import { buildQuoteMessage, buildWhatsAppLink } from "@mypet/core/whatsapp";
+import { formatCnpj, formatWhatsapp } from "@mypet/core/br-validation";
 import type { Palette } from "@mypet/core/theme";
-import { applyServerPrices, registerOrder } from "./register-order";
-
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "5511981030532";
-const ORDER_INTRO = "Olá! Quero fazer este pedido:";
+import { useCheckout } from "../checkout/use-checkout";
+import { useIdentity } from "../identity/identity-store";
+import { useIdentityGate } from "../identity/identity-gate";
 
 export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
-  const { cart, removeItem, updateQty, clear } = useCart();
-  const [form, setForm] = useState({ nome: "", empresa: "", whatsapp: "", cnpj: "" });
-  const [submitError, setSubmitError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  // Guarda síncrona contra duplo toque: o disabled do botão só vale após o render.
-  const inFlight = useRef(false);
+  const { cart, removeItem, updateQty } = useCart();
+  const identity = useIdentity();
+  const { openIdentityGate } = useIdentityGate();
+  const { checkout, sending, error } = useCheckout();
 
   if (cart.items.length === 0) {
     return (
@@ -38,30 +34,6 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   }
 
   const totals = cartTotals(cart.items);
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (inFlight.current) return;
-    inFlight.current = true;
-    setSubmitError("");
-    setSubmitting(true);
-
-    const result = await registerOrder(cart.items, form);
-    if (result.kind === "invalid") {
-      setSubmitError(result.error);
-      setSubmitting(false);
-      inFlight.current = false;
-      return;
-    }
-
-    const items = result.kind === "ok" ? applyServerPrices(cart.items, result.prices, result.unavailableIds) : cart.items;
-    const message = buildQuoteMessage(items, form, ORDER_INTRO, {
-      showPrices: true,
-      orderNumber: result.kind === "ok" ? result.number : undefined,
-    });
-    window.open(buildWhatsAppLink(WHATSAPP_NUMBER, message), "_self");
-    clear();
-  };
 
   return (
     <>
@@ -146,21 +118,36 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       </div>
 
       <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: PALETTE.navy, marginBottom: 16 }}>
-          Seus dados para o pedido
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <input className="form-input" placeholder="Seu nome" required value={form.nome} onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))} />
-          <input className="form-input" placeholder="Nome do pet shop / empresa" required value={form.empresa} onChange={(event) => setForm((current) => ({ ...current, empresa: event.target.value }))} />
-          <input className="form-input" placeholder="WhatsApp com DDD" required inputMode="tel" value={form.whatsapp} onChange={(event) => setForm((current) => ({ ...current, whatsapp: event.target.value }))} />
-          <input className="form-input" placeholder="CNPJ (opcional)" inputMode="numeric" value={form.cnpj} onChange={(event) => setForm((current) => ({ ...current, cnpj: event.target.value }))} />
-          {submitError && (
-            <p role="alert" style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 8, textAlign: "center" }}>{submitError}</p>
-          )}
-          <button type="submit" className="form-submit" disabled={submitting}>
-            {submitting ? "Registrando pedido…" : "Enviar pedido pelo WhatsApp →"}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: PALETTE.navy }}>Seus dados</h2>
+          <button
+            type="button"
+            onClick={openIdentityGate}
+            style={{ background: "none", border: "none", color: PALETTE.pink, fontSize: 13, fontWeight: 800, cursor: "pointer" }}
+          >
+            Alterar dados
           </button>
-        </form>
+        </div>
+        {identity && (
+          <dl style={{ fontSize: 14, color: PALETTE.gray800, marginBottom: 20, display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 12px" }}>
+            <dt style={{ color: PALETTE.gray600 }}>Nome</dt>
+            <dd>{identity.nome}</dd>
+            <dt style={{ color: PALETTE.gray600 }}>WhatsApp</dt>
+            <dd>{formatWhatsapp(identity.whatsapp)}</dd>
+            {identity.cnpj && (
+              <>
+                <dt style={{ color: PALETTE.gray600 }}>CNPJ</dt>
+                <dd>{formatCnpj(identity.cnpj)}</dd>
+              </>
+            )}
+          </dl>
+        )}
+        {error && (
+          <p role="alert" style={{ color: PALETTE.orange, fontSize: 13, marginBottom: 8, textAlign: "center" }}>{error}</p>
+        )}
+        <button type="button" className="form-submit" disabled={sending} onClick={() => void checkout()}>
+          {sending ? "Registrando pedido…" : "Fechar pedido pelo WhatsApp →"}
+        </button>
       </div>
     </>
   );

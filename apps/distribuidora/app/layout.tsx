@@ -4,7 +4,7 @@ import { Nunito, Nunito_Sans } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
-import { CartBar } from "@mypet/core/components/cart-bar";
+import { CheckoutBar } from "./checkout/checkout-bar";
 import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import RegisterSW from "./components/register-sw";
@@ -61,7 +61,7 @@ export default function RootLayout({
               {children}
               {/* usePathname em rota com parâmetro dinâmico exige Suspense com cacheComponents. */}
               <Suspense fallback={null}>
-                <CartBar />
+                <CheckoutBar />
                 {/* Dentro do CartProvider para subir acima da CartBar. */}
                 <InstallPrompt />
               </Suspense>

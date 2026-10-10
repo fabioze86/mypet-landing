@@ -1,135 +1,85 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Palette } from "@mypet/core/theme";
+import { ClientConfigProvider } from "@mypet/core/theme";
+import { CartProvider } from "@mypet/core/components/cart-provider";
 import { formatPrice } from "@mypet/core/catalog-utils";
+import { clientConfig } from "@/client.config";
 
-const mocks = vi.hoisted(() => ({
-  removeItem: vi.fn(),
-  updateQty: vi.fn(),
-  clear: vi.fn(),
-  registerOrder: vi.fn(),
-}));
-
-vi.mock("@mypet/core/components/cart-provider", () => ({
-  useCart: () => ({
-    cart: {
-      items: [
-        { id: "p1", name: "Coleira", qty: 2, img: "/coleira.jpg", brand: "MadPet", sku: "COL-1", unitPrice: 10 },
-        { id: "p2", name: "Guia", qty: 1, img: "/guia.jpg", brand: null, sku: "" },
-      ],
-    },
-    removeItem: mocks.removeItem,
-    updateQty: mocks.updateQty,
-    clear: mocks.clear,
-  }),
-}));
-
+const mocks = vi.hoisted(() => ({ registerOrder: vi.fn() }));
 vi.mock("./register-order", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./register-order")>()),
   registerOrder: mocks.registerOrder,
 }));
 
+import { __resetIdentityForTests, saveIdentity } from "../identity/identity-store";
+import { IdentityGateProvider } from "../identity/identity-gate";
 import { CotacaoContent } from "./cotacao-content";
 
-const palette = {
-  white: "#fff", gray50: "#fafafa", gray100: "#f5f5f5", gray200: "#e5e5e5", gray400: "#a3a3a3",
-  gray600: "#525252", gray800: "#262626", navy: "#111827", orange: "#b45309", pink: "#7144a4",
-} as Palette;
+const P1 = "11111111-1111-4111-8111-111111111111";
+const P2 = "22222222-2222-4222-8222-222222222222";
 
-function fillAndSubmit() {
-  fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { value: "Fabio" } });
-  fireEvent.change(screen.getByPlaceholderText("Nome do pet shop / empresa"), { target: { value: "My Pet" } });
-  fireEvent.change(screen.getByPlaceholderText("WhatsApp com DDD"), { target: { value: "11999999999" } });
-  fireEvent.click(screen.getByRole("button", { name: /Enviar pedido pelo WhatsApp/i }));
-}
-
-function sentMessage(open: ReturnType<typeof vi.spyOn>) {
-  const [url, target] = open.mock.calls[0];
-  expect(target).toBe("_self");
-  expect(url).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
-  return decodeURIComponent(String(url).split("?text=")[1]);
+function renderPage() {
+  return render(
+    <ClientConfigProvider config={clientConfig}>
+      <CartProvider>
+        <IdentityGateProvider>
+          <CotacaoContent palette={clientConfig.palette} />
+        </IdentityGateProvider>
+      </CartProvider>
+    </ClientConfigProvider>,
+  );
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  localStorage.clear();
+  __resetIdentityForTests();
+  vi.restoreAllMocks();
+  mocks.registerOrder.mockReset();
+  localStorage.setItem(
+    "mypet_cart",
+    JSON.stringify({
+      items: [
+        { id: P1, name: "Coleira", sku: "COL-1", brand: "MadPet", img: "/c.jpg", qty: 2, unitPrice: 10 },
+        { id: P2, name: "Guia", sku: "", brand: null, img: "/g.jpg", qty: 1 },
+      ],
+    }),
+  );
+  saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: "11222333000181" });
 });
 
-describe("CotacaoContent", () => {
-  it("mostra subtotal por linha, a consultar e o total", () => {
-    render(<CotacaoContent palette={palette} />);
-    // R$ 20,00 aparece no subtotal da Coleira e no total.
+describe("CotacaoContent (revisão)", () => {
+  it("mostra itens, total e os dados identificados, sem formulário", () => {
+    renderPage();
     expect(screen.getAllByText(formatPrice(20)!.replace(/\s/g, " ")).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("a consultar")).toBeInTheDocument();
-    expect(screen.getByText("Total de unidades")).toBeInTheDocument();
-    expect(screen.getByTestId("cart-total")).toHaveTextContent(formatPrice(20)!.replace(/\s/g, " "));
-    expect(screen.getByText(/Itens sem preço serão confirmados pelo atendente/)).toBeInTheDocument();
+    expect(screen.getByText("Ana")).toBeInTheDocument();
+    expect(screen.getByText("(11) 99999-8888")).toBeInTheDocument();
+    expect(screen.getByText("11.222.333/0001-81")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).toBeNull();
   });
 
-  it("grava o pedido e abre o WhatsApp com número e preço do servidor", async () => {
+  it("Alterar dados reabre o pop-up", () => {
+    renderPage();
+    fireEvent.click(screen.getByRole("button", { name: "Alterar dados" }));
+    expect(screen.getByRole("dialog", { name: "Acesse o catálogo" })).toBeInTheDocument();
+  });
+
+  it("Fechar pedido pelo WhatsApp grava e abre o WhatsApp", async () => {
     const open = vi.spyOn(window, "open").mockReturnValue(null);
-    mocks.registerOrder.mockResolvedValue({ kind: "ok", number: 1042, prices: new Map([["p1", 12], ["p2", null]]), unavailableIds: [] });
-
-    render(<CotacaoContent palette={palette} />);
-    await act(async () => fillAndSubmit());
-
-    expect(mocks.registerOrder).toHaveBeenCalledOnce();
-    const message = sentMessage(open);
+    mocks.registerOrder.mockResolvedValue({ kind: "ok", number: 1042, prices: new Map([[P1, 12], [P2, null]]), unavailableIds: [] });
+    renderPage();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: /Fechar pedido pelo WhatsApp/ })));
+    const message = decodeURIComponent(String(open.mock.calls[0][0]).split("?text=")[1]);
     expect(message.split("\n")[0]).toBe("Pedido #1042");
     expect(message).toContain(`Coleira (SKU COL-1) — 2 × ${formatPrice(12)} = ${formatPrice(24)}`);
     expect(message).toContain("Guia — Qtd: 1 (a consultar)");
-    expect(message).toContain("Nome: Fabio");
-    expect(mocks.clear).toHaveBeenCalledOnce();
   });
 
-  it("item indisponível segue na mensagem como a consultar", async () => {
-    const open = vi.spyOn(window, "open").mockReturnValue(null);
-    mocks.registerOrder.mockResolvedValue({ kind: "ok", number: 1043, prices: new Map([["p2", 5]]), unavailableIds: ["p1"] });
-
-    render(<CotacaoContent palette={palette} />);
-    await act(async () => fillAndSubmit());
-
-    const message = sentMessage(open);
-    expect(message.split("\n")[0]).toBe("Pedido #1043");
-    expect(message).toContain("Coleira (SKU COL-1) — Qtd: 2 (a consultar)");
-    expect(message).toContain(`Guia — 1 × ${formatPrice(5)} = ${formatPrice(5)}`);
-  });
-
-  it("se a gravação falhar, abre o WhatsApp mesmo assim sem número", async () => {
-    const open = vi.spyOn(window, "open").mockReturnValue(null);
-    mocks.registerOrder.mockResolvedValue({ kind: "failed" });
-
-    render(<CotacaoContent palette={palette} />);
-    await act(async () => fillAndSubmit());
-
-    const message = sentMessage(open);
-    expect(message).not.toContain("Pedido #");
-    expect(message).toContain(`Coleira (SKU COL-1) — 2 × ${formatPrice(10)} = ${formatPrice(20)}`);
-  });
-
-  it("ignora o segundo envio enquanto o primeiro está em andamento", async () => {
+  it("erro de validação aparece acima do botão", async () => {
     vi.spyOn(window, "open").mockReturnValue(null);
-    let finish: (value: unknown) => void = () => {};
-    mocks.registerOrder.mockReturnValue(new Promise((resolve) => { finish = resolve; }));
-
-    render(<CotacaoContent palette={palette} />);
-    fillAndSubmit();
-    const form = screen.getByRole("button", { name: /Registrando pedido|Enviar pedido/i }).closest("form")!;
-    fireEvent.submit(form);
-    fireEvent.submit(form);
-    await act(async () => finish({ kind: "failed" }));
-
-    expect(mocks.registerOrder).toHaveBeenCalledOnce();
-  });
-
-  it("erro de validação aparece no formulário e não abre o WhatsApp", async () => {
-    const open = vi.spyOn(window, "open").mockReturnValue(null);
-    mocks.registerOrder.mockResolvedValue({ kind: "invalid", error: "Um dos produtos não está mais disponível." });
-
-    render(<CotacaoContent palette={palette} />);
-    await act(async () => fillAndSubmit());
-
-    expect(open).not.toHaveBeenCalled();
-    expect(screen.getByText("Um dos produtos não está mais disponível.")).toBeInTheDocument();
-    expect(mocks.clear).not.toHaveBeenCalled();
+    mocks.registerOrder.mockResolvedValue({ kind: "invalid", error: "Há um item inválido no carrinho." });
+    renderPage();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: /Fechar pedido pelo WhatsApp/ })));
+    expect(screen.getByRole("alert")).toHaveTextContent("Há um item inválido no carrinho.");
   });
 });
