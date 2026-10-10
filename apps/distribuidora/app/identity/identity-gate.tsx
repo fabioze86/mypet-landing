@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { Suspense, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useClientConfig } from "@mypet/core/theme";
 import { cartTotals } from "@mypet/core/cart";
@@ -53,6 +53,10 @@ function IdentityGateHost({ editing, onDone }: { editing: boolean; onDone: () =>
   return <IdentityDialog initial={identity ?? null} dismissible={!required} onDone={onDone} />;
 }
 
+function sameIdentity(a: Identity, b: Identity): boolean {
+  return a.nome === b.nome && a.whatsapp === b.whatsapp && (a.cnpj ?? null) === (b.cnpj ?? null);
+}
+
 function IdentityDialog({
   initial,
   dismissible,
@@ -79,26 +83,46 @@ function IdentityDialog({
     };
   }, []);
 
+  // Guarda síncrona contra duplo envio: o disabled só vale após o render.
+  const inFlight = useRef(false);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (sending) return;
+    if (inFlight.current || sending) return;
     const parsed = validateIdentity(form);
     if (!parsed.ok) {
       setErrors({ [parsed.field]: parsed.error });
       return;
     }
     setErrors({});
-    setSending(true);
-    const result = await submitIdentityLead(parsed.value);
-    if (result.kind === "invalid") {
-      setErrors(result.field ? { [result.field]: result.error } : { nome: result.error });
-      setSending(false);
+    // "Alterar dados" sem mudança: só fecha, sem gravar outro lead.
+    if (initial && sameIdentity(initial, parsed.value)) {
+      onDone();
       return;
     }
-    saveIdentity(parsed.value);
-    setSending(false);
-    onDone();
+    inFlight.current = true;
+    setSending(true);
+    try {
+      const result = await submitIdentityLead(parsed.value);
+      if (result.kind === "invalid") {
+        setErrors(result.field ? { [result.field]: result.error } : { nome: result.error });
+        return;
+      }
+      saveIdentity(parsed.value);
+      onDone();
+    } finally {
+      inFlight.current = false;
+      setSending(false);
+    }
   };
+
+  const update = (field: IdentityField, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
+  };
+
+  const a11y = (field: IdentityField) =>
+    errors[field] ? { "aria-invalid": true as const, "aria-describedby": `identity-${field}-error` } : {};
 
   const input: React.CSSProperties = {
     width: "100%",
@@ -145,10 +169,11 @@ function IdentityDialog({
               autoFocus
               autoComplete="name"
               value={form.nome}
-              onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))}
+              onChange={(event) => update("nome", event.target.value)}
+              {...a11y("nome")}
               style={input}
             />
-            {errors.nome && <p role="alert" style={errorStyle}>{errors.nome}</p>}
+            {errors.nome && <p id="identity-nome-error" role="alert" style={errorStyle}>{errors.nome}</p>}
           </div>
           <div style={{ marginBottom: 14 }}>
             <label htmlFor="identity-whatsapp" style={label}>WhatsApp com DDD</label>
@@ -157,10 +182,11 @@ function IdentityDialog({
               inputMode="tel"
               autoComplete="tel-national"
               value={form.whatsapp}
-              onChange={(event) => setForm((current) => ({ ...current, whatsapp: formatWhatsapp(event.target.value) }))}
+              onChange={(event) => update("whatsapp", formatWhatsapp(event.target.value))}
+              {...a11y("whatsapp")}
               style={input}
             />
-            {errors.whatsapp && <p role="alert" style={errorStyle}>{errors.whatsapp}</p>}
+            {errors.whatsapp && <p id="identity-whatsapp-error" role="alert" style={errorStyle}>{errors.whatsapp}</p>}
           </div>
           <div style={{ marginBottom: 20 }}>
             <label htmlFor="identity-cnpj" style={label}>CNPJ (opcional)</label>
@@ -168,10 +194,11 @@ function IdentityDialog({
               id="identity-cnpj"
               inputMode="numeric"
               value={form.cnpj}
-              onChange={(event) => setForm((current) => ({ ...current, cnpj: formatCnpj(event.target.value) }))}
+              onChange={(event) => update("cnpj", formatCnpj(event.target.value))}
+              {...a11y("cnpj")}
               style={input}
             />
-            {errors.cnpj && <p role="alert" style={errorStyle}>{errors.cnpj}</p>}
+            {errors.cnpj && <p id="identity-cnpj-error" role="alert" style={errorStyle}>{errors.cnpj}</p>}
           </div>
           <button
             type="submit"

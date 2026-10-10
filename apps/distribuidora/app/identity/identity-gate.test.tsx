@@ -160,4 +160,50 @@ describe("IdentityGateProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
     expect(screen.queryByRole("dialog")).toBeNull();
   });
+
+  it("erro marca o campo (aria) e some ao editar o campo", () => {
+    seedCart();
+    renderGate();
+    fill("Ana", "123");
+    const whatsapp = screen.getByLabelText("WhatsApp com DDD");
+    expect(whatsapp).toHaveAttribute("aria-invalid", "true");
+    expect(whatsapp).toHaveAccessibleDescription("Informe o WhatsApp com DDD.");
+    fireEvent.change(whatsapp, { target: { value: "1199" } });
+    expect(screen.queryByText("Informe o WhatsApp com DDD.")).toBeNull();
+    expect(whatsapp).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("duplo envio grava um lead só", async () => {
+    let resolve!: (v: unknown) => void;
+    fetchMock.mockReturnValue(new Promise((r) => { resolve = r; }));
+    seedCart();
+    renderGate();
+    fireEvent.change(screen.getByLabelText("Seu nome"), { target: { value: "Ana" } });
+    fireEvent.change(screen.getByLabelText("WhatsApp com DDD"), { target: { value: "11999998888" } });
+    const form = screen.getByRole("button", { name: "Continuar" }).closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await act(async () => resolve({ ok: true, status: 200, json: async () => ({ ok: true }) }));
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it("Alterar dados sem mudança só fecha, sem chamar /api/leads", async () => {
+    saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    renderGate();
+    fireEvent.click(screen.getByRole("button", { name: "Alterar dados" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Continuar" })));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("Alterar dados com mudança grava o lead novo", async () => {
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ ok: true }) });
+    saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    renderGate();
+    fireEvent.click(screen.getByRole("button", { name: "Alterar dados" }));
+    await act(async () => fill("Ana Souza", "(11) 99999-8888"));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(readIdentity()?.nome).toBe("Ana Souza");
+  });
 });
