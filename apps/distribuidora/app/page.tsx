@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Palette } from "@mypet/core/theme";
-import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { CatalogSearchBox } from "@mypet/core/components/catalog-search-box";
 import { getProductCount, getChannelCategories } from "@mypet/core/catalog";
@@ -293,98 +292,94 @@ export default async function Home({
 
       `}</style>
 
-      <LeadGateProvider>
+      {/* NAV */}
+      <SiteNav categories={categories} />
 
-        {/* NAV */}
-        <SiteNav categories={categories} />
+      {/* BUSCA — primeiro elemento abaixo da navegação */}
+      <Suspense fallback={<CatalogSearchBox />}>
+        <SearchSlot searchParams={searchParams} />
+      </Suspense>
 
-        {/* BUSCA — primeiro elemento abaixo da navegação */}
-        <Suspense fallback={<CatalogSearchBox />}>
-          <SearchSlot searchParams={searchParams} />
-        </Suspense>
+      {/* CATEGORY CHIPS */}
+      <CategoryChips categories={categories} />
 
-        {/* CATEGORY CHIPS */}
-        <CategoryChips categories={categories} />
+      {/* COMPACT BANNER — canal de banner é por site, desacoplado do catálogo (mypetbrasil) */}
 
-        {/* COMPACT BANNER — canal de banner é por site, desacoplado do catálogo (mypetbrasil) */}
+      {/* MINI BANNER STRIP */}
 
-        {/* MINI BANNER STRIP */}
-
-        {/* CATALOG */}
-        <Suspense fallback={
-          <section style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 80px" }}>
-            <div style={{ marginBottom: 28 }}>
-              <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
-            </div>
-            <p style={{ color: PALETTE.gray600 }}>Carregando catálogo…</p>
-          </section>
-        }>
-          <DynamicCatalog searchParams={searchParams} channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
-        </Suspense>
-
-        {/* STATS */}
-        <section style={{ background: PALETTE.white, borderBottom: `1px solid ${PALETTE.gray200}`, marginTop: 32 }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-            <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
-              <Suspense fallback={
-                <>
-                  {STATS_STATIC.map((s) => (
-                    <div key={s.label} style={{ padding: "16px 12px", textAlign: "center" }}>
-                      <div style={{ fontSize: 18, marginBottom: 4 }}>{s.icon}</div>
-                      <div style={{ fontSize: 20, fontWeight: 900, color: PALETTE.pink, marginBottom: 2 }}>{s.value}</div>
-                      <div style={{ fontSize: 12, color: PALETTE.gray600, fontWeight: 600 }}>{s.label}</div>
-                    </div>
-                  ))}
-                </>
-              }>
-                <StatsCount channel={clientConfig.catalogChannel} />
-              </Suspense>
-            </div>
+      {/* CATALOG */}
+      <Suspense fallback={
+        <section style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 80px" }}>
+          <div style={{ marginBottom: 28 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 4 }}>Catálogo completo</h2>
           </div>
+          <p style={{ color: PALETTE.gray600 }}>Carregando catálogo…</p>
         </section>
+      }>
+        <DynamicCatalog searchParams={searchParams} channel={clientConfig.catalogChannel} palette={clientConfig.palette} />
+      </Suspense>
 
-        {/* CTA BANNER */}
-        <section style={{
-          background: `linear-gradient(135deg, ${PALETTE.pink} 0%, ${PALETTE.pinkDark} 100%)`,
-          padding: "44px 24px",
-        }}>
-          <div style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: "50%",
-              background: "rgba(255,255,255,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 26, margin: "0 auto 16px",
-            }}>🐾</div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.white, marginBottom: 12 }}>
-              Um mix pensado para a sua loja vender mais
-            </h2>
-            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.88)", lineHeight: 1.65, textAlign: "left" }}>
-              <p style={{ marginBottom: 14 }}>
-                Reponha o estoque com praticidade: linha de fabricação própria, kits prontos para revenda e produtos de giro para pet shops, banho e tosa.
-              </p>
-              <p style={{ marginBottom: 14 }}>
-                Coleiras, peitorais, guias, laços, bandanas e camas para ampliar seu mix, manter os itens essenciais disponíveis e buscar uma margem mais saudável em cada venda.
-              </p>
-              <p style={{ marginBottom: 0 }}>
-                Conte com entrega em todo o Brasil calculada pelo CEP, campanhas de frete selecionadas, até 3x sem juros no cartão ou desconto no Pix, e atendimento profissional de segunda a sexta. Monte seu pedido com kits de entrada, reposições e itens de alta saída em um só lugar.
-              </p>
-            </div>
+      {/* STATS */}
+      <section style={{ background: PALETTE.white, borderBottom: `1px solid ${PALETTE.gray200}`, marginTop: 32 }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+          <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 0 }}>
+            <Suspense fallback={
+              <>
+                {STATS_STATIC.map((s) => (
+                  <div key={s.label} style={{ padding: "16px 12px", textAlign: "center" }}>
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>{s.icon}</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: PALETTE.pink, marginBottom: 2 }}>{s.value}</div>
+                    <div style={{ fontSize: 12, color: PALETTE.gray600, fontWeight: 600 }}>{s.label}</div>
+                  </div>
+                ))}
+              </>
+            }>
+              <StatsCount channel={clientConfig.catalogChannel} />
+            </Suspense>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* FOOTER */}
-        <footer style={{ background: PALETTE.navyDark, padding: "24px 24px calc(24px + env(safe-area-inset-bottom))" }}>
-          <div className="footer-row">
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
-              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
-            </div>
-            <a href="https://www.mypetbrasil.com" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>Conheça o site oficial: www.mypetbrasil.com</a>
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
+      {/* CTA BANNER */}
+      <section style={{
+        background: `linear-gradient(135deg, ${PALETTE.pink} 0%, ${PALETTE.pinkDark} 100%)`,
+        padding: "44px 24px",
+      }}>
+        <div style={{ maxWidth: 760, margin: "0 auto", textAlign: "center" }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: "50%",
+            background: "rgba(255,255,255,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26, margin: "0 auto 16px",
+          }}>🐾</div>
+          <h2 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.white, marginBottom: 12 }}>
+            Um mix pensado para a sua loja vender mais
+          </h2>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,0.88)", lineHeight: 1.65, textAlign: "left" }}>
+            <p style={{ marginBottom: 14 }}>
+              Reponha o estoque com praticidade: linha de fabricação própria, kits prontos para revenda e produtos de giro para pet shops, banho e tosa.
+            </p>
+            <p style={{ marginBottom: 14 }}>
+              Coleiras, peitorais, guias, laços, bandanas e camas para ampliar seu mix, manter os itens essenciais disponíveis e buscar uma margem mais saudável em cada venda.
+            </p>
+            <p style={{ marginBottom: 0 }}>
+              Conte com entrega em todo o Brasil calculada pelo CEP, campanhas de frete selecionadas, até 3x sem juros no cartão ou desconto no Pix, e atendimento profissional de segunda a sexta. Monte seu pedido com kits de entrada, reposições e itens de alta saída em um só lugar.
+            </p>
           </div>
-        </footer>
+        </div>
+      </section>
 
-      </LeadGateProvider>
+      {/* FOOTER */}
+      <footer style={{ background: PALETTE.navyDark, padding: "24px 24px calc(24px + env(safe-area-inset-bottom))" }}>
+        <div className="footer-row">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
+            <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
+          </div>
+          <a href="https://www.mypetbrasil.com" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>Conheça o site oficial: www.mypetbrasil.com</a>
+          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
+        </div>
+      </footer>
     </div>
   );
 }

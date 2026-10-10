@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { getChannelCategories } from "@mypet/core/catalog";
-import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { LoginForm } from "@mypet/core/components/login-form";
 import { clientConfig } from "@/client.config";
@@ -66,23 +65,21 @@ export default async function EntrarPage({
         .form-submit:disabled { opacity: 0.6; cursor: default; }
       `}</style>
 
-      <LeadGateProvider>
-        <SiteNav categories={categories} />
-        <main style={{ maxWidth: 440, margin: "0 auto", padding: "60px 24px" }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 8, textAlign: "center" }}>
-            Entrar
-          </h1>
-          <p style={{ fontSize: 14, color: PALETTE.gray600, textAlign: "center", marginBottom: 24 }}>
-            Informe seu e-mail para receber um link de acesso — sem senha.
-          </p>
-          <Suspense fallback={null}>
-            <EntrarFormSection searchParams={searchParams} />
-          </Suspense>
-          <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 20, fontSize: 13, color: PALETTE.gray400 }}>
-            ← Voltar ao catálogo
-          </Link>
-        </main>
-      </LeadGateProvider>
+      <SiteNav categories={categories} />
+      <main style={{ maxWidth: 440, margin: "0 auto", padding: "60px 24px" }}>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 8, textAlign: "center" }}>
+          Entrar
+        </h1>
+        <p style={{ fontSize: 14, color: PALETTE.gray600, textAlign: "center", marginBottom: 24 }}>
+          Informe seu e-mail para receber um link de acesso — sem senha.
+        </p>
+        <Suspense fallback={null}>
+          <EntrarFormSection searchParams={searchParams} />
+        </Suspense>
+        <Link href="/" style={{ display: "block", textAlign: "center", marginTop: 20, fontSize: 13, color: PALETTE.gray400 }}>
+          ← Voltar ao catálogo
+        </Link>
+      </main>
     </div>
   );
 }

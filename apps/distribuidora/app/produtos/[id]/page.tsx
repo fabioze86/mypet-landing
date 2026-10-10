@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { getProductById, getCategories, getChannelCategories } from "@mypet/core/catalog";
 import { getCategoryPath } from "@mypet/core/catalog-utils";
-import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
@@ -162,35 +161,33 @@ export default async function ProductPage({
         }
       `}</style>
 
-      <LeadGateProvider>
-        {/* NAV */}
-        <SiteNav categories={categories} />
+      {/* NAV */}
+      <SiteNav categories={categories} />
 
-        {/* CONTAINER */}
-        <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
-          {/* VOLTAR */}
-          <Link href="/" className="back-link">
-            ← Voltar ao catálogo
-          </Link>
+      {/* CONTAINER */}
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
+        {/* VOLTAR */}
+        <Link href="/" className="back-link">
+          ← Voltar ao catálogo
+        </Link>
 
-          {/* GRID */}
-          <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando produto…</p>}>
-            <ProductDetail params={params} />
-          </Suspense>
-        </main>
+        {/* GRID */}
+        <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando produto…</p>}>
+          <ProductDetail params={params} />
+        </Suspense>
+      </main>
 
-        {/* FOOTER */}
-        <footer style={{ background: PALETTE.navyDark, padding: "32px 24px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
-              <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
-            </div>
-            <a href="https://www.mypetbrasil.com" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>Conheça o site oficial: www.mypetbrasil.com</a>
-            <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
+      {/* FOOTER */}
+      <footer style={{ background: PALETTE.navyDark, padding: "32px 24px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 20 }}>{clientConfig.logo.emoji}</span>
+            <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: 14 }}>{clientConfig.name} — {clientConfig.tagline}</span>
           </div>
-        </footer>
-      </LeadGateProvider>
+          <a href="https://www.mypetbrasil.com" target="_blank" rel="noopener" style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 700, textDecoration: "underline" }}>Conheça o site oficial: www.mypetbrasil.com</a>
+          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>© 2026 {clientConfig.name}. Todos os direitos reservados.</span>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { getChannelCategories } from "@mypet/core/catalog";
-import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { clientConfig } from "@/client.config";
 import { CotacaoContent } from "./cotacao-content";
@@ -89,21 +88,19 @@ export default async function CotacaoPage() {
         .form-submit:disabled { opacity: 0.6; cursor: default; }
       `}</style>
 
-      <LeadGateProvider>
-        <SiteNav categories={categories} />
+      <SiteNav categories={categories} />
 
-        <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>
-          <Link href="/" className="back-link">
-            ← Voltar ao catálogo
-          </Link>
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px 80px" }}>
+        <Link href="/" className="back-link">
+          ← Voltar ao catálogo
+        </Link>
 
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.navy, marginBottom: 24 }}>
-            Seu pedido
-          </h1>
+        <h1 style={{ fontSize: 28, fontWeight: 900, color: PALETTE.navy, marginBottom: 24 }}>
+          Seu pedido
+        </h1>
 
-          <CotacaoContent palette={PALETTE} />
-        </main>
-      </LeadGateProvider>
+        <CotacaoContent palette={PALETTE} />
+      </main>
     </div>
   );
 }

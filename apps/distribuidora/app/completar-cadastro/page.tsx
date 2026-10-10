@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { CompleteSignupForm } from "@mypet/core/components/complete-signup-form";
 import { getChannelCategories } from "@mypet/core/catalog";
@@ -75,20 +74,18 @@ export default async function CompletarCadastroPage({
         .form-submit:disabled { opacity: 0.6; cursor: default; }
       `}</style>
 
-      <LeadGateProvider>
-        <SiteNav categories={categories} />
-        <main style={{ maxWidth: 440, margin: "0 auto", padding: "60px 24px" }}>
-          <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 8, textAlign: "center" }}>
-            Complete seu cadastro
-          </h1>
-          <p style={{ fontSize: 14, color: PALETTE.gray600, textAlign: "center", marginBottom: 24 }}>
-            É seu primeiro acesso — precisamos de mais alguns dados.
-          </p>
-          <Suspense fallback={null}>
-            <CompleteSignupFormSection searchParams={searchParams} />
-          </Suspense>
-        </main>
-      </LeadGateProvider>
+      <SiteNav categories={categories} />
+      <main style={{ maxWidth: 440, margin: "0 auto", padding: "60px 24px" }}>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 8, textAlign: "center" }}>
+          Complete seu cadastro
+        </h1>
+        <p style={{ fontSize: 14, color: PALETTE.gray600, textAlign: "center", marginBottom: 24 }}>
+          É seu primeiro acesso — precisamos de mais alguns dados.
+        </p>
+        <Suspense fallback={null}>
+          <CompleteSignupFormSection searchParams={searchParams} />
+        </Suspense>
+      </main>
     </div>
   );
 }

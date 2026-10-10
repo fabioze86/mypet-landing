@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@mypet/core/supabase-server";
 import { getOrdersByBuyer } from "@mypet/core/orders-server";
 import { getChannelCategories } from "@mypet/core/catalog";
-import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { clientConfig } from "@/client.config";
 
@@ -75,12 +74,10 @@ export default async function PedidosPage() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
       `}</style>
 
-      <LeadGateProvider>
-        <SiteNav categories={categories} />
-        <Suspense fallback={null}>
-          <PedidosContent />
-        </Suspense>
-      </LeadGateProvider>
+      <SiteNav categories={categories} />
+      <Suspense fallback={null}>
+        <PedidosContent />
+      </Suspense>
     </div>
   );
 }
