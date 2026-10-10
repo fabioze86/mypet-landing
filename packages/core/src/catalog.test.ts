@@ -38,6 +38,7 @@ vi.mock("./supabase", () => {
       builder.eq = accumulate("eq");
       builder.neq = chain("neq");
       builder.ilike = chain("ilike");
+      builder.or = chain("or");
       builder.in = accumulate("in");
       builder.order = chain("order");
       builder.not = chain("not");
@@ -118,7 +119,7 @@ const selectContains = (needle: string) =>
 describe("queryCatalog", () => {
   it("aplica busca, marca, canal, paginação e mapeia os itens", async () => {
     const result = await queryCatalog({ q: "ração", brand: "NAPI", page: 2, channel: "mypetbrasil" });
-    expect(calls["ilike"]).toEqual(["name", "%ração%"]);
+    expect(calls["or"]).toEqual(["name.ilike.*ração*,brand.ilike.*ração*,reference.ilike.*ração*"]);
     expect(calls["eq"]).toContainEqual(["status", "active"]);
     expect(calls["neq"]).toEqual(["product_role", "variant"]);
     expect(calls["eq"]).toContainEqual(["brand", "NAPI"]);

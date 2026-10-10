@@ -12,6 +12,7 @@ import {
   collectCategorySubtreeIds,
   getCategoryPath,
   topLevelCategories,
+  buildSearchOrFilter,
   type RawProductRow,
   type CategoryNode,
 } from "./catalog-utils";
@@ -210,5 +211,18 @@ describe("filterCategoriesWithProducts", () => {
     const visible = filter?.(SAMPLE_CATEGORIES, ["c3"]) ?? SAMPLE_CATEGORIES;
 
     expect(visible.map((category) => category.id)).toEqual(["c1", "c2", "c3"]);
+  });
+});
+
+describe("buildSearchOrFilter", () => {
+  it("casa nome, marca e referência", () => {
+    expect(buildSearchOrFilter("areia")).toBe(
+      "name.ilike.*areia*,brand.ilike.*areia*,reference.ilike.*areia*",
+    );
+  });
+  it("sanitiza caracteres que quebram o filtro or()", () => {
+    expect(buildSearchOrFilter("  a,b(c)  ")).toBe(
+      "name.ilike.*a b c*,brand.ilike.*a b c*,reference.ilike.*a b c*",
+    );
   });
 });

@@ -10,6 +10,7 @@ import {
   mainImage,
   pickActiveBadge,
   filterCategoriesWithProducts,
+  buildSearchOrFilter,
   type CatalogResult,
   type RawProductRow,
   type RawVariantRow,
@@ -96,7 +97,7 @@ export async function queryCatalog(params: {
     .eq("product_channel_prices.channel", channel)
     .order("name", { ascending: true });
 
-  if (q) query = query.ilike("name", `%${q}%`);
+  if (q) query = query.or(buildSearchOrFilter(q));
   if (brand) query = query.eq("brand", brand);
   if (Array.isArray(categoryId)) {
     if (categoryId.length > 0) query = query.in("category_id", categoryId);
