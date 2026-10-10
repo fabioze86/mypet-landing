@@ -28,7 +28,6 @@ export function SearchBar({
           borderRadius: 100,
           border: `1.5px solid ${palette.gray200}`,
           fontSize: 14,
-          outline: "none",
           color: palette.gray800,
           background: palette.white,
         }}

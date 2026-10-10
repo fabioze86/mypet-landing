@@ -15,7 +15,8 @@ async function Resultados({
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
   const sp = await searchParams;
-  const q = (sp.q ?? "").trim();
+  const rawQ = Array.isArray(sp.q) ? sp.q[0] : sp.q;
+  const q = (rawQ ?? "").trim();
   return (
     <section style={{ maxWidth: 1200, margin: "0 auto", padding: "16px 24px 80px" }}>
       <h1
