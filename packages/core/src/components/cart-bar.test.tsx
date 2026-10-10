@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { createElement } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatPrice } from "../catalog-utils";
 import type { CartItem } from "../cart";
@@ -76,6 +76,21 @@ describe("CartBar", () => {
     const link = screen.getByRole("link");
     expect(link).toHaveTextContent("1 item");
     expect(link).not.toHaveTextContent("R$");
+  });
+
+  it("com onAction vira botão com o rótulo e chama a ação", () => {
+    cart.items = [{ ...base, id: "a", name: "A", qty: 2, unitPrice: 10 }];
+    const onAction = vi.fn();
+    render(createElement(ClientConfigProvider, { config }, createElement(CartBar, { onAction, actionLabel: "Fechar pedido", secondaryHref: "/cotacao", secondaryLabel: "ver itens" })));
+    fireEvent.click(screen.getByRole("button", { name: "Fechar pedido →" }));
+    expect(onAction).toHaveBeenCalledOnce();
+    expect(screen.getByRole("link", { name: "ver itens" })).toHaveAttribute("href", "/cotacao");
+  });
+
+  it("busy mostra Enviando… e desabilita", () => {
+    cart.items = [{ ...base, id: "a", name: "A", qty: 1, unitPrice: 10 }];
+    render(createElement(ClientConfigProvider, { config }, createElement(CartBar, { onAction: vi.fn(), busy: true })));
+    expect(screen.getByRole("button", { name: "Enviando…" })).toBeDisabled();
   });
 });
 
