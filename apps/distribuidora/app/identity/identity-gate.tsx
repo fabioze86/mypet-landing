@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { Suspense, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useClientConfig } from "@mypet/core/theme";
 import { cartTotals } from "@mypet/core/cart";
 import { useCart } from "@mypet/core/components/cart-provider";
@@ -20,24 +21,36 @@ export function useIdentityGate(): IdentityGateValue {
 // Pop-up obrigatório no 1º "Adicionar" (sem identidade e carrinho com itens): sem
 // intersticial ao entrar, que o Google veria sempre. Reabre por "Alterar dados".
 export function IdentityGateProvider({ children }: { children: React.ReactNode }) {
-  const identity = useIdentity();
-  const { cart } = useCart();
   const [editing, setEditing] = useState(false);
-  const required = identity === null && cartTotals(cart.items).totalUnits > 0;
-  const open = required || editing;
+  const openIdentityGate = useCallback(() => setEditing(true), []);
+  const value = useMemo(() => ({ openIdentityGate }), [openIdentityGate]);
 
+  // O contexto fica fora do Suspense: usePathname não pode suspender os children.
   return (
-    <IdentityGateContext.Provider value={{ openIdentityGate: () => setEditing(true) }}>
+    <IdentityGateContext.Provider value={value}>
       {children}
-      {open && (
-        <IdentityDialog
-          initial={identity ?? null}
-          dismissible={!required}
-          onDone={() => setEditing(false)}
-        />
-      )}
+      <Suspense fallback={null}>
+        <IdentityGateHost editing={editing} onDone={() => setEditing(false)} />
+      </Suspense>
     </IdentityGateContext.Provider>
   );
+}
+
+// Páginas de conta/pedidos não recebem o pop-up obrigatório.
+const EXEMPT_PREFIXES = ["/entrar", "/completar-cadastro", "/pedidos"];
+
+function isExempt(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return EXEMPT_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+function IdentityGateHost({ editing, onDone }: { editing: boolean; onDone: () => void }) {
+  const identity = useIdentity();
+  const { cart } = useCart();
+  const pathname = usePathname();
+  const required = identity === null && cartTotals(cart.items).totalUnits > 0 && !isExempt(pathname);
+  if (!required && !editing) return null;
+  return <IdentityDialog initial={identity ?? null} dismissible={!required} onDone={onDone} />;
 }
 
 function IdentityDialog({

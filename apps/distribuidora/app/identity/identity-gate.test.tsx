@@ -6,6 +6,9 @@ import { clientConfig } from "@/client.config";
 import { __resetIdentityForTests, readIdentity, saveIdentity } from "./identity-store";
 import { IdentityGateProvider, useIdentityGate } from "./identity-gate";
 
+const nav = vi.hoisted(() => ({ pathname: "/" }));
+vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
+
 const fetchMock = vi.fn();
 
 function Reopen() {
@@ -51,6 +54,7 @@ function fill(nome: string, whatsapp: string, cnpj = "") {
 }
 
 beforeEach(() => {
+  nav.pathname = "/";
   localStorage.clear();
   __resetIdentityForTests();
   fetchMock.mockReset();
@@ -76,6 +80,22 @@ describe("IdentityGateProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Adicionar" }));
     expect(screen.getByRole("dialog", { name: "Quase lá!" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Fechar" })).toBeNull();
+  });
+
+  it.each(["/entrar", "/completar-cadastro", "/pedidos", "/pedidos/123"])("não abre em %s mesmo com carrinho cheio", (path) => {
+    nav.pathname = path;
+    seedCart();
+    renderGate();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("Alterar dados funciona em página isenta", () => {
+    nav.pathname = "/entrar";
+    seedCart();
+    renderGate();
+    fireEvent.click(screen.getByRole("button", { name: "Alterar dados" }));
+    expect(screen.getByRole("dialog", { name: "Quase lá!" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fechar" })).toBeInTheDocument();
   });
 
   it("não abre quando já identificado", () => {
