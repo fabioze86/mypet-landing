@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { requireAdminSession } from "@/lib/auth";
 import { formatPrice } from "@mypet/core/catalog-utils";
+import { formatWhatsapp } from "@mypet/core/br-validation";
 import { ORDER_STATUSES, ORDERS_SELECT, itemUnitPrice, orderCustomer, orderTotal, type OrderRow } from "@/lib/orders";
 import { updateOrderStatus } from "./actions";
 import { OrderStatusSelect } from "./order-status-select";
@@ -77,7 +78,7 @@ async function PedidosContent({
                   <td className="px-4 py-3">{new Date(order.created_at).toLocaleDateString("pt-BR")}</td>
                   <td className="px-4 py-3">
                     {customer.nome} — {customer.empresa}
-                    <div className="text-xs text-slate-400">{customer.whatsapp}</div>
+                    <div className="text-xs text-slate-400">{formatWhatsapp(customer.whatsapp)}</div>
                     {customer.cnpj && <div className="text-xs text-slate-400">CNPJ: {customer.cnpj}</div>}
                     {!order.buyers && <div className="text-xs text-slate-400">Sem cadastro</div>}
                   </td>

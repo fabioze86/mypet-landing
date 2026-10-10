@@ -1,3 +1,4 @@
+import { formatWhatsapp } from "@mypet/core/br-validation";
 import { requireAdminSession } from "@/lib/auth";
 import { LEAD_STATUSES, type LeadRow } from "@/lib/leads";
 import { updateLeadStatus } from "./actions";
@@ -81,7 +82,7 @@ export default async function ClientesPage({
             <tr key={lead.id} className="border-b border-slate-100">
               <td className="px-4 py-3">{lead.nome}</td>
               <td className="px-4 py-3">{lead.empresa ?? "—"}</td>
-              <td className="px-4 py-3">{lead.whatsapp}</td>
+              <td className="px-4 py-3">{formatWhatsapp(lead.whatsapp)}</td>
               <td className="px-4 py-3">{CHANNEL_LABEL[lead.channel] ?? lead.channel}</td>
               <td className="px-4 py-3">
                 <StatusSelect leadId={lead.id} currentStatus={lead.status} action={updateLeadStatus} />
