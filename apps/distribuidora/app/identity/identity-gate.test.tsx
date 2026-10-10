@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientConfigProvider } from "@mypet/core/theme";
+import { CartProvider, useCart } from "@mypet/core/components/cart-provider";
 import { clientConfig } from "@/client.config";
 import { __resetIdentityForTests, readIdentity, saveIdentity } from "./identity-store";
 import { IdentityGateProvider, useIdentityGate } from "./identity-gate";
@@ -12,13 +13,32 @@ function Reopen() {
   return <button onClick={openIdentityGate}>Alterar dados</button>;
 }
 
+function AddToCart() {
+  const { addItem } = useCart();
+  return (
+    <button onClick={() => addItem({ id: "p1", name: "Coleira", sku: "COL-1", brand: null, img: "/c.jpg", unitPrice: 10 }, 1)}>
+      Adicionar
+    </button>
+  );
+}
+
+function seedCart() {
+  localStorage.setItem(
+    "mypet_cart",
+    JSON.stringify({ items: [{ id: "p1", name: "Coleira", sku: "COL-1", brand: null, img: "/c.jpg", qty: 1, unitPrice: 10 }] }),
+  );
+}
+
 function renderGate() {
   return render(
     <ClientConfigProvider config={clientConfig}>
-      <IdentityGateProvider>
-        <p>conteúdo</p>
-        <Reopen />
-      </IdentityGateProvider>
+      <CartProvider>
+        <IdentityGateProvider>
+          <p>conteúdo</p>
+          <Reopen />
+          <AddToCart />
+        </IdentityGateProvider>
+      </CartProvider>
     </ClientConfigProvider>,
   );
 }
@@ -27,7 +47,7 @@ function fill(nome: string, whatsapp: string, cnpj = "") {
   fireEvent.change(screen.getByLabelText("Seu nome"), { target: { value: nome } });
   fireEvent.change(screen.getByLabelText("WhatsApp com DDD"), { target: { value: whatsapp } });
   fireEvent.change(screen.getByLabelText("CNPJ (opcional)"), { target: { value: cnpj } });
-  fireEvent.click(screen.getByRole("button", { name: "Acessar catálogo" }));
+  fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
 }
 
 beforeEach(() => {
@@ -38,19 +58,35 @@ beforeEach(() => {
 });
 
 describe("IdentityGateProvider", () => {
-  it("abre sem identidade e não tem botão de fechar", () => {
+  it("sem identidade e carrinho vazio: navegação livre, sem pop-up", () => {
     renderGate();
-    expect(screen.getByRole("dialog", { name: "Acesse o catálogo" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("sem identidade e com item no carrinho: abre obrigatório, sem botão de fechar", () => {
+    seedCart();
+    renderGate();
+    expect(screen.getByRole("dialog", { name: "Quase lá!" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Fechar" })).toBeNull();
+  });
+
+  it("abre no primeiro Adicionar depois de montado", () => {
+    renderGate();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Adicionar" }));
+    expect(screen.getByRole("dialog", { name: "Quase lá!" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Fechar" })).toBeNull();
   });
 
   it("não abre quando já identificado", () => {
     saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    seedCart();
     renderGate();
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("mascara os campos ao digitar", () => {
+    seedCart();
     renderGate();
     fireEvent.change(screen.getByLabelText("WhatsApp com DDD"), { target: { value: "11999998888" } });
     fireEvent.change(screen.getByLabelText("CNPJ (opcional)"), { target: { value: "11222333000181" } });
@@ -59,6 +95,7 @@ describe("IdentityGateProvider", () => {
   });
 
   it("valida no cliente sem chamar a API", () => {
+    seedCart();
     renderGate();
     fill("Ana", "123");
     expect(screen.getByText("Informe o WhatsApp com DDD.")).toBeInTheDocument();
@@ -67,6 +104,7 @@ describe("IdentityGateProvider", () => {
 
   it("grava o lead, salva a identidade e fecha", async () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ ok: true }) });
+    seedCart();
     renderGate();
     await act(async () => fill("Ana", "(11) 99999-8888", "11.222.333/0001-81"));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -77,6 +115,7 @@ describe("IdentityGateProvider", () => {
   it("libera o site quando a API falha", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     fetchMock.mockRejectedValue(new Error("offline"));
+    seedCart();
     renderGate();
     await act(async () => fill("Ana", "11999998888"));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -85,6 +124,7 @@ describe("IdentityGateProvider", () => {
 
   it("400 do servidor mostra o erro e mantém aberto", async () => {
     fetchMock.mockResolvedValue({ ok: false, status: 400, json: async () => ({ field: "cnpj", error: "CNPJ inválido." }) });
+    seedCart();
     renderGate();
     await act(async () => fill("Ana", "11999998888"));
     expect(await screen.findByText("CNPJ inválido.")).toBeInTheDocument();

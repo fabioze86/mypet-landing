@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useClientConfig } from "@mypet/core/theme";
+import { cartTotals } from "@mypet/core/cart";
+import { useCart } from "@mypet/core/components/cart-provider";
 import { formatCnpj, formatWhatsapp, validateIdentity, type Identity, type IdentityField } from "@mypet/core/br-validation";
 import { saveIdentity, useIdentity } from "./identity-store";
 import { submitIdentityLead } from "./submit-identity-lead";
@@ -15,11 +17,13 @@ export function useIdentityGate(): IdentityGateValue {
   return ctx;
 }
 
-// Pop-up obrigatório na primeira visita (sem identidade salva); reabre por "Alterar dados".
+// Pop-up obrigatório no 1º "Adicionar" (sem identidade e carrinho com itens): sem
+// intersticial ao entrar, que o Google veria sempre. Reabre por "Alterar dados".
 export function IdentityGateProvider({ children }: { children: React.ReactNode }) {
   const identity = useIdentity();
+  const { cart } = useCart();
   const [editing, setEditing] = useState(false);
-  const required = identity === null;
+  const required = identity === null && cartTotals(cart.items).totalUnits > 0;
   const open = required || editing;
 
   return (
@@ -45,7 +49,7 @@ function IdentityDialog({
   dismissible: boolean;
   onDone: () => void;
 }) {
-  const { palette, name } = useClientConfig();
+  const { palette } = useClientConfig();
   const [form, setForm] = useState({
     nome: initial?.nome ?? "",
     whatsapp: initial ? formatWhatsapp(initial.whatsapp) : "",
@@ -115,10 +119,10 @@ function IdentityDialog({
         style={{ background: palette.white, borderRadius: 20, padding: "28px 22px", width: "100%", maxWidth: 420, fontFamily: "var(--font-nunito), sans-serif" }}
       >
         <h2 id="identity-gate-title" style={{ fontSize: 22, fontWeight: 900, color: palette.navy, marginBottom: 6 }}>
-          Acesse o catálogo
+          Quase lá!
         </h2>
         <p style={{ fontSize: 14, color: palette.gray600, marginBottom: 20 }}>
-          Informe seus dados para ver os produtos da {name} e fechar pedidos pelo WhatsApp.
+          Informe seus dados para montar o pedido e fechar pelo WhatsApp.
         </p>
         <form onSubmit={handleSubmit} noValidate>
           <div style={{ marginBottom: 14 }}>
@@ -173,7 +177,7 @@ function IdentityDialog({
               opacity: sending ? 0.7 : 1,
             }}
           >
-            {sending ? "Salvando…" : "Acessar catálogo"}
+            {sending ? "Salvando…" : "Continuar"}
           </button>
         </form>
         {dismissible && (

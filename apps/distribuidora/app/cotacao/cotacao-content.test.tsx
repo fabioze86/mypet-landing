@@ -61,7 +61,7 @@ describe("CotacaoContent (revisão)", () => {
   it("Alterar dados reabre o pop-up", () => {
     renderPage();
     fireEvent.click(screen.getByRole("button", { name: "Alterar dados" }));
-    expect(screen.getByRole("dialog", { name: "Acesse o catálogo" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Quase lá!" })).toBeInTheDocument();
   });
 
   it("Fechar pedido pelo WhatsApp grava e abre o WhatsApp", async () => {
