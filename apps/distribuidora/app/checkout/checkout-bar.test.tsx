@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider, useCart } from "@mypet/core/components/cart-provider";
@@ -17,6 +17,7 @@ vi.mock("../cotacao/register-order", async (importOriginal) => ({
 import { __resetIdentityForTests, saveIdentity } from "../identity/identity-store";
 import { IdentityGateProvider } from "../identity/identity-gate";
 import { CheckoutBar } from "./checkout-bar";
+import { useCheckout } from "./use-checkout";
 
 const P1 = "11111111-1111-4111-8111-111111111111";
 
@@ -168,5 +169,30 @@ describe("CheckoutBar", () => {
       </ClientConfigProvider>,
     );
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("se algo lançar no meio, libera o envio (try/finally)", async () => {
+    saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    mocks.registerOrder.mockRejectedValueOnce(new Error("boom"));
+    const { result } = renderHook(() => useCheckout(), {
+      wrapper: ({ children }) => (
+        <ClientConfigProvider config={clientConfig}>
+          <CartProvider>
+            <IdentityGateProvider>{children}</IdentityGateProvider>
+          </CartProvider>
+        </ClientConfigProvider>
+      ),
+    });
+    await act(async () => {
+      await expect(result.current.checkout()).rejects.toThrow("boom");
+    });
+    expect(result.current.sending).toBe(false);
+
+    vi.spyOn(window, "open").mockReturnValue(null);
+    mocks.registerOrder.mockResolvedValueOnce({ kind: "failed" });
+    await act(async () => {
+      await result.current.checkout();
+    });
+    expect(mocks.registerOrder).toHaveBeenCalledTimes(2);
   });
 });

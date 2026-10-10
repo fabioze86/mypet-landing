@@ -34,34 +34,35 @@ export function useCheckout() {
     inFlight.current = true;
     setSending(true);
     setFailure(null);
+    try {
+      const result = await registerOrder(cart.items, {
+        nome: identity.nome,
+        whatsapp: identity.whatsapp,
+        ...(identity.cnpj ? { cnpj: identity.cnpj } : {}),
+      });
+      if (result.kind === "invalid") {
+        setFailure({ error: result.error, signature: cartSignature });
+        return;
+      }
 
-    const result = await registerOrder(cart.items, {
-      nome: identity.nome,
-      whatsapp: identity.whatsapp,
-      ...(identity.cnpj ? { cnpj: identity.cnpj } : {}),
-    });
-    if (result.kind === "invalid") {
-      setFailure({ error: result.error, signature: cartSignature });
+      const items = result.kind === "ok" ? applyServerPrices(cart.items, result.prices, result.unavailableIds) : cart.items;
+      const message = buildQuoteMessage(
+        items,
+        {
+          nome: identity.nome,
+          whatsapp: formatWhatsapp(identity.whatsapp),
+          ...(identity.cnpj ? { cnpj: formatCnpj(identity.cnpj) } : {}),
+        },
+        ORDER_INTRO,
+        { showPrices: true, orderNumber: result.kind === "ok" ? result.number : undefined },
+      );
+      window.open(buildWhatsAppLink(WHATSAPP_NUMBER, message), "_self");
+      clear();
+    } finally {
+      // Sempre libera a barra, mesmo se algo lançar no meio.
       setSending(false);
       inFlight.current = false;
-      return;
     }
-
-    const items = result.kind === "ok" ? applyServerPrices(cart.items, result.prices, result.unavailableIds) : cart.items;
-    const message = buildQuoteMessage(
-      items,
-      {
-        nome: identity.nome,
-        whatsapp: formatWhatsapp(identity.whatsapp),
-        ...(identity.cnpj ? { cnpj: formatCnpj(identity.cnpj) } : {}),
-      },
-      ORDER_INTRO,
-      { showPrices: true, orderNumber: result.kind === "ok" ? result.number : undefined },
-    );
-    window.open(buildWhatsAppLink(WHATSAPP_NUMBER, message), "_self");
-    clear();
-    setSending(false);
-    inFlight.current = false;
   }, [cart.items, cartSignature, clear, identity, openIdentityGate]);
 
   return { checkout, sending, error };
