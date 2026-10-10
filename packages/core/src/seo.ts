@@ -9,6 +9,10 @@ export type PdpProductForSeo = {
   img: string;
   productRole: "simple" | "parent" | "variant";
   variants: ProductVariant[];
+  sku?: string;
+  barcode?: string | null;
+  salePrice?: number | null;
+  stockQty?: number | null;
 };
 
 export function canonicalUrl(domain: string, path: string): string {
@@ -46,17 +50,40 @@ export function productGroupJsonLd(product: PdpProductForSeo, domain: string) {
   };
 }
 
-export function productJsonLd(product: PdpProductForSeo, domain: string) {
+export function productJsonLd(
+  product: PdpProductForSeo,
+  domain: string,
+  opts?: { offers?: boolean },
+) {
   if (product.productRole === "parent") return null;
+  const url = canonicalUrl(domain, `/produtos/${product.id}`);
+  const withOffers = opts?.offers && product.salePrice != null;
+  const offers = withOffers
+    ? {
+        offers: {
+          "@type": "Offer",
+          url,
+          priceCurrency: "BRL",
+          price: product.salePrice!.toFixed(2),
+          availability:
+            (product.stockQty ?? 0) > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition",
+        },
+      }
+    : {};
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    sku: product.id,
+    sku: product.sku || product.id,
+    ...(product.barcode ? { gtin13: product.barcode } : {}),
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
     ...(product.description ? { description: product.description } : {}),
     image: absoluteImageUrl(domain, product.img),
-    url: canonicalUrl(domain, `/produtos/${product.id}`),
+    url,
+    ...offers,
   };
 }
 

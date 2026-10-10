@@ -55,6 +55,47 @@ describe("productJsonLd", () => {
   });
 });
 
+describe("productJsonLd offers", () => {
+  const base: PdpProductForSeo = {
+    id: "p1",
+    name: "Produto",
+    brand: "NAPI",
+    description: "desc",
+    img: "https://img/p1.jpg",
+    productRole: "simple",
+    variants: [],
+  };
+  it("sem offers por padrão (compat)", () => {
+    const r = productJsonLd(base, "d.com") as Record<string, unknown>;
+    expect(r.offers).toBeUndefined();
+  });
+  it("inclui offers InStock quando offers:true, com preço e estoque", () => {
+    const r = productJsonLd(
+      { ...base, sku: "REF1", barcode: "7890000000001", salePrice: 94.9, stockQty: 5 },
+      "d.com",
+      { offers: true },
+    ) as Record<string, any>;
+    expect(r.sku).toBe("REF1");
+    expect(r.gtin13).toBe("7890000000001");
+    expect(r.offers.priceCurrency).toBe("BRL");
+    expect(r.offers.price).toBe("94.90");
+    expect(r.offers.availability).toBe("https://schema.org/InStock");
+    expect(r.offers.itemCondition).toBe("https://schema.org/NewCondition");
+  });
+  it("OutOfStock quando estoque 0", () => {
+    const r = productJsonLd(
+      { ...base, salePrice: 10, stockQty: 0 },
+      "d.com",
+      { offers: true },
+    ) as Record<string, any>;
+    expect(r.offers.availability).toBe("https://schema.org/OutOfStock");
+  });
+  it("sem preço não emite offers mesmo com offers:true", () => {
+    const r = productJsonLd({ ...base, stockQty: 5 }, "d.com", { offers: true }) as Record<string, unknown>;
+    expect(r.offers).toBeUndefined();
+  });
+});
+
 describe("breadcrumbJsonLd", () => {
   it("monta itemListElement com posição 1-indexada", () => {
     const items = [
