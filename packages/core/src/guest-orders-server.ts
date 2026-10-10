@@ -5,17 +5,16 @@ import { createServerSupabaseClient } from "./supabase-server";
 import { salePriceFromChannelPrices, type RawChannelPrice } from "./catalog-utils";
 import type { Channel } from "./channels";
 import { rejectForeignRequest } from "./request-guards";
+import { validateIdentity } from "./br-validation";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_LINES = 200;
 const MAX_QTY = 9999;
 const MAX_NAME = 120;
-const MAX_WHATSAPP = 30;
-const MAX_CNPJ = 30;
 const ORDER_ERROR = "Não foi possível registrar seu pedido. Tente novamente em instantes.";
 
 type GuestOrderLine = { id: string; qty: number };
-type GuestCustomer = { nome: string; empresa: string; whatsapp: string; cnpj: string | null };
+type GuestCustomer = { nome: string; empresa: string | null; whatsapp: string; cnpj: string | null };
 type GuestOrder = { items: GuestOrderLine[]; customer: GuestCustomer };
 
 function text(value: unknown): string {
@@ -26,17 +25,10 @@ function parseGuestOrder(body: unknown): { ok: true; value: GuestOrder } | { ok:
   if (!body || typeof body !== "object") return { ok: false, error: "Pedido inválido." };
   const { items, customer } = body as { items?: unknown; customer?: Record<string, unknown> };
 
-  const nome = text(customer?.nome);
+  const identity = validateIdentity(customer ?? {});
+  if (!identity.ok) return { ok: false, error: identity.error };
   const empresa = text(customer?.empresa);
-  const whatsapp = text(customer?.whatsapp);
-  if (!nome || !empresa || !whatsapp) {
-    return { ok: false, error: "Preencha nome, empresa e WhatsApp." };
-  }
-
-  const cnpj = text(customer?.cnpj);
-  if (nome.length > MAX_NAME || empresa.length > MAX_NAME || whatsapp.length > MAX_WHATSAPP || cnpj.length > MAX_CNPJ) {
-    return { ok: false, error: "Algum dado está longo demais." };
-  }
+  if (empresa.length > MAX_NAME) return { ok: false, error: "Algum dado está longo demais." };
 
   if (!Array.isArray(items) || items.length === 0) return { ok: false, error: "O carrinho está vazio." };
   if (items.length > MAX_LINES) return { ok: false, error: "O pedido tem itens demais." };
@@ -57,7 +49,7 @@ function parseGuestOrder(body: unknown): { ok: true; value: GuestOrder } | { ok:
     ok: true,
     value: {
       items: [...qtyById].map(([id, qty]) => ({ id, qty })),
-      customer: { nome, empresa, whatsapp, cnpj: cnpj || null },
+      customer: { ...identity.value, empresa: empresa || null },
     },
   };
 }

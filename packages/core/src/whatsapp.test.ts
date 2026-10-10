@@ -45,6 +45,15 @@ describe("buildQuoteMessage", () => {
   });
 });
 
+describe("buildQuoteMessage sem empresa", () => {
+  it("sem empresa omite a linha Empresa", () => {
+    const items: CartItem[] = [{ id: "p1", name: "COLEIRA", sku: "", brand: null, img: "/c.jpg", qty: 1 }];
+    const message = buildQuoteMessage(items, { nome: "Ana", whatsapp: "(11) 99999-8888" });
+    expect(message).not.toContain("Empresa:");
+    expect(message).toContain("Nome: Ana\nWhatsApp: (11) 99999-8888");
+  });
+});
+
 describe("buildWhatsAppLink", () => {
   it("monta a URL codificando a mensagem", () => {
     const link = buildWhatsAppLink("5511999999999", "Olá! Teste com acento é ção");

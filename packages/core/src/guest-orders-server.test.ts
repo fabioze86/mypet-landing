@@ -79,7 +79,7 @@ import { createOrdersPostHandler } from "./guest-orders-server";
 
 const P1 = "11111111-1111-4111-8111-111111111111";
 const P2 = "22222222-2222-4222-8222-222222222222";
-const customer = { nome: "João", empresa: "Pet X", whatsapp: "11999999999", cnpj: "" };
+const customer = { nome: "João", whatsapp: "11999999999", cnpj: "" };
 
 function fakeRequest(body: unknown, headers: Record<string, string> = {}): NextRequest {
   const all = new Headers({ "content-type": "application/json", host: "loja.exemplo.com", ...headers });
@@ -247,8 +247,8 @@ describe("createOrdersPostHandler — gravação", () => {
       channel: "distribuidora",
       status: "pendente",
       customer_name: "João",
-      customer_company: "Pet X",
-      customer_whatsapp: "11999999999",
+      customer_company: null,
+      customer_whatsapp: "5511999999999",
       customer_cnpj: null,
     });
     expect(state.itemsInsert).toHaveBeenCalledWith([
@@ -258,8 +258,24 @@ describe("createOrdersPostHandler — gravação", () => {
   });
 
   it("grava o cnpj preenchido", async () => {
-    await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer: { ...customer, cnpj: "12.345.678/0001-90" } }));
-    expect(state.orderInsert).toHaveBeenCalledWith(expect.objectContaining({ customer_cnpj: "12.345.678/0001-90" }));
+    await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer: { ...customer, cnpj: "11.222.333/0001-81" } }));
+    expect(state.orderInsert).toHaveBeenCalledWith(expect.objectContaining({ customer_cnpj: "11222333000181" }));
+  });
+
+  it("aceita empresa quando enviada", async () => {
+    await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer: { ...customer, empresa: "Pet X" } }));
+    expect(state.orderInsert).toHaveBeenCalledWith(expect.objectContaining({ customer_company: "Pet X" }));
+  });
+
+  it("400 com CNPJ inválido", async () => {
+    const res = await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer: { ...customer, cnpj: "123" } }));
+    expect(res.status).toBe(400);
+    expect(state.orderInsert).not.toHaveBeenCalled();
+  });
+
+  it("400 com WhatsApp inválido", async () => {
+    const res = await POST(fakeRequest({ items: [{ id: P1, qty: 1 }], customer: { ...customer, whatsapp: "123" } }));
+    expect(res.status).toBe(400);
   });
 
   it("soma linhas repetidas do mesmo produto", async () => {

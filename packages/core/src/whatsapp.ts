@@ -3,7 +3,7 @@ import { formatPrice } from "./catalog-utils";
 
 export type QuoteCustomer = {
   nome: string;
-  empresa: string;
+  empresa?: string;
   whatsapp: string;
   cnpj?: string;
 };
@@ -42,11 +42,9 @@ export function buildQuoteMessage(
   const showPrices = options.showPrices === true;
   const itemLines = items.map((item) => quoteItemLine(item, showPrices)).join("\n");
 
-  const customerLines = [
-    `Nome: ${customer.nome}`,
-    `Empresa: ${customer.empresa}`,
-    `WhatsApp: ${customer.whatsapp}`,
-  ];
+  const customerLines = [`Nome: ${customer.nome}`];
+  if (customer.empresa) customerLines.push(`Empresa: ${customer.empresa}`);
+  customerLines.push(`WhatsApp: ${customer.whatsapp}`);
   if (customer.cnpj) customerLines.push(`CNPJ: ${customer.cnpj}`);
 
   return [
