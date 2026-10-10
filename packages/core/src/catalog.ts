@@ -216,7 +216,7 @@ export async function getProductById(id: string, channel: string) {
   const { data, error } = await supabase
     .from("v_produtos_resolvidos")
     .select(
-      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_role, parent_product_id, variant_axis, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)"
+      "id, name, reference, brand, description, barcode, weight_kg, width_cm, height_cm, length_cm, product_role, parent_product_id, variant_axis, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel, description, meta_description, keywords, title)"
     )
     .eq("id", id)
     .eq("status", "active")
@@ -229,9 +229,18 @@ export async function getProductById(id: string, channel: string) {
     return null;
   }
 
-  const variants = data.product_role === "parent" ? await getVariantsByParentId(id, channel) : [];
+  const [variants, stockRes] = await Promise.all([
+    data.product_role === "parent" ? getVariantsByParentId(id, channel) : Promise.resolve([]),
+    supabase.from("products").select("stock_qty").eq("id", id).maybeSingle(),
+  ]);
+  const stockQty = (stockRes.data?.stock_qty as number | null) ?? null;
 
   const channelSalePrice = salePriceFromChannelPrices(data.product_channel_prices);
+  const link = Array.isArray(data.product_channel_links)
+    ? data.product_channel_links[0]
+    : (data.product_channel_links as
+        | { description: string | null; meta_description: string | null; keywords: string | null }
+        | null);
   const product = {
     id: data.id,
     name: data.name,
@@ -253,6 +262,10 @@ export async function getProductById(id: string, channel: string) {
     category: (data.categories as unknown as RawCategory | null) ?? null,
     variantAxis: (data.variant_axis as VariantAxisEntry[] | null) ?? [],
     variants,
+    channelDescription: (link?.description as string | null) ?? null,
+    channelMetaDescription: (link?.meta_description as string | null) ?? null,
+    channelKeywords: (link?.keywords as string | null) ?? null,
+    stockQty,
   };
 
   return product;

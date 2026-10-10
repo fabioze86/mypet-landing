@@ -18,6 +18,7 @@ type QueryBuilder = {
   not: (...args: unknown[]) => QueryBuilder;
   range: (...args: unknown[]) => Promise<{ data: unknown[]; count: number; error: null }>;
   single: () => Promise<{ data: unknown; error: null }>;
+  maybeSingle: () => Promise<{ data: unknown; error: null }>;
   then: (resolve: (value: { data: unknown[]; error: null }) => void) => void;
 };
 
@@ -61,6 +62,7 @@ vi.mock("./supabase", () => {
           error: null,
         });
       };
+      builder.maybeSingle = () => Promise.resolve({ data: { stock_qty: 7 }, error: null });
       builder.single = () => Promise.resolve({
         data: {
           id: "p1",
