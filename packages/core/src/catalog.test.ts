@@ -82,6 +82,9 @@ vi.mock("./supabase", () => {
           categories: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
           product_assets: [{ url: "https://img/1", type: "main_image" }],
           product_badges: null,
+          product_channel_links: [
+            { channel: "mypetbrasil", description: "Desc canal", meta_description: "Meta canal", keywords: "k1, k2" },
+          ],
         },
         error: null,
       });
@@ -198,6 +201,10 @@ describe("getProductById", () => {
       categoryId: "cat-1",
       category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
     });
+    expect(product?.channelDescription).toBe("Desc canal");
+    expect(product?.channelMetaDescription).toBe("Meta canal");
+    expect(product?.channelKeywords).toBe("k1, k2");
+    expect(product?.stockQty).toBe(7);
   });
 });
 

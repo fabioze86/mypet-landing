@@ -233,6 +233,7 @@ export async function getProductById(id: string, channel: string) {
     data.product_role === "parent" ? getVariantsByParentId(id, channel) : Promise.resolve([]),
     supabase.from("products").select("stock_qty").eq("id", id).maybeSingle(),
   ]);
+  if (stockRes.error) console.error("[catalog] erro ao buscar estoque:", stockRes.error.message);
   const stockQty = (stockRes.data?.stock_qty as number | null) ?? null;
 
   const channelSalePrice = salePriceFromChannelPrices(data.product_channel_prices);
