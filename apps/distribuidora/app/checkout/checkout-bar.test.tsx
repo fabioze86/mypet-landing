@@ -2,9 +2,11 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
+import { formatPrice } from "@mypet/core/catalog-utils";
 import { clientConfig } from "@/client.config";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
+const nav = vi.hoisted(() => ({ pathname: "/" }));
+vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
 
 const mocks = vi.hoisted(() => ({ registerOrder: vi.fn() }));
 vi.mock("../cotacao/register-order", async (importOriginal) => ({
@@ -30,7 +32,12 @@ function renderBar() {
   );
 }
 
+function openedMessage(open: { mock: { calls: unknown[][] } }) {
+  return decodeURIComponent(String(open.mock.calls[0][0]).split("?text=")[1]);
+}
+
 beforeEach(() => {
+  nav.pathname = "/";
   localStorage.clear();
   __resetIdentityForTests();
   vi.restoreAllMocks();
@@ -84,5 +91,41 @@ describe("CheckoutBar", () => {
     fireEvent.click(button);
     await act(async () => resolve({ kind: "failed" }));
     expect(mocks.registerOrder).toHaveBeenCalledOnce();
+  });
+
+  it("falha ao gravar (fail-open): abre o WhatsApp sem número, com preço do carrinho, e limpa o carrinho", async () => {
+    saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    mocks.registerOrder.mockResolvedValue({ kind: "failed" });
+    renderBar();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Fechar pedido →" })));
+    expect(open).toHaveBeenCalledOnce();
+    expect(open.mock.calls[0][1]).toBe("_self");
+    const message = openedMessage(open);
+    expect(message).not.toContain("Pedido #");
+    expect(message).toContain(formatPrice(10)!);
+    expect(JSON.parse(localStorage.getItem("mypet_cart")!).items).toEqual([]);
+    expect(screen.queryByRole("button", { name: "Fechar pedido →" })).toBeNull();
+  });
+
+  it("item indisponível no servidor vira 'a consultar'", async () => {
+    saveIdentity({ nome: "Ana", whatsapp: "5511999998888", cnpj: null });
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    mocks.registerOrder.mockResolvedValue({ kind: "ok", number: 1042, prices: new Map([[P1, 10]]), unavailableIds: [P1] });
+    renderBar();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Fechar pedido →" })));
+    expect(openedMessage(open)).toContain("Coleira (SKU COL-1) — Qtd: 2 (a consultar)");
+  });
+
+  it("sem identidade: Fechar pedido abre o pop-up e não grava", async () => {
+    // Em página isenta o pop-up obrigatório não abre sozinho; o toque é que o abre.
+    nav.pathname = "/pedidos";
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    renderBar();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Fechar pedido →" })));
+    expect(screen.getByRole("dialog", { name: "Quase lá!" })).toBeInTheDocument();
+    expect(mocks.registerOrder).not.toHaveBeenCalled();
+    expect(open).not.toHaveBeenCalled();
   });
 });
