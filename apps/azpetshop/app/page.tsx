@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { SearchBar } from "@mypet/core/components/search-bar";
 import { getCategories } from "@mypet/core/catalog";
 import { clientConfig } from "@/client.config";
 import { canonicalUrl } from "@mypet/core/seo";
@@ -273,6 +274,7 @@ export default async function Home({
       `}</style>
 
       <SiteNav categories={categories} audienceLabel={null} />
+      <SearchBar action="/busca" />
 
       <Hero />
       <PromoStrip />

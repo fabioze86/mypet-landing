@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getCategories } from "@mypet/core/catalog";
 import { CategoryListing } from "@mypet/core/components/category-listing";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { SearchBar } from "@mypet/core/components/search-bar";
 import type { Palette } from "@mypet/core/theme";
 import { clientConfig } from "@/client.config";
 import { canonicalUrl } from "@mypet/core/seo";
@@ -58,6 +59,7 @@ export default async function CategoriaPage({
         }
       `}</style>
       <SiteNav categories={categories} audienceLabel={null} />
+      <SearchBar action="/busca" />
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px" }}>
         <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando…</p>}>
           <CategoryListingResolved

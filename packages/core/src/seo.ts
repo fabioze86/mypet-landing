@@ -9,6 +9,10 @@ export type PdpProductForSeo = {
   img: string;
   productRole: "simple" | "parent" | "variant";
   variants: ProductVariant[];
+  sku?: string;
+  barcode?: string | null;
+  salePrice?: number | null;
+  stockQty?: number | null;
 };
 
 export function canonicalUrl(domain: string, path: string): string {
@@ -46,17 +50,40 @@ export function productGroupJsonLd(product: PdpProductForSeo, domain: string) {
   };
 }
 
-export function productJsonLd(product: PdpProductForSeo, domain: string) {
+export function productJsonLd(
+  product: PdpProductForSeo,
+  domain: string,
+  opts?: { offers?: boolean },
+) {
   if (product.productRole === "parent") return null;
+  const url = canonicalUrl(domain, `/produtos/${product.id}`);
+  const withOffers = opts?.offers && product.salePrice != null;
+  const offers = withOffers
+    ? {
+        offers: {
+          "@type": "Offer",
+          url,
+          priceCurrency: "BRL",
+          price: product.salePrice!.toFixed(2),
+          availability:
+            (product.stockQty ?? 0) > 0
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+          itemCondition: "https://schema.org/NewCondition",
+        },
+      }
+    : {};
   return {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    sku: product.id,
+    sku: product.sku || product.id,
+    ...(product.barcode ? { gtin13: product.barcode } : {}),
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand } } : {}),
     ...(product.description ? { description: product.description } : {}),
     image: absoluteImageUrl(domain, product.img),
-    url: canonicalUrl(domain, `/produtos/${product.id}`),
+    url,
+    ...offers,
   };
 }
 
@@ -88,4 +115,19 @@ export function organizationJsonLd(config: ClientConfig) {
     url: canonicalUrl(config.domain, ""),
     logo: canonicalUrl(config.domain, "/opengraph-image"),
   };
+}
+
+/** Normaliza uma descrição (remove HTML, colapsa espaços) e trunca para meta description. */
+export function metaDescription(
+  raw: string | null | undefined,
+  fallback: string,
+  maxLen = 155,
+): string {
+  const text = (raw ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!text) return fallback;
+  if (text.length <= maxLen) return text;
+  const truncated = text.slice(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(" ");
+  const base = lastSpace > 40 ? truncated.slice(0, lastSpace) : truncated;
+  return `${base.trim()}…`;
 }

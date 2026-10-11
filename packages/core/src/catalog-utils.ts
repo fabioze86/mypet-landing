@@ -252,3 +252,9 @@ export function filterCategoriesWithProducts(
 
   return categories.filter((category) => visibleIds.has(category.id));
 }
+
+/** Monta o filtro PostgREST `or` para busca textual por nome, marca e referência. */
+export function buildSearchOrFilter(term: string): string {
+  const safe = term.replace(/[,()*:]/g, " ").replace(/\s+/g, " ").trim();
+  return `name.ilike.*${safe}*,brand.ilike.*${safe}*,reference.ilike.*${safe}*`;
+}

@@ -18,6 +18,7 @@ type QueryBuilder = {
   not: (...args: unknown[]) => QueryBuilder;
   range: (...args: unknown[]) => Promise<{ data: unknown[]; count: number; error: null }>;
   single: () => Promise<{ data: unknown; error: null }>;
+  maybeSingle: () => Promise<{ data: unknown; error: null }>;
   then: (resolve: (value: { data: unknown[]; error: null }) => void) => void;
 };
 
@@ -38,6 +39,7 @@ vi.mock("./supabase", () => {
       builder.eq = accumulate("eq");
       builder.neq = chain("neq");
       builder.ilike = chain("ilike");
+      builder.or = chain("or");
       builder.in = accumulate("in");
       builder.order = chain("order");
       builder.not = chain("not");
@@ -60,6 +62,7 @@ vi.mock("./supabase", () => {
           error: null,
         });
       };
+      builder.maybeSingle = () => Promise.resolve({ data: { stock_qty: 7 }, error: null });
       builder.single = () => Promise.resolve({
         data: {
           id: "p1",
@@ -79,6 +82,9 @@ vi.mock("./supabase", () => {
           categories: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
           product_assets: [{ url: "https://img/1", type: "main_image" }],
           product_badges: null,
+          product_channel_links: [
+            { channel: "mypetbrasil", description: "Desc canal", meta_description: "Meta canal", keywords: "k1, k2" },
+          ],
         },
         error: null,
       });
@@ -118,7 +124,7 @@ const selectContains = (needle: string) =>
 describe("queryCatalog", () => {
   it("aplica busca, marca, canal, paginação e mapeia os itens", async () => {
     const result = await queryCatalog({ q: "ração", brand: "NAPI", page: 2, channel: "mypetbrasil" });
-    expect(calls["ilike"]).toEqual(["name", "%ração%"]);
+    expect(calls["or"]).toEqual(["name.ilike.*ração*,brand.ilike.*ração*,reference.ilike.*ração*"]);
     expect(calls["eq"]).toContainEqual(["status", "active"]);
     expect(calls["neq"]).toEqual(["product_role", "variant"]);
     expect(calls["eq"]).toContainEqual(["brand", "NAPI"]);
@@ -195,6 +201,10 @@ describe("getProductById", () => {
       categoryId: "cat-1",
       category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
     });
+    expect(product?.channelDescription).toBe("Desc canal");
+    expect(product?.channelMetaDescription).toBe("Meta canal");
+    expect(product?.channelKeywords).toBe("k1, k2");
+    expect(product?.stockQty).toBe(7);
   });
 });
 
