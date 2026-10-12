@@ -6,6 +6,8 @@ vi.mock("ai", async (importOriginal) => {
   return { ...actual, generateText: vi.fn() };
 });
 
+vi.mock("./ai-usage-limits", () => ({ consumeAiQuota: vi.fn(async () => null) }));
+
 vi.mock("./catalog", () => ({ getCatalog: vi.fn(), getCategories: vi.fn() }));
 
 vi.mock("./help-center", () => ({ getArtigosAjudaPublicados: vi.fn() }));
@@ -24,6 +26,7 @@ vi.mock("./ai-provider", async (importOriginal) => {
 import { generateText } from "ai";
 import { getArtigosAjudaPublicados } from "./help-center";
 import { getAssistantModelChain } from "./ai-provider";
+import { consumeAiQuota } from "./ai-usage-limits";
 import { createSupportAssistantHandler, buildSupportSystemPrompt } from "./support-assistant-server";
 
 const faq = [{ q: "Qual é o pedido mínimo?", a: "R$ 250,00 na capital de SP." }];
@@ -119,5 +122,39 @@ describe("POST /api/duvidas", () => {
   it("rejeita corpo que não é JSON", async () => {
     const res = await POST(makeRequest(validBody, { "content-type": "text/plain" }));
     expect(res.status).toBe(415);
+  });
+
+  it("não chama a IA quando a cota estoura", async () => {
+    (consumeAiQuota as Mock).mockResolvedValueOnce(
+      Response.json({ ok: false, error: { code: "RATE_LIMITED", message: "Aguarde." } }, { status: 429 }),
+    );
+    const res = await POST(makeRequest(validBody));
+    expect(res.status).toBe(429);
+    expect(generateText).not.toHaveBeenCalled();
+    expect(consumeAiQuota).toHaveBeenCalledWith("duvidas", "mypetbrasil", expect.any(Headers));
+  });
+
+  it("não consome cota com pedido inválido", async () => {
+    await POST(makeRequest({ channel: "mypetbrasil", messages: [] }));
+    expect(consumeAiQuota).not.toHaveBeenCalled();
+  });
+
+  it("recusa mensagem acima de 500 caracteres", async () => {
+    const res = await POST(makeRequest({ channel: "mypetbrasil", messages: [{ role: "user", content: "a".repeat(501) }] }));
+    expect(res.status).toBe(400);
+  });
+
+  it("recusa conversa com mais de 12 mensagens", async () => {
+    const messages = Array.from({ length: 13 }, (_, i) => ({ role: i % 2 ? "assistant" : "user", content: "oi" }));
+    const res = await POST(makeRequest({ channel: "mypetbrasil", messages }));
+    expect(res.status).toBe(400);
+  });
+
+  it("limita tokens de saída e tempo da chamada", async () => {
+    (generateText as Mock).mockResolvedValue({ text: "ok" });
+    await POST(makeRequest(validBody));
+    const call = (generateText as Mock).mock.calls[0][0];
+    expect(call.maxOutputTokens).toBe(500);
+    expect(call.abortSignal).toBeInstanceOf(AbortSignal);
   });
 });

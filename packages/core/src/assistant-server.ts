@@ -4,12 +4,27 @@ import { z } from "zod";
 import { getCatalog, getCategories } from "./catalog";
 import { collectCategorySubtreeIds, getCategoryPath, type CategoryNode } from "./catalog-utils";
 import { getAssistantModelChain, isAssistantProvider, isSelectableModel, type AssistantModelOverride } from "./ai-provider";
+import { consumeAiQuota } from "./ai-usage-limits";
+import { rejectForeignRequest } from "./request-guards";
 import type { CatalogProduct } from "./catalog-utils";
 
 export type AssistantMessage = { role: "user" | "assistant"; content: string };
 
-const MAX_MESSAGES = 20;
-const MAX_MESSAGE_LENGTH = 2000;
+export type ConversationLimits = {
+  maxMessages: number;
+  maxMessageLength: number;
+  maxTotalChars: number;
+};
+
+const DEFAULT_CONVERSATION_LIMITS: ConversationLimits = {
+  maxMessages: 20,
+  maxMessageLength: 2000,
+  maxTotalChars: 12000,
+};
+
+// Teto por chamada ao provedor: resposta curta e sem pendurar a função.
+export const AI_REQUEST_TIMEOUT_MS = 25_000;
+const MAX_REPLY_TOKENS = 800;
 
 type ProfileGuess = {
   perfil: "pet_shop" | "banho_tosa" | "outro";
@@ -26,6 +41,7 @@ type ParsedAssistantRequest = {
 
 export function parseAssistantRequest(
   body: unknown,
+  limits: ConversationLimits = DEFAULT_CONVERSATION_LIMITS,
 ): { ok: true; value: ParsedAssistantRequest } | { ok: false; message: string } {
   if (!body || typeof body !== "object") {
     return { ok: false, message: "Corpo da requisição inválido." };
@@ -38,7 +54,7 @@ export function parseAssistantRequest(
   if (!Array.isArray(messages) || messages.length === 0) {
     return { ok: false, message: "Nenhuma mensagem informada." };
   }
-  if (messages.length > MAX_MESSAGES) {
+  if (messages.length > limits.maxMessages) {
     return { ok: false, message: "Conversa muito longa. Recarregue a página para recomeçar." };
   }
 
@@ -54,10 +70,18 @@ export function parseAssistantRequest(
     if (typeof content !== "string" || !content.trim()) {
       return { ok: false, message: "Mensagem vazia." };
     }
-    if (content.length > MAX_MESSAGE_LENGTH) {
+    if (content.length > limits.maxMessageLength) {
       return { ok: false, message: "Mensagem muito longa. Tente ser mais direto." };
     }
     parsedMessages.push({ role, content });
+  }
+
+  if (parsedMessages[parsedMessages.length - 1].role !== "user") {
+    return { ok: false, message: "A última mensagem precisa ser sua." };
+  }
+  const totalChars = parsedMessages.reduce((sum, m) => sum + m.content.length, 0);
+  if (totalChars > limits.maxTotalChars) {
+    return { ok: false, message: "Conversa muito longa. Recarregue a página para recomeçar." };
   }
 
   let modelOverride: AssistantModelOverride | undefined;
@@ -187,6 +211,9 @@ export function buildAssistantTools({
 
 export function createAssistantHandler(expectedChannel: string) {
   return async function POST(req: NextRequest) {
+    const foreign = rejectForeignRequest(req);
+    if (foreign) return foreign;
+
     const body = await req.json().catch(() => null);
     const parsed = parseAssistantRequest(body);
 
@@ -203,6 +230,9 @@ export function createAssistantHandler(expectedChannel: string) {
         { status: 403 },
       );
     }
+
+    const limited = await consumeAiQuota("assistant", expectedChannel, req.headers);
+    if (limited) return limited;
 
     const adminKeyEnv = process.env.ADMIN_AI_OVERRIDE_KEY;
     const override =
@@ -232,6 +262,8 @@ async function handleAssistantRequest(
         messages,
         tools,
         stopWhen: stepCountIs(5),
+        maxOutputTokens: MAX_REPLY_TOKENS,
+        abortSignal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
       });
       usedProvider = candidate.provider;
       break;

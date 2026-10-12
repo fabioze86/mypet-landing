@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { generateText } from "ai";
 import { getAssistantModelChain } from "./ai-provider";
-import { parseAssistantRequest } from "./assistant-server";
+import { AI_REQUEST_TIMEOUT_MS, parseAssistantRequest, type ConversationLimits } from "./assistant-server";
+import { consumeAiQuota } from "./ai-usage-limits";
 import { getArtigosAjudaPublicados, type ArtigoAjuda } from "./help-center";
 import { rejectForeignRequest } from "./request-guards";
 
@@ -20,6 +21,12 @@ export type SupportAssistantConfig = {
 const MAX_ARTICLE_CHARS = 4000;
 const MAX_KNOWLEDGE_CHARS = 60000;
 const MAX_REPLY_TOKENS = 500;
+// Mesmo limite do campo na UI (faq-assistant.tsx, maxLength=500).
+const CONVERSATION_LIMITS: ConversationLimits = {
+  maxMessages: 12,
+  maxMessageLength: 500,
+  maxTotalChars: 6000,
+};
 
 function formatKnowledge(faq: readonly SupportFaqItem[], artigos: ArtigoAjuda[]): string {
   const parts = faq.map((item) => `### ${item.q}\n${item.a}`);
@@ -63,7 +70,7 @@ export function createSupportAssistantHandler(config: SupportAssistantConfig) {
     if (foreign) return foreign;
 
     const body = await req.json().catch(() => null);
-    const parsed = parseAssistantRequest(body);
+    const parsed = parseAssistantRequest(body, CONVERSATION_LIMITS);
 
     if (!parsed.ok) {
       return Response.json(
@@ -79,6 +86,9 @@ export function createSupportAssistantHandler(config: SupportAssistantConfig) {
       );
     }
 
+    const limited = await consumeAiQuota("duvidas", config.channel, req.headers);
+    if (limited) return limited;
+
     const artigos = await getArtigosAjudaPublicados();
     const system = buildSupportSystemPrompt(config.siteName, config.faq, artigos);
 
@@ -89,6 +99,7 @@ export function createSupportAssistantHandler(config: SupportAssistantConfig) {
           system,
           messages: parsed.value.messages,
           maxOutputTokens: MAX_REPLY_TOKENS,
+          abortSignal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
         });
         return Response.json({ ok: true, reply: result.text });
       } catch (error) {
