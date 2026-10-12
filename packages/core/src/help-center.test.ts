@@ -38,6 +38,7 @@ import {
   getArtigoAjudaPublicadoBySlug,
   getCategoriaIdsComArtigosPublicados,
   buscarArtigosAjudaPublicados,
+  getArtigosAjudaPublicados,
 } from "./help-center";
 
 beforeEach(() => {
@@ -117,5 +118,16 @@ describe("buscarArtigosAjudaPublicados", () => {
     expect(calls["or"]).toEqual([
       "titulo.ilike.%caixa \\(transporte\\)\\, pequena%,resumo.ilike.%caixa \\(transporte\\)\\, pequena%,palavras_chave.ilike.%caixa \\(transporte\\)\\, pequena%,corpo_markdown.ilike.%caixa \\(transporte\\)\\, pequena%",
     ]);
+  });
+});
+
+describe("getArtigosAjudaPublicados", () => {
+  it("lista só os publicados, em ordem, com o corpo", async () => {
+    rows = [{ id: "a1", categoria_id: "c1", slug: "frete", titulo: "Frete", resumo: "r", ordem: 0, corpo_markdown: "Corpo" }];
+    const result = await getArtigosAjudaPublicados();
+    expect(calls["from"]).toEqual(["artigos_ajuda"]);
+    expect(calls["eq"]).toContainEqual(["status", "publicado"]);
+    expect(calls["order"]).toEqual(["ordem", { ascending: true }]);
+    expect(result[0]).toMatchObject({ slug: "frete", corpoMarkdown: "Corpo" });
   });
 });

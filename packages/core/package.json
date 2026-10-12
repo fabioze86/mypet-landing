@@ -38,6 +38,8 @@
     "./querystring": "./src/querystring.ts",
     "./seo": "./src/seo.ts",
     "./supabase": "./src/supabase.ts",
+    "./support-assistant-client": "./src/support-assistant-client.ts",
+    "./support-assistant-server": "./src/support-assistant-server.ts",
     "./supabase-browser": "./src/supabase-browser.ts",
     "./supabase-server": "./src/supabase-server.ts",
     "./theme": "./src/theme.tsx",

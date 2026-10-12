@@ -45,8 +45,15 @@ describe("LandingPage", () => {
   });
 
   it("não mostra o formulário de criação de acesso na home", async () => {
-    const { container } = render(await LandingPage());
-    expect(container.querySelector("form")).toBeNull();
+    render(await LandingPage());
+    expect(screen.queryByLabelText(/cnpj/i)).toBeNull();
+  });
+
+  it("mostra o assistente de dúvidas com IA dentro do FAQ", async () => {
+    render(await LandingPage());
+    const faq = screen.getByRole("region", { name: "Perguntas frequentes" });
+    expect(within(faq).getByRole("region", { name: /pergunte aqui/i })).toBeInTheDocument();
+    expect(within(faq).getByLabelText("Sua dúvida")).toBeInTheDocument();
   });
 
   it("a vitrine do catálogo mostra categorias sem qualquer preço", async () => {
