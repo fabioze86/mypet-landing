@@ -254,6 +254,29 @@ de ambiente, não de código. O perfil do visitante (pet shop revendedor vs.
 banho-e-tosa) é inferido pela IA a cada conversa e vive apenas em memória
 da sessão do navegador; nada é persistido no Supabase nesta fase.
 
+### Assistente de dúvidas e limites de uso da IA
+
+A home do mypet tem um box de dúvidas (`FaqAssistant`) que chama
+`POST /api/duvidas` (`packages/core/src/support-assistant-server.ts`). Ele
+responde só com o FAQ comercial e os artigos publicados da Central de Ajuda,
+sem ferramentas nem catálogo.
+
+`/api/assistant` e `/api/duvidas` são públicos e cada chamada custa tokens,
+então ambos passam por `packages/core/src/ai-usage-limits.ts`:
+
+- só JSON da própria origem (`rejectForeignRequest`);
+- tamanho da conversa (nº de mensagens, caracteres por mensagem e total);
+- `maxOutputTokens` e timeout de 25s por chamada ao provedor;
+- cota no Supabase (função `consume_ai_quota`, migration
+  `20261012120000_ai_usage_limits.sql`): rajada por IP (10 min), diária por IP
+  e teto diário global por canal. Sem conseguir contar, a rota responde 503 e
+  não chama a IA (falha fechada) — por isso exige `SUPABASE_SERVICE_ROLE_KEY`.
+
+Padrões (por escopo, em `ai-usage-limits.ts`) ajustáveis por env:
+`AI_LIMIT_{DUVIDAS|ASSISTANT}_IP_BURST`, `AI_LIMIT_{...}_IP_DAILY`,
+`AI_LIMIT_{...}_GLOBAL_DAILY`. `AI_ASSISTANTS_DISABLED=true` desliga os dois
+assistentes na hora (503), sem deploy de código.
+
 ## 8. Qualidade e operação
 
 ### Validação mínima por mudança

@@ -190,3 +190,23 @@ export async function buscarArtigosAjudaPublicados(termo: string): Promise<Artig
   }
   return ((data as RawArtigoResumo[] | null) ?? []).map(mapArtigoResumo);
 }
+
+/** Todos os artigos publicados com corpo — base de conhecimento do assistente de dúvidas. */
+export async function getArtigosAjudaPublicados(): Promise<ArtigoAjuda[]> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("central-ajuda");
+
+  const supabase = getHubClient();
+  const { data, error } = await supabase
+    .from("artigos_ajuda")
+    .select(ARTIGO_SELECT)
+    .eq("status", "publicado")
+    .order("ordem", { ascending: true });
+
+  if (error) {
+    console.error("[help-center] erro ao listar artigos publicados:", error.message);
+    return [];
+  }
+  return ((data as RawArtigo[] | null) ?? []).map(mapArtigo);
+}

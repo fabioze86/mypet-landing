@@ -6,6 +6,8 @@ vi.mock("ai", async (importOriginal) => {
   return { ...actual, generateText: vi.fn() };
 });
 
+vi.mock("./ai-usage-limits", () => ({ consumeAiQuota: vi.fn(async () => null) }));
+
 vi.mock("./catalog", () => ({
   getCatalog: vi.fn(),
   getCategories: vi.fn(),
@@ -25,11 +27,13 @@ vi.mock("./ai-provider", async (importOriginal) => {
 import { generateText } from "ai";
 import { getCatalog, getCategories } from "./catalog";
 import { getAssistantModelChain } from "./ai-provider";
+import { consumeAiQuota } from "./ai-usage-limits";
 import { createAssistantHandler, parseAssistantRequest, buildAssistantTools } from "./assistant-server";
 
 function makeRequest(body: unknown): NextRequest {
   return new NextRequest("http://localhost/api/assistant", {
     method: "POST",
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
 }
@@ -492,5 +496,64 @@ describe("POST /api/assistant", () => {
 
     const json = await res.json();
     expect(json.products.map((p: { id: string }) => p.id)).toEqual(["p1"]);
+  });
+});
+
+describe("limites de uso do /api/assistant", () => {
+  const body = { channel: "mypetbrasil", messages: [{ role: "user", content: "oi" }] };
+
+  it("não chama a IA quando a cota estoura", async () => {
+    (getCategories as Mock).mockResolvedValue([]);
+    (consumeAiQuota as Mock).mockResolvedValueOnce(
+      Response.json({ ok: false, error: { code: "RATE_LIMITED", message: "Aguarde." } }, { status: 429 }),
+    );
+    const res = await POST(makeRequest(body));
+    expect(res.status).toBe(429);
+    expect(generateText).not.toHaveBeenCalled();
+    expect(consumeAiQuota).toHaveBeenCalledWith("assistant", "mypetbrasil", expect.any(Headers));
+  });
+
+  it("rejeita requisição de outra origem", async () => {
+    const req = new NextRequest("http://localhost/api/assistant", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: "https://evil.example" },
+      body: JSON.stringify(body),
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(403);
+    expect(consumeAiQuota).not.toHaveBeenCalled();
+  });
+
+  it("limita tokens de saída e tempo da chamada", async () => {
+    (getCategories as Mock).mockResolvedValue([]);
+    (generateText as Mock).mockResolvedValue({ text: "ok" });
+    await POST(makeRequest(body));
+    const call = (generateText as Mock).mock.calls[0][0];
+    expect(call.maxOutputTokens).toBe(800);
+    expect(call.abortSignal).toBeInstanceOf(AbortSignal);
+  });
+});
+
+describe("parseAssistantRequest — limites de conversa", () => {
+  it("exige que a última mensagem seja do usuário", () => {
+    const result = parseAssistantRequest({
+      channel: "mypetbrasil",
+      messages: [
+        { role: "user", content: "oi" },
+        { role: "assistant", content: "olá" },
+      ],
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it("recusa conversa acima do total de caracteres", () => {
+    const messages = Array.from({ length: 7 }, (_, i) => ({ role: i % 2 ? "assistant" : "user", content: "a".repeat(1900) }));
+    expect(parseAssistantRequest({ channel: "mypetbrasil", messages }).ok).toBe(false);
+  });
+
+  it("aceita limites customizados", () => {
+    const limits = { maxMessages: 2, maxMessageLength: 10, maxTotalChars: 100 };
+    expect(parseAssistantRequest({ channel: "c", messages: [{ role: "user", content: "a".repeat(11) }] }, limits).ok).toBe(false);
+    expect(parseAssistantRequest({ channel: "c", messages: [{ role: "user", content: "curta" }] }, limits).ok).toBe(true);
   });
 });

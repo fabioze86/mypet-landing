@@ -154,6 +154,26 @@ export const LANDING_STYLES = `
   .pa-faq details[open] summary::after { content: "\\2212"; }
   .pa-faq details p { margin: 0; padding: 0 4px 18px; color: var(--pa-muted); font-size: 14px; line-height: 1.6; }
 
+  /* assistente de dúvidas (IA) */
+  .pa-ai { margin-top: 40px; padding: 24px; background: #fff; border: 1px solid var(--pa-line); border-radius: var(--pa-r-card); }
+  .pa-ai-title { margin: 0 0 4px; font-family: var(--pa-geist); font-weight: 700; font-size: 18px; color: var(--pa-navy); }
+  .pa-ai-lead { margin: 0 0 16px; color: var(--pa-muted); font-size: 14px; line-height: 1.5; }
+  .pa-ai-log { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; margin-bottom: 12px; }
+  .pa-ai-msg { margin: 0; align-self: flex-start; max-width: 85%; padding: 10px 14px; border-radius: 14px; background: var(--pa-bg-soft); color: var(--pa-ink); font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+  .pa-ai-msg a { color: var(--pa-green-dark); font-weight: 600; }
+  .pa-ai-msg--user { align-self: flex-end; background: var(--pa-navy); color: #fff; }
+  .pa-ai-msg--muted { color: var(--pa-muted); }
+  .pa-ai-form { display: flex; gap: 8px; }
+  .pa-ai-form input { flex: 1; min-width: 0; padding: 12px 14px; border: 1.5px solid var(--pa-line); border-radius: var(--pa-r-input); font: inherit; font-size: 15px; color: var(--pa-ink); }
+  .pa-ai-form input:focus { outline: none; border-color: var(--pa-green); }
+  .pa-ai-form .pa-btn { padding: 10px 20px; }
+  .pa-ai-form .pa-btn:disabled { opacity: .6; cursor: default; }
+  .pa-ai-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .pa-ai-chips button { font: inherit; font-size: 13px; color: var(--pa-navy); background: var(--pa-navy-soft); border: 0; border-radius: var(--pa-r-pill); padding: 6px 12px; cursor: pointer; }
+  .pa-ai-chips button:hover { background: var(--pa-line); }
+  .pa-ai-error { margin: 12px 0 0; color: #B42318; font-size: 14px; }
+  @media (max-width: 460px) { .pa-ai { padding: 18px; } .pa-ai-form { flex-direction: column; } }
+
   /* institutional */
   .pa-inst-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 24px; }
   .pa-inst-item { padding-top: 20px; border-top: 2px solid var(--pa-navy); }
