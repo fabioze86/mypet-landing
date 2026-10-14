@@ -11,6 +11,14 @@ function callsAfter(calls: FakeCall[], method: string) {
 
 const base = { id: "conv-1", channel: "mypetbrasil", ipHash: "h", mode: "visitante" as const };
 
+// Linha de agent_conversations como o select devolve.
+const row = (buyer_id: string | null, extra: Record<string, unknown> = {}) => ({
+  data: { id: "conv-1", buyer_id, channel: "mypetbrasil", started_as: "visitante", ...extra },
+});
+// Resultado do update condicional: com .select("id"), as linhas atualizadas.
+const claimed = { data: [{ id: "conv-1" }] };
+const notClaimed = { data: [] };
+
 vi.spyOn(console, "error").mockImplementation(() => {});
 
 describe("ensureConversation", () => {
@@ -26,25 +34,72 @@ describe("ensureConversation", () => {
   });
 
   it("liga a conversa ao comprador quando o visitante se cadastra", async () => {
-    const { client, calls } = fakeSupabase({ agent_conversations: [{ data: { id: "conv-1", buyer_id: null } }, {}] });
+    const { client, calls } = fakeSupabase({ agent_conversations: [row(null), claimed] });
     expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("ok");
     expect(calls).toContainEqual({ table: "agent_conversations", method: "update", args: [{ buyer_id: "b1" }] });
-    expect(callsAfter(calls, "update")).toContainEqual({ table: "agent_conversations", method: "eq", args: ["id", "conv-1"] });
+    const afterUpdate = callsAfter(calls, "update");
+    expect(afterUpdate).toContainEqual({ table: "agent_conversations", method: "eq", args: ["id", "conv-1"] });
+    expect(afterUpdate).toContainEqual({ table: "agent_conversations", method: "is", args: ["buyer_id", null] });
+    expect(afterUpdate).toContainEqual({ table: "agent_conversations", method: "select", args: ["id"] });
+  });
+
+  it("seleciona canal e started_as junto com o dono", async () => {
+    const { client, calls } = fakeSupabase({ agent_conversations: [row("b1")] });
+    await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" });
+    expect(calls).toContainEqual({
+      table: "agent_conversations",
+      method: "select",
+      args: ["id, buyer_id, channel, started_as"],
+    });
+  });
+
+  it("recusa conversa de outro canal", async () => {
+    const visitante = fakeSupabase({ agent_conversations: [row(null, { channel: "azpetshop" })] });
+    expect(await ensureConversation(visitante.client, { ...base, buyerId: null })).toBe("forbidden");
+    const cliente = fakeSupabase({ agent_conversations: [row(null, { channel: "azpetshop" })] });
+    expect(await ensureConversation(cliente.client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("forbidden");
+    expect(cliente.calls.some((c) => c.method === "update")).toBe(false);
+    const dono = fakeSupabase({ agent_conversations: [row("b1", { channel: "azpetshop" })] });
+    expect(await ensureConversation(dono.client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("forbidden");
+  });
+
+  it("recusa visitante em conversa de cliente cujo comprador foi apagado", async () => {
+    const { client } = fakeSupabase({ agent_conversations: [row(null, { started_as: "cliente" })] });
+    expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("forbidden");
+  });
+
+  it("corrida no claim: outro comprador ligou a conversa antes → relê e recusa", async () => {
+    const { client, calls } = fakeSupabase({ agent_conversations: [row(null), notClaimed, row("b2")] });
+    expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("forbidden");
+    expect(calls.filter((c) => c.method === "update")).toHaveLength(1);
+    expect(calls.filter((c) => c.method === "maybeSingle")).toHaveLength(2);
+  });
+
+  it("corrida no claim: o mesmo comprador ligou a conversa antes → relê e aceita", async () => {
+    const { client } = fakeSupabase({ agent_conversations: [row(null), notClaimed, row("b1")] });
+    expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("ok");
+  });
+
+  it("corrida no claim: relê só uma vez; se ainda não conseguir, fica indisponível", async () => {
+    const { client, calls } = fakeSupabase({ agent_conversations: [row(null), notClaimed, row(null), notClaimed] });
+    expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("unavailable");
+    expect(calls.filter((c) => c.method === "update")).toHaveLength(2);
+    expect(calls.filter((c) => c.method === "maybeSingle")).toHaveLength(2);
   });
 
   it("aceita o mesmo comprador sem atualizar", async () => {
-    const { client, calls } = fakeSupabase({ agent_conversations: [{ data: { id: "conv-1", buyer_id: "b1" } }] });
+    const { client, calls } = fakeSupabase({ agent_conversations: [row("b1")] });
     expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("ok");
     expect(calls.some((c) => c.method === "update" || c.method === "insert")).toBe(false);
   });
 
   it("recusa conversa de outro comprador", async () => {
-    const { client } = fakeSupabase({ agent_conversations: [{ data: { id: "conv-1", buyer_id: "b1" } }] });
+    const { client } = fakeSupabase({ agent_conversations: [row("b1")] });
     expect(await ensureConversation(client, { ...base, buyerId: "b2", mode: "cliente" })).toBe("forbidden");
   });
 
   it("recusa visitante numa conversa que já pertence a um comprador", async () => {
-    const { client } = fakeSupabase({ agent_conversations: [{ data: { id: "conv-1", buyer_id: "b1" } }] });
+    const { client } = fakeSupabase({ agent_conversations: [row("b1")] });
     expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("forbidden");
   });
 
@@ -55,25 +110,26 @@ describe("ensureConversation", () => {
 
   it("conflito no primeiro insert (23505): relê e aceita visitante em conversa sem dono", async () => {
     const { client } = fakeSupabase({
-      agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, { data: { id: "conv-1", buyer_id: null } }],
+      agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, row(null)],
     });
     expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("ok");
   });
 
   it("conflito no primeiro insert (23505): recusa se a conversa é de outro comprador", async () => {
     const { client } = fakeSupabase({
-      agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, { data: { id: "conv-1", buyer_id: "b1" } }],
+      agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, row("b1")],
     });
     expect(await ensureConversation(client, { ...base, buyerId: "b2", mode: "cliente" })).toBe("forbidden");
   });
 
   it("conflito no primeiro insert (23505): liga a conversa ao comprador, escopando o update", async () => {
     const { client, calls } = fakeSupabase({
-      agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, { data: { id: "conv-1", buyer_id: null } }, {}],
+      agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, row(null), claimed],
     });
     expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("ok");
     expect(calls).toContainEqual({ table: "agent_conversations", method: "update", args: [{ buyer_id: "b1" }] });
     expect(callsAfter(calls, "update")).toContainEqual({ table: "agent_conversations", method: "eq", args: ["id", "conv-1"] });
+    expect(callsAfter(calls, "update")).toContainEqual({ table: "agent_conversations", method: "is", args: ["buyer_id", null] });
   });
 
   it("outro erro no insert vira unavailable", async () => {
@@ -124,9 +180,9 @@ describe("saveTurn", () => {
     const { client, calls } = fakeSupabase({ agent_messages: [{}], agent_conversations: [{}] });
     await saveTurn(client, { conversationId: "conv-1", mode: "cliente", messages: [user, reply] });
 
-    const upsert = calls.find((c) => c.method === "upsert");
-    const [rows, options] = upsert!.args as [Record<string, unknown>[], unknown];
-    expect(options).toEqual({ onConflict: "conversation_id,message_id" });
+    const rows = calls
+      .filter((c) => c.method === "upsert")
+      .flatMap((c) => c.args[0] as Record<string, unknown>[]);
     expect(rows.map((r) => [r.message_id, r.role, r.content, r.mode])).toEqual([
       ["m1", "user", "Tem shampoo?", "cliente"],
       ["m2", "assistant", "Encontrei estas opções.", "cliente"],
@@ -134,6 +190,20 @@ describe("saveTurn", () => {
     expect(Date.parse(rows[1].created_at as string)).toBeGreaterThan(Date.parse(rows[0].created_at as string));
     expect(calls.some((c) => c.table === "agent_conversations" && c.method === "update")).toBe(true);
     expect(calls).toContainEqual({ table: "agent_conversations", method: "eq", args: ["id", "conv-1"] });
+  });
+
+  it("pergunta do usuário não sobrescreve linha existente; resposta do assistente usa upsert normal", async () => {
+    const { client, calls } = fakeSupabase({ agent_messages: [{}, {}], agent_conversations: [{}] });
+    await saveTurn(client, { conversationId: "conv-1", mode: "cliente", messages: [user, reply] });
+
+    const upserts = calls.filter((c) => c.method === "upsert");
+    expect(upserts).toHaveLength(2);
+    const [userRows, userOptions] = upserts[0].args as [Record<string, unknown>[], unknown];
+    const [replyRows, replyOptions] = upserts[1].args as [Record<string, unknown>[], unknown];
+    expect(userRows.map((r) => [r.message_id, r.role])).toEqual([["m1", "user"]]);
+    expect(userOptions).toEqual({ onConflict: "conversation_id,message_id", ignoreDuplicates: true });
+    expect(replyRows.map((r) => [r.message_id, r.role])).toEqual([["m2", "assistant"]]);
+    expect(replyOptions).toEqual({ onConflict: "conversation_id,message_id" });
   });
 
   it("sem mensagens para gravar, não chama o Supabase", async () => {

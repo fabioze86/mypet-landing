@@ -8,7 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type FakeResult = { data?: unknown; error?: { message: string; code?: string } | null };
 export type FakeCall = { table: string; method: string; args: unknown[] };
 
-const CHAIN_METHODS = ["select", "eq", "order", "limit", "insert", "update", "upsert"] as const;
+const CHAIN_METHODS = ["select", "eq", "is", "order", "limit", "insert", "update", "upsert"] as const;
 
 export function fakeSupabase(results: Record<string, FakeResult[]>) {
   const calls: FakeCall[] = [];
