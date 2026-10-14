@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // aguardada (await) ou finalizada com maybeSingle(). Todas as chamadas ficam
 // registradas em `calls` para asserções.
 
-export type FakeResult = { data?: unknown; error?: { message: string } | null };
+export type FakeResult = { data?: unknown; error?: { message: string; code?: string } | null };
 export type FakeCall = { table: string; method: string; args: unknown[] };
 
 const CHAIN_METHODS = ["select", "eq", "order", "limit", "insert", "update", "upsert"] as const;

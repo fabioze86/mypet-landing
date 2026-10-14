@@ -18,41 +18,49 @@ export function messageText(message: UIMessage): string {
     .trim();
 }
 
+// Dono da conversa x comprador da requisição. Visitante que se cadastrou no
+// meio da conversa passa a ser o dono.
+async function claimConversation(
+  supabase: SupabaseClient,
+  id: string,
+  owner: string | null,
+  buyerId: string | null,
+): Promise<ConversationAccess> {
+  if (owner && owner !== buyerId) return "forbidden";
+  if (!owner && buyerId) {
+    const { error } = await supabase.from("agent_conversations").update({ buyer_id: buyerId }).eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+  return "ok";
+}
+
 export async function ensureConversation(
   supabase: SupabaseClient,
   input: { id: string; channel: string; buyerId: string | null; ipHash: string; mode: AgentMode },
 ): Promise<ConversationAccess> {
+  const selectRow = () =>
+    supabase.from("agent_conversations").select("id, buyer_id").eq("id", input.id).maybeSingle();
+
   try {
-    const { data, error } = await supabase
-      .from("agent_conversations")
-      .select("id, buyer_id")
-      .eq("id", input.id)
-      .maybeSingle();
+    const { data, error } = await selectRow();
     if (error) throw new Error(error.message);
+    if (data) return await claimConversation(supabase, input.id, (data as { buyer_id: string | null }).buyer_id, input.buyerId);
 
-    if (!data) {
-      const { error: insertError } = await supabase.from("agent_conversations").insert({
-        id: input.id,
-        channel: input.channel,
-        buyer_id: input.buyerId,
-        ip_hash: input.ipHash,
-        started_as: input.mode,
-      });
-      if (insertError) throw new Error(insertError.message);
-      return "ok";
-    }
+    const { error: insertError } = await supabase.from("agent_conversations").insert({
+      id: input.id,
+      channel: input.channel,
+      buyer_id: input.buyerId,
+      ip_hash: input.ipHash,
+      started_as: input.mode,
+    });
+    if (!insertError) return "ok";
+    if (insertError.code !== "23505") throw new Error(insertError.message);
 
-    const owner = (data as { buyer_id: string | null }).buyer_id;
-    if (owner && owner !== input.buyerId) return "forbidden";
-    if (!owner && input.buyerId) {
-      // Visitante que se cadastrou no meio da conversa.
-      const { error: updateError } = await supabase
-        .from("agent_conversations")
-        .update({ buyer_id: input.buyerId })
-        .eq("id", input.id);
-      if (updateError) throw new Error(updateError.message);
-    }
-    return "ok";
+    // Outra requisição criou a conversa entre o select e o insert.
+    const { data: existing, error: rereadError } = await selectRow();
+    if (rereadError) throw new Error(rereadError.message);
+    if (!existing) throw new Error(insertError.message);
+    return await claimConversation(supabase, input.id, (existing as { buyer_id: string | null }).buyer_id, input.buyerId);
   } catch (error) {
     console.error("[agent-conversations] falha ao abrir conversa:", error);
     return "unavailable";
@@ -95,6 +103,8 @@ export async function saveTurn(
       mode: input.mode,
       created_at: new Date(base + index).toISOString(),
     }));
+
+  if (rows.length === 0) return;
 
   try {
     const { error } = await supabase
