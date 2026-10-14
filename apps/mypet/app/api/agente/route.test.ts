@@ -43,7 +43,7 @@ describe("/api/agente", () => {
 });
 
 describe("/api/agente: duração máxima", () => {
-  it("permite até 60s (timeout total do modelo é 45s)", () => {
-    expect(maxDuration).toBe(60);
+  it("permite até 120s (dois provedores de 45s cada, mais a folga)", () => {
+    expect(maxDuration).toBe(120);
   });
 });
