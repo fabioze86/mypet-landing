@@ -30,8 +30,18 @@ describe("parseAgentRequest", () => {
     ["texto vazio", { id, message: { ...message, parts: [{ type: "text", text: "   " }] } }],
     ["texto acima de 500", { id, message: { ...message, parts: [{ type: "text", text: "a".repeat(501) }] } }],
     ["id de mensagem vazio", { id, message: { ...message, id: "" } }],
+    [
+      "mais de 20 partes",
+      { id, message: { ...message, parts: Array.from({ length: 21 }, () => ({ type: "text", text: "a" })) } },
+    ],
   ])("recusa %s", (_label, body) => {
     expect(parseAgentRequest(body).ok).toBe(false);
+  });
+
+  it("aceita exatamente 20 partes", () => {
+    const parts = Array.from({ length: 20 }, () => ({ type: "text", text: "a" }));
+    const result = parseAgentRequest({ id, message: { ...message, parts } });
+    expect(result.ok && result.value.message.parts).toEqual([{ type: "text", text: "a".repeat(20) }]);
   });
 
   it("carrinho: mantém itens válidos, descarta inválidos e achata quebras de linha no nome", () => {

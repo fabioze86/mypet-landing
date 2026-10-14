@@ -14,6 +14,7 @@ const MAX_CART_ITEMS = 50;
 const MAX_QTY = 9999;
 const MAX_ID_LENGTH = 100;
 const MAX_NAME_LENGTH = 200;
+const MAX_PARTS = 20;
 
 function fail(message: string): ParseResult {
   return { ok: false, message };
@@ -48,6 +49,7 @@ export function parseAgentRequest(body: unknown): ParseResult {
   }
   if (role !== "user") return fail("A mensagem precisa ser sua.");
   if (!Array.isArray(parts) || parts.length === 0) return fail("Mensagem vazia.");
+  if (parts.length > MAX_PARTS) return fail("Mensagem inválida.");
 
   let text = "";
   for (const part of parts) {
