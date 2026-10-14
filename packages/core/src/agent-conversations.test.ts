@@ -68,6 +68,42 @@ describe("ensureConversation", () => {
     expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("forbidden");
   });
 
+  it("recusa visitante em conversa sem dono que já teve mensagem no modo cliente", async () => {
+    const { client, calls } = fakeSupabase({
+      agent_conversations: [row(null)],
+      agent_messages: [{ data: [{ id: "msg-1" }] }],
+    });
+    expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("forbidden");
+    const messageCalls = calls.filter((c) => c.table === "agent_messages");
+    expect(messageCalls).toContainEqual({ table: "agent_messages", method: "select", args: ["id"] });
+    expect(messageCalls).toContainEqual({ table: "agent_messages", method: "eq", args: ["conversation_id", "conv-1"] });
+    expect(messageCalls).toContainEqual({ table: "agent_messages", method: "eq", args: ["mode", "cliente"] });
+    expect(messageCalls).toContainEqual({ table: "agent_messages", method: "limit", args: [1] });
+  });
+
+  it("aceita visitante em conversa sem dono e sem mensagem no modo cliente", async () => {
+    const { client, calls } = fakeSupabase({ agent_conversations: [row(null)], agent_messages: [{ data: [] }] });
+    expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("ok");
+    expect(calls).toContainEqual({ table: "agent_messages", method: "eq", args: ["mode", "cliente"] });
+  });
+
+  it("erro ao procurar mensagens do modo cliente vira unavailable", async () => {
+    const { client } = fakeSupabase({ agent_conversations: [row(null)], agent_messages: [{ error: { message: "down" } }] });
+    expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("unavailable");
+  });
+
+  it("só procura mensagens do modo cliente no caso visitante em conversa sem dono", async () => {
+    const dono = fakeSupabase({ agent_conversations: [row("b1")] });
+    await ensureConversation(dono.client, { ...base, buyerId: "b1", mode: "cliente" });
+    const claim = fakeSupabase({ agent_conversations: [row(null), claimed] });
+    await ensureConversation(claim.client, { ...base, buyerId: "b1", mode: "cliente" });
+    const orfa = fakeSupabase({ agent_conversations: [row(null, { started_as: "cliente" })] });
+    await ensureConversation(orfa.client, { ...base, buyerId: null });
+    for (const { calls } of [dono, claim, orfa]) {
+      expect(calls.some((c) => c.table === "agent_messages")).toBe(false);
+    }
+  });
+
   it("corrida no claim: outro comprador ligou a conversa antes → relê e recusa", async () => {
     const { client, calls } = fakeSupabase({ agent_conversations: [row(null), notClaimed, row("b2")] });
     expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("forbidden");
