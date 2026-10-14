@@ -112,9 +112,14 @@ export function createAgentHandler(config: AgentConfig) {
     const store = access === "ok" ? supabase : null;
 
     const tools = { buscar_produtos: buildCatalogTool({ channel: config.channel, showPrices: mode === "cliente" }) };
-    // O id da pergunta vem do navegador: se já estiver no histórico (reenvio,
-    // ou id de uma resposta), a versão do banco sai para não duplicar.
-    const history = (store ? await loadHistory(store, id) : []).filter((item) => item.id !== message.id);
+    const history = store
+      ? await loadHistory(store, id, mode === "visitante" ? { onlyMode: "visitante" } : {})
+      : [];
+    // Cada envio do navegador usa um id novo; id repetido (reenvio ou id de uma
+    // resposta) deixaria o histórico inconsistente.
+    if (history.some((item) => item.id === message.id)) {
+      return errorResponse(409, "MESSAGE_DUPLICATE", "Esta mensagem já foi enviada. Comece uma nova conversa.");
+    }
     const messages = await validateHistory([...history, message], tools);
 
     let instructions: string;

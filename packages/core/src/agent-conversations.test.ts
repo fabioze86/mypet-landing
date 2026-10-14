@@ -199,6 +199,18 @@ describe("loadHistory", () => {
     const { client } = fakeSupabase({ agent_messages: [{ error: { message: "down" } }] });
     expect(await loadHistory(client, "conv-1")).toEqual([]);
   });
+
+  it("com onlyMode filtra pelo modo da mensagem", async () => {
+    const { client, calls } = fakeSupabase({ agent_messages: [{ data: [] }] });
+    await loadHistory(client, "conv-1", { onlyMode: "visitante" });
+    expect(calls).toContainEqual({ table: "agent_messages", method: "eq", args: ["mode", "visitante"] });
+  });
+
+  it("sem onlyMode não filtra por modo", async () => {
+    const { client, calls } = fakeSupabase({ agent_messages: [{ data: [] }] });
+    await loadHistory(client, "conv-1");
+    expect(calls.some((c) => c.method === "eq" && c.args[0] === "mode")).toBe(false);
+  });
 });
 
 describe("saveTurn", () => {

@@ -106,10 +106,6 @@ function makeRequest(body: unknown, headers: Record<string, string> = {}, signal
   });
 }
 
-function countOccurrences(haystack: string, needle: string): number {
-  return haystack.split(needle).length - 1;
-}
-
 function handler(buyer: AgentBuyer | null | Error = null) {
   return createAgentHandler({
     channel: "mypetbrasil",
@@ -225,30 +221,25 @@ describe("POST /api/agente", () => {
     expect(saved.messages[1].role).toBe("assistant");
   });
 
-  it("id da pergunta já no histórico: a pergunta chega ao modelo uma vez só", async () => {
-    const model = textModel("Temos sim.");
-    useModels(model);
-    (loadHistory as Mock).mockResolvedValueOnce([
-      { id: "m1", role: "user", parts: [{ type: "text", text: "Tem shampoo?" }] },
-      { id: "a0", role: "assistant", parts: [{ type: "text", text: "Resposta antiga." }] },
-    ]);
-    await (await handler()(makeRequest(validBody))).text();
-
-    const prompt = JSON.stringify(model.doStreamCalls[0].prompt);
-    expect(countOccurrences(prompt, "Tem shampoo?")).toBe(1);
-    expect(prompt).toContain("Resposta antiga.");
-  });
-
-  it("id da pergunta igual ao de uma resposta do histórico: a resposta sai do prompt", async () => {
+  it("409 quando o id da pergunta já está no histórico, sem chamar a IA", async () => {
     const model = textModel("Oi.");
     useModels(model);
     (loadHistory as Mock).mockResolvedValueOnce([
-      { id: "m1", role: "assistant", parts: [{ type: "text", text: "Resposta antiga." }] },
+      { id: "m1", role: "user", parts: [{ type: "text", text: "Tem shampoo?" }] },
     ]);
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error.code).toBe("MESSAGE_DUPLICATE");
+    expect(model.doStreamCalls).toHaveLength(0);
+  });
+
+  it("visitante carrega só o histórico do modo visitante; cliente carrega tudo", async () => {
+    useModels(textModel("Oi."));
     await (await handler()(makeRequest(validBody))).text();
-    const prompt = JSON.stringify(model.doStreamCalls[0].prompt);
-    expect(prompt).not.toContain("Resposta antiga.");
-    expect(countOccurrences(prompt, "Tem shampoo?")).toBe(1);
+    expect(loadHistory).toHaveBeenLastCalledWith(expect.anything(), conversationId, { onlyMode: "visitante" });
+    useModels(textModel("Oi."));
+    await (await handler({ id: "b1", empresa: null })(makeRequest(validBody))).text();
+    expect(loadHistory).toHaveBeenLastCalledWith(expect.anything(), conversationId, {});
   });
 
   it("streamText: timeout total e por trecho, sinal da requisição e OpenAI sem store", async () => {

@@ -105,14 +105,20 @@ export async function ensureConversation(
   }
 }
 
-export async function loadHistory(supabase: SupabaseClient, conversationId: string): Promise<UIMessage[]> {
+export async function loadHistory(
+  supabase: SupabaseClient,
+  conversationId: string,
+  options: { onlyMode?: AgentMode } = {},
+): Promise<UIMessage[]> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("agent_messages")
       .select("message_id, role, parts")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: false })
-      .limit(HISTORY_LIMIT);
+      .eq("conversation_id", conversationId);
+    // Visitante nunca recebe no contexto mensagens do modo cliente (têm preço),
+    // mesmo que a regra de posse falhe por corrida.
+    if (options.onlyMode) query = query.eq("mode", options.onlyMode);
+    const { data, error } = await query.order("created_at", { ascending: false }).limit(HISTORY_LIMIT);
     if (error) throw new Error(error.message);
     return ((data as StoredMessageRow[] | null) ?? [])
       .reverse()
