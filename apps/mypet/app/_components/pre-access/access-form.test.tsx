@@ -36,7 +36,22 @@ describe("AccessForm", () => {
         }),
       }),
     );
-    expect(assign).toHaveBeenCalledWith("/pedido-rapido");
+    expect(assign).toHaveBeenCalledWith("/agente");
+  });
+
+  it("redireciona para o redirectTo informado", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    });
+    const user = userEvent.setup();
+    render(<AccessForm redirectTo="/agente?x=1" />);
+
+    await user.type(screen.getByLabelText("CNPJ"), "12.345.678/0001-95");
+    await user.type(screen.getByLabelText("WhatsApp"), "(11) 99999-0000");
+    await user.click(screen.getByRole("button", { name: "Consultar preços" }));
+
+    expect(assign).toHaveBeenCalledWith("/agente?x=1");
   });
 
   it("envia email vazio quando o campo fica em branco", async () => {

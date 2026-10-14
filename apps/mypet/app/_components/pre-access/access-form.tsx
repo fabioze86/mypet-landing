@@ -6,7 +6,10 @@ const GENERIC_ERROR = "Não foi possível liberar seu acesso agora. Tente novame
 type Field = "cnpj" | "whatsapp" | "email";
 type FieldErrors = Partial<Record<Field, string>>;
 
-export function AccessForm({ submitLabel = "Consultar preços" }: { submitLabel?: string } = {}) {
+export function AccessForm({
+  submitLabel = "Consultar preços",
+  redirectTo = "/agente",
+}: { submitLabel?: string; redirectTo?: string } = {}) {
   const [cnpj, setCnpj] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
@@ -35,7 +38,7 @@ export function AccessForm({ submitLabel = "Consultar preços" }: { submitLabel?
         body: JSON.stringify({ cnpj, whatsapp, email }),
       });
       if (response.ok) {
-        window.location.assign("/pedido-rapido");
+        window.location.assign(redirectTo);
         return;
       }
       const data = await response.json().catch(() => null);
