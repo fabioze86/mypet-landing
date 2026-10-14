@@ -42,8 +42,10 @@ export const AGENT_STYLES = `
 
   .ag-error { margin: 0 20px 8px; color: #B42318; font-size: 14px; }
   .ag-form { display: flex; gap: 8px; margin: 0 16px; padding: 6px; border: 1.5px solid var(--pa-navy); border-radius: 14px; background: #fff; }
-  .ag-form input { flex: 1; min-width: 0; border: 0; padding: 10px; font: inherit; font-size: 15px; color: var(--pa-ink); background: transparent; }
+  .ag-form input { flex: 1; min-width: 0; border: 0; padding: 10px; font: inherit; font-size: 16px; color: var(--pa-ink); background: transparent; }
   .ag-form input:focus { outline: none; }
+  .ag-form:focus-within { box-shadow: 0 0 0 3px var(--pa-green-soft); border-color: var(--pa-green); }
+  .ag-form button:focus-visible, .ag-intent:focus-visible, .ag-product-lock:focus-visible, .ag-product-link:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
   .ag-form button { width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--pa-green); color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
   .ag-form button:disabled { background: var(--pa-line); color: var(--pa-muted); cursor: default; }
   .ag-disclaimer { margin: 8px 16px 14px; text-align: center; color: var(--pa-muted); font-size: 12px; }

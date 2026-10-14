@@ -135,4 +135,46 @@ describe("AgentChat", () => {
     expect(chat.sendText).toHaveBeenCalledWith("Qual o pedido mínimo?");
     expect(props.onInitialQuestionUsed).toHaveBeenCalledTimes(1);
   });
+
+  it("pergunta inicial recusada fica pendente e é reenviada quando o envio volta", () => {
+    const refused = vi.fn(() => false);
+    chat.sendText = refused;
+    const props = {
+      mode: "visitante" as const,
+      initialQuestion: "Qual o pedido mínimo?",
+      onInitialQuestionUsed: vi.fn(),
+      onLockedIntent: vi.fn(),
+    };
+    const { rerender } = render(<AgentChat {...props} />);
+    expect(refused).toHaveBeenCalledWith("Qual o pedido mínimo?");
+    expect(props.onInitialQuestionUsed).not.toHaveBeenCalled();
+
+    const accepted = vi.fn(() => true);
+    chat.sendText = accepted;
+    rerender(<AgentChat {...props} />);
+    expect(accepted).toHaveBeenCalledWith("Qual o pedido mínimo?");
+    expect(props.onInitialQuestionUsed).toHaveBeenCalledTimes(1);
+  });
+
+  it("só linkifica caminhos isolados", () => {
+    chat.state.messages = [
+      {
+        id: "a2",
+        role: "assistant",
+        parts: [{ type: "text", text: "Use e/ou /cadastros, veja https://x.com/pedidos e depois /pedidos." }],
+      } as AgentMessage,
+    ];
+    renderChat("visitante");
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveTextContent("/pedidos");
+    expect(links[0].nextSibling?.textContent).toBe(".");
+  });
+
+  it("visitante nunca vê preço, mesmo se o payload trouxer priceLabel", () => {
+    chat.state.messages = [assistantWithProducts(true)];
+    renderChat("visitante");
+    expect(screen.queryByText(/R\$/)).toBeNull();
+    expect(screen.getByRole("button", { name: "Cadastre-se para ver o preço" })).toBeInTheDocument();
+  });
 });

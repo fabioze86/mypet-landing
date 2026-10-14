@@ -14,8 +14,8 @@ export function ProductCards({
 }) {
   return (
     <ul className="ag-products" aria-label="Produtos encontrados">
-      {products.map((p) => (
-        <li key={p.id} className="ag-product">
+      {products.map((p, i) => (
+        <li key={`${p.id}-${i}`} className="ag-product">
           <img src={p.img} alt="" className="ag-product-img" />
           <div className="ag-product-info">
             <span className="ag-product-name">

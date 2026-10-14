@@ -46,7 +46,8 @@ const LOCKED_INTENTS: LockedIntent[] = [
 ];
 
 // Caminhos internos citados pelo agente viram links.
-const LINK_PATTERN = /(\/(?:central-de-ajuda(?:\/[a-z0-9-]+)*|cadastro|perguntas-frequentes|pedido-rapido|pedidos))/g;
+const LINK_PATTERN =
+  /(?<![\w/.])(\/(?:central-de-ajuda(?:\/[a-z0-9-]+)*|cadastro|perguntas-frequentes|pedido-rapido|pedidos))(?![\w-])/g;
 
 function renderWithLinks(text: string) {
   return text.split(LINK_PATTERN).map((part, i) =>
@@ -106,9 +107,11 @@ function AgentChatSession({
 
   useEffect(() => {
     if (!initialQuestion || sentInitial.current) return;
+    // se o envio for recusado (ex.: ocupado), a pergunta continua pendente e o
+    // efeito tenta de novo quando o sendText mudar
+    if (!sendText(initialQuestion)) return;
     sentInitial.current = true;
     onInitialQuestionUsed();
-    sendText(initialQuestion);
     // a pergunta já foi enviada: tira o ?pergunta= da URL
     window.history.replaceState(null, "", "/agente");
   }, [initialQuestion, onInitialQuestionUsed, sendText]);
@@ -124,7 +127,11 @@ function AgentChatSession({
   return (
     <section className="ag-chat" aria-labelledby="ag-chat-title">
       <ChatHead />
-      <div ref={logRef} className="ag-log" aria-live="polite">
+      <div
+        ref={logRef}
+        className="ag-log"
+        {...(messages.length > 0 ? { role: "log", "aria-live": "polite", "aria-relevant": "additions" } : {})}
+      >
         {notice && (
           <p className="ag-notice" role="status">
             {notice}
