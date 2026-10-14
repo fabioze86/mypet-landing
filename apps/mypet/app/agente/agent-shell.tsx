@@ -1,25 +1,57 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clientConfig } from "@/client.config";
 import { AgentChat, type AgentPageMode } from "./agent-chat";
 import { AccessPanel } from "./access-panel";
 
 const { name: SITE_NAME, logo } = clientConfig;
 
+// SSR-safe: false até montar no navegador
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const query = window.matchMedia("(max-width: 900px)");
+    const update = () => setIsMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+}
+
 export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; initialQuestion: string | null }) {
   const [question, setQuestion] = useState(initialQuestion);
   const [reason, setReason] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const isVisitor = mode === "visitante";
+  const isMobile = useIsMobile();
+  const modal = isVisitor && isMobile && sheetOpen;
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const barRef = useRef<HTMLButtonElement>(null);
+  const wasModal = useRef(false);
+
+  useEffect(() => {
+    if (wasModal.current && !modal) barRef.current?.focus();
+    wasModal.current = modal;
+  }, [modal]);
 
   const handleQuestionUsed = useCallback(() => setQuestion(null), []);
-  const handleLocked = useCallback((nextReason: string) => {
-    setReason(nextReason);
-    setSheetOpen(true);
-    // no computador o painel já está visível: leva o foco ao primeiro campo
-    requestAnimationFrame(() => document.getElementById("pa-cnpj")?.focus());
-  }, []);
+  const handleClose = useCallback(() => setSheetOpen(false), []);
+  const handleLocked = useCallback(
+    (nextReason: string) => {
+      setReason(nextReason);
+      if (isMobile) {
+        setSheetOpen(true);
+        return;
+      }
+      // no computador o painel já está visível: só leva a vista e o foco até ele
+      headingRef.current?.closest("aside")?.scrollIntoView?.({ block: "nearest" });
+      headingRef.current?.focus();
+    },
+    [isMobile],
+  );
 
   return (
     <div className="ag-page">
@@ -45,17 +77,33 @@ export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; ini
       </header>
 
       <main className={isVisitor ? "ag-main ag-main--split" : "ag-main"}>
-        <AgentChat
-          mode={mode}
-          initialQuestion={question}
-          onInitialQuestionUsed={handleQuestionUsed}
-          onLockedIntent={handleLocked}
-        />
-        {isVisitor && <AccessPanel reason={reason} open={sheetOpen} onClose={() => setSheetOpen(false)} />}
+        <div className="ag-chat-wrap" inert={modal}>
+          <AgentChat
+            mode={mode}
+            initialQuestion={question}
+            onInitialQuestionUsed={handleQuestionUsed}
+            onLockedIntent={handleLocked}
+          />
+        </div>
+        {isVisitor && (
+          <AccessPanel
+            reason={reason}
+            open={modal}
+            modal={modal}
+            onClose={handleClose}
+            headingRef={headingRef}
+          />
+        )}
       </main>
 
-      {isVisitor && !sheetOpen && (
-        <button type="button" className="ag-unlock-bar" onClick={() => setSheetOpen(true)}>
+      {isVisitor && (
+        <button
+          type="button"
+          className="ag-unlock-bar"
+          ref={barRef}
+          hidden={modal}
+          onClick={() => setSheetOpen(true)}
+        >
           Liberar acesso completo
         </button>
       )}

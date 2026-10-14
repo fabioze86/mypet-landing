@@ -57,6 +57,8 @@ export const AGENT_STYLES = `
   .ag-benefits { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   .ag-benefits li { font-size: 14px; color: var(--pa-ink); }
   .ag-benefits li::before { content: "✓ "; color: var(--pa-green); font-weight: 700; }
+  .ag-access-reason:empty { display: none; }
+  .ag-chat-wrap { min-width: 0; }
   .ag-access-close { display: none; }
   .ag-unlock-bar { display: none; }
 
@@ -68,6 +70,7 @@ export const AGENT_STYLES = `
     .ag-access { display: none; position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 60; max-height: 88dvh; overflow-y: auto; border-radius: 20px 20px 0 0; box-shadow: 0 -16px 40px rgba(15,31,69,0.25); }
     .ag-access.is-open { display: block; }
     .ag-access-close { display: block; position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--pa-bg-soft); font-size: 20px; color: var(--pa-navy); cursor: pointer; }
+    .ag-unlock-bar[hidden] { display: none; }
     .ag-unlock-bar { display: block; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 50; padding: 15px; border: 0; border-radius: var(--pa-r-pill); background: var(--pa-green); color: #fff; font-family: var(--pa-geist); font-weight: 600; font-size: 15px; box-shadow: 0 10px 24px rgba(0,166,81,0.35); cursor: pointer; }
     .ag-msg { max-width: 92%; }
     .ag-header-links a.ag-hide-mobile { display: none; }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
 vi.mock("./agent-chat", () => ({
@@ -14,6 +14,23 @@ vi.mock("../_components/pre-access/access-form", () => ({
 
 import { AgentShell } from "./agent-shell";
 
+function mockViewport(mobile: boolean) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn().mockImplementation(() => ({
+      matches: mobile,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+}
+
+beforeEach(() => mockViewport(false));
+afterEach(() => {
+  vi.unstubAllGlobals();
+  document.body.style.overflow = "";
+});
+
 describe("AgentShell", () => {
   it("visitante: painel de acesso com cadastro que volta para /agente", () => {
     render(<AgentShell mode="visitante" initialQuestion={null} />);
@@ -22,14 +39,40 @@ describe("AgentShell", () => {
     expect(screen.getByRole("button", { name: "Liberar acesso completo" })).toBeInTheDocument();
   });
 
-  it("cadeado mostra o motivo e abre o painel", () => {
+  it("computador: cadeado mostra o motivo, sem diálogo, e leva o foco ao título", () => {
     render(<AgentShell mode="visitante" initialQuestion={null} />);
     fireEvent.click(screen.getByRole("button", { name: "cadeado" }));
     expect(screen.getByRole("status")).toHaveTextContent("Cadastre-se para ver os preços da tabela.");
-    expect(screen.getByRole("complementary")).toHaveClass("is-open");
-    expect(screen.queryByRole("button", { name: "Liberar acesso completo" })).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("heading", { name: "Acesso completo ao agente" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Liberar acesso completo" })).toBeVisible();
+  });
+
+  it("celular: a barra abre o diálogo, Esc fecha e devolve o foco à barra", () => {
+    mockViewport(true);
+    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Liberar acesso completo" }));
+    const dialog = screen.getByRole("dialog", { name: "Acesso completo ao agente" });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(screen.getByRole("heading", { name: "Acesso completo ao agente" })).toHaveFocus();
+    expect(document.body.style.overflow).toBe("hidden");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.body.style.overflow).toBe("");
+    const bar = screen.getByRole("button", { name: "Liberar acesso completo" });
+    expect(bar).toBeVisible();
+    expect(bar).toHaveFocus();
+  });
+
+  it("celular: cadeado abre o diálogo com o motivo e o botão Fechar fecha", () => {
+    mockViewport(true);
+    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "cadeado" }));
+    expect(screen.getByRole("dialog", { name: "Acesso completo ao agente" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Cadastre-se para ver os preços da tabela.");
     fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
-    expect(screen.getByRole("complementary")).not.toHaveClass("is-open");
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("cliente: sem painel de acesso, com links da tabela e dos pedidos", () => {
