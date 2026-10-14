@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import type { UIMessage } from "ai";
-import { fakeSupabase } from "./test-utils/fake-supabase";
+import { fakeSupabase, type FakeCall } from "./test-utils/fake-supabase";
 import { ensureConversation, loadHistory, messageText, saveTurn } from "./agent-conversations";
+
+// Chamadas registradas depois da primeira chamada de `method` (ex.: o .eq que escopa um update).
+function callsAfter(calls: FakeCall[], method: string) {
+  const index = calls.findIndex((c) => c.method === method);
+  return index === -1 ? [] : calls.slice(index + 1);
+}
 
 const base = { id: "conv-1", channel: "mypetbrasil", ipHash: "h", mode: "visitante" as const };
 
@@ -23,7 +29,7 @@ describe("ensureConversation", () => {
     const { client, calls } = fakeSupabase({ agent_conversations: [{ data: { id: "conv-1", buyer_id: null } }, {}] });
     expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("ok");
     expect(calls).toContainEqual({ table: "agent_conversations", method: "update", args: [{ buyer_id: "b1" }] });
-    expect(calls).toContainEqual({ table: "agent_conversations", method: "eq", args: ["id", "conv-1"] });
+    expect(callsAfter(calls, "update")).toContainEqual({ table: "agent_conversations", method: "eq", args: ["id", "conv-1"] });
   });
 
   it("aceita o mesmo comprador sem atualizar", async () => {
@@ -59,6 +65,15 @@ describe("ensureConversation", () => {
       agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, { data: { id: "conv-1", buyer_id: "b1" } }],
     });
     expect(await ensureConversation(client, { ...base, buyerId: "b2", mode: "cliente" })).toBe("forbidden");
+  });
+
+  it("conflito no primeiro insert (23505): liga a conversa ao comprador, escopando o update", async () => {
+    const { client, calls } = fakeSupabase({
+      agent_conversations: [{ data: null }, { error: { message: "dup", code: "23505" } }, { data: { id: "conv-1", buyer_id: null } }, {}],
+    });
+    expect(await ensureConversation(client, { ...base, buyerId: "b1", mode: "cliente" })).toBe("ok");
+    expect(calls).toContainEqual({ table: "agent_conversations", method: "update", args: [{ buyer_id: "b1" }] });
+    expect(callsAfter(calls, "update")).toContainEqual({ table: "agent_conversations", method: "eq", args: ["id", "conv-1"] });
   });
 
   it("outro erro no insert vira unavailable", async () => {
