@@ -15,7 +15,7 @@ vi.mock("@mypet/core/agent-server", () => ({
 }));
 vi.mock("@/lib/require-buyer", () => ({ requireBuyer: () => requireBuyer() }));
 
-import "./route";
+import { maxDuration } from "./route";
 
 describe("/api/agente", () => {
   it("usa o canal, o nome e o FAQ do site", () => {
@@ -39,5 +39,11 @@ describe("/api/agente", () => {
 
     requireBuyer.mockResolvedValueOnce(null);
     expect(await resolveBuyer({} as never)).toBeNull();
+  });
+});
+
+describe("/api/agente: duração máxima", () => {
+  it("permite até 60s (timeout total do modelo é 45s)", () => {
+    expect(maxDuration).toBe(60);
   });
 });
