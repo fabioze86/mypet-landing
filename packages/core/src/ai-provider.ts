@@ -1,5 +1,5 @@
 import { google } from "@ai-sdk/google";
-import { vertex } from "@ai-sdk/google-vertex";
+import { createVertex, vertex } from "@ai-sdk/google-vertex";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import type { LanguageModel } from "ai";
@@ -17,13 +17,32 @@ const DEFAULT_MODEL_BY_PROVIDER: Record<AssistantProvider, string> = {
 
 const DEFAULT_FALLBACK_CHAIN: AssistantProvider[] = ["openai", "google"];
 
+// Na Vercel não há arquivo de service account: GOOGLE_VERTEX_CREDENTIALS traz o
+// JSON inteiro. Sem ela, vale o ADC padrão (GOOGLE_APPLICATION_CREDENTIALS =
+// caminho do arquivo, uso local).
+function vertexModel(id: string): LanguageModel {
+  const json = process.env.GOOGLE_VERTEX_CREDENTIALS;
+  if (!json) return vertex(id);
+
+  let credentials: { project_id?: string };
+  try {
+    credentials = JSON.parse(json);
+  } catch {
+    throw new Error("GOOGLE_VERTEX_CREDENTIALS não é um JSON válido de service account.");
+  }
+  return createVertex({
+    project: process.env.GOOGLE_VERTEX_PROJECT ?? credentials.project_id,
+    googleAuthOptions: { credentials },
+  })(id);
+}
+
 function buildModel(provider: AssistantProvider, modelId?: string): LanguageModel {
   const id = modelId ?? DEFAULT_MODEL_BY_PROVIDER[provider];
   switch (provider) {
     case "google":
       return google(id);
     case "google-vertex":
-      return vertex(id);
+      return vertexModel(id);
     case "openai":
       return openai(id);
     case "anthropic":

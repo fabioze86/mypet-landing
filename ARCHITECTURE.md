@@ -37,8 +37,11 @@ Variáveis de ambiente por app (`.env.local`, não versionado):
 `NEXT_PUBLIC_` para ficarem disponíveis ao client Supabase do navegador.
 
 - `google`: `GOOGLE_GENERATIVE_AI_API_KEY`
-- `google-vertex`: `GOOGLE_APPLICATION_CREDENTIALS` (caminho para a service
-  account), `GOOGLE_VERTEX_PROJECT`, `GOOGLE_VERTEX_LOCATION`
+- `google-vertex`: `GOOGLE_VERTEX_CREDENTIALS` (conteúdo JSON da service
+  account; use na Vercel) ou `GOOGLE_APPLICATION_CREDENTIALS` (caminho para o
+  arquivo, só local), `GOOGLE_VERTEX_PROJECT` (opcional com
+  `GOOGLE_VERTEX_CREDENTIALS`: cai no `project_id` do JSON),
+  `GOOGLE_VERTEX_LOCATION`
 - `openai`: `OPENAI_API_KEY`
 - `anthropic`: `ANTHROPIC_API_KEY`
 

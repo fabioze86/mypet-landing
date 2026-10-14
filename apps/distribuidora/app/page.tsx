@@ -62,7 +62,7 @@ async function CatalogContent({
       <p style={{ fontSize: 14, color: PALETTE.gray600, marginBottom: 20 }}>
         Mais de {totalLabel} produtos disponíveis no atacado
       </p>
-      <CatalogSection q={q} brand={brand} page={page} channel={channel} palette={palette} addControl="stepper" liveSearch />
+      <CatalogSection q={q} brand={brand} page={page} channel={channel} palette={palette} addControl="stepper" liveSearch layout="masonry" />
     </>
   );
 }
@@ -177,6 +177,35 @@ export default async function Home({
           box-shadow: 0 12px 32px rgba(26,52,114,0.12);
         }
 
+        /* MASONRY — grade estilo Pinterest/Pexels */
+        .products-masonry {
+          column-count: 5;
+          column-gap: 16px;
+        }
+        .product-card--masonry {
+          break-inside: avoid;
+          margin-bottom: 20px;
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          overflow: visible;
+          display: block;
+        }
+        .product-card--masonry:hover { transform: none; box-shadow: none; }
+        .product-card--masonry .product-card-media::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: rgba(15,31,69,0);
+          transition: background 0.2s;
+          pointer-events: none;
+        }
+        .product-card--masonry .product-card-media img { transition: transform 0.35s ease; }
+        .product-card--masonry:hover .product-card-media::after { background: rgba(15,31,69,0.08); }
+        .product-card--masonry:hover .product-card-media img { transform: scale(1.03); }
+        @media (max-width: 1100px) { .products-masonry { column-count: 4; } }
+        @media (max-width: 860px) { .products-masonry { column-count: 3; } }
+
         .unlock-btn {
           width: 100%;
           padding: 11px 0;
@@ -286,6 +315,9 @@ export default async function Home({
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px !important; }
           .product-card-media { aspect-ratio: 1 / 1.08 !important; }
+          .products-masonry { column-count: 2; column-gap: 10px; }
+          .product-card--masonry { margin-bottom: 14px; }
+          .product-card--masonry .product-card-media { aspect-ratio: auto !important; }
           .modal { padding: 28px 20px; }
           .footer-row { flex-direction: column; align-items: flex-start; }
         }

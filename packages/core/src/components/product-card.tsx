@@ -9,36 +9,56 @@ import { AddToCartControl } from "./add-to-cart-control";
 import { CartStepperControl } from "./cart-stepper-control";
 import type { CatalogProduct } from "../catalog-utils";
 
-export function ProductCard({ product, addControl = "default" }: { product: CatalogProduct; addControl?: "default" | "stepper" }) {
+export function ProductCard({
+  product,
+  addControl = "default",
+  layout = "grid",
+}: {
+  product: CatalogProduct;
+  addControl?: "default" | "stepper";
+  /** "masonry": estilo Pinterest — imagem na proporção natural, sem moldura de card. */
+  layout?: "grid" | "masonry";
+}) {
   const { palette, features } = useClientConfig();
   const style = product.badge ? badgeStyle(product.badge.code, palette) : null;
+  const masonry = layout === "masonry";
   return (
-    <div className="product-card">
+    <div className={masonry ? "product-card product-card--masonry" : "product-card"}>
       <Link href={`/produtos/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
         <div
           className="product-card-media"
-          style={{
-            position: "relative",
-            aspectRatio: "1 / 1.22",
-            width: "100%",
-            background: palette.white,
-            overflow: "hidden",
-          }}
+          style={
+            masonry
+              ? { position: "relative", width: "100%", background: palette.gray50, borderRadius: 16, overflow: "hidden" }
+              : { position: "relative", aspectRatio: "1 / 1.22", width: "100%", background: palette.white, overflow: "hidden" }
+          }
         >
-          <Image
-            src={product.img}
-            alt={product.name}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
-            style={{ objectFit: "contain" }}
-          />
+          {masonry ? (
+            // width/height só reservam espaço; height:auto mantém a proporção real da foto.
+            <Image
+              src={product.img}
+              alt={product.name}
+              width={600}
+              height={600}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
+              style={{ display: "block", width: "100%", height: "auto" }}
+            />
+          ) : (
+            <Image
+              src={product.img}
+              alt={product.name}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+              style={{ objectFit: "contain" }}
+            />
+          )}
           {product.badge && style && (
             <span style={{ position: "absolute", top: 10, left: 10, background: style.bg, color: style.color, fontSize: 11, fontWeight: 800, padding: "4px 10px", borderRadius: 100, letterSpacing: "0.02em" }}>
               {product.badge.label}
             </span>
           )}
         </div>
-        <div style={{ padding: "10px 12px 0" }}>
+        <div style={{ padding: masonry ? "8px 4px 0" : "10px 12px 0" }}>
           {product.sku && (
             <p style={{ fontSize: 9, color: palette.gray400, fontWeight: 700, letterSpacing: "0.08em", marginBottom: 4, textTransform: "uppercase" }}>
               SKU: {product.sku}
@@ -50,7 +70,7 @@ export function ProductCard({ product, addControl = "default" }: { product: Cata
               fontWeight: 800,
               color: palette.navy,
               lineHeight: 1.28,
-              marginBottom: 10,
+              marginBottom: masonry ? 6 : 10,
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
@@ -61,7 +81,7 @@ export function ProductCard({ product, addControl = "default" }: { product: Cata
           </h3>
         </div>
       </Link>
-      <div style={{ padding: "0 12px 12px" }}>
+      <div style={{ padding: masonry ? "0 4px 4px" : "0 12px 12px" }}>
         {showsListPrice(features) ? (
           <div style={{ marginBottom: 12 }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: palette.navy }}>

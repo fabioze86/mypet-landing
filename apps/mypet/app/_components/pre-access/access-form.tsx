@@ -6,7 +6,7 @@ const GENERIC_ERROR = "Não foi possível liberar seu acesso agora. Tente novame
 type Field = "cnpj" | "whatsapp" | "email";
 type FieldErrors = Partial<Record<Field, string>>;
 
-export function AccessForm() {
+export function AccessForm({ submitLabel = "Consultar preços" }: { submitLabel?: string } = {}) {
   const [cnpj, setCnpj] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
@@ -114,7 +114,7 @@ export function AccessForm() {
       </p>
 
       <button type="submit" disabled={submitting}>
-        {submitting ? "Enviando…" : "Consultar preços"}
+        {submitting ? "Enviando…" : submitLabel}
       </button>
     </form>
   );

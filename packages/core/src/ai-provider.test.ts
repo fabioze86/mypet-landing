@@ -5,6 +5,9 @@ vi.mock("@ai-sdk/google", () => ({
 }));
 vi.mock("@ai-sdk/google-vertex", () => ({
   vertex: vi.fn((modelId: string) => ({ provider: "google-vertex", modelId })),
+  createVertex: vi.fn(
+    (settings: unknown) => (modelId: string) => ({ provider: "google-vertex", modelId, settings }),
+  ),
 }));
 vi.mock("@ai-sdk/openai", () => ({
   openai: vi.fn((modelId: string) => ({ provider: "openai", modelId })),
@@ -40,6 +43,44 @@ describe("getAssistantModelChain", () => {
     expect(getAssistantModelChain()).toEqual([
       { provider: "google-vertex", model: { provider: "google-vertex", modelId: "gemini-2.5-flash" } },
     ]);
+  });
+
+  it("com GOOGLE_VERTEX_CREDENTIALS, autentica o Vertex pelo JSON da service account (sem arquivo)", () => {
+    vi.stubEnv("AI_PROVIDER", "google-vertex");
+    vi.stubEnv(
+      "GOOGLE_VERTEX_CREDENTIALS",
+      JSON.stringify({ type: "service_account", project_id: "proj-sa", private_key: "k", client_email: "sa@x" }),
+    );
+    expect(getAssistantModelChain()).toEqual([
+      {
+        provider: "google-vertex",
+        model: {
+          provider: "google-vertex",
+          modelId: "gemini-2.5-flash",
+          settings: {
+            project: "proj-sa",
+            googleAuthOptions: {
+              credentials: { type: "service_account", project_id: "proj-sa", private_key: "k", client_email: "sa@x" },
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  it("GOOGLE_VERTEX_PROJECT tem precedência sobre o project_id da service account", () => {
+    vi.stubEnv("AI_PROVIDER", "google-vertex");
+    vi.stubEnv("GOOGLE_VERTEX_PROJECT", "proj-env");
+    vi.stubEnv("GOOGLE_VERTEX_CREDENTIALS", JSON.stringify({ project_id: "proj-sa" }));
+    const [candidate] = getAssistantModelChain();
+    expect(candidate.model).toMatchObject({ settings: { project: "proj-env" } });
+  });
+
+  it("GOOGLE_VERTEX_CREDENTIALS inválido gera erro sem expor o conteúdo", () => {
+    vi.stubEnv("AI_PROVIDER", "google-vertex");
+    vi.stubEnv("GOOGLE_VERTEX_CREDENTIALS", "segredo-nao-json");
+    expect(() => getAssistantModelChain()).toThrow("GOOGLE_VERTEX_CREDENTIALS não é um JSON válido");
+    expect(() => getAssistantModelChain()).not.toThrow(/segredo/);
   });
 
   it("lança erro para um provedor forçado desconhecido", () => {

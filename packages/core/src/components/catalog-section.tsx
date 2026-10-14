@@ -12,6 +12,7 @@ export async function CatalogSection({
   palette,
   addControl = "default",
   liveSearch = false,
+  layout = "grid",
 }: {
   q?: string;
   brand?: string;
@@ -20,6 +21,8 @@ export async function CatalogSection({
   palette: Palette;
   addControl?: "default" | "stepper";
   liveSearch?: boolean;
+  /** "masonry": colunas estilo Pinterest; CSS `.products-masonry` fica na página. */
+  layout?: "grid" | "masonry";
 }) {
   const page = parsePage(pageRaw);
   const [catalog, brands] = await Promise.all([
@@ -65,6 +68,12 @@ export async function CatalogSection({
         <p style={{ fontSize: 15, color: palette.gray600, padding: "40px 0", textAlign: "center" }}>
           Nenhum produto encontrado. Tente outra busca ou marca.
         </p>
+      ) : layout === "masonry" ? (
+        <div className="products-masonry">
+          {catalog.items.map((product) => (
+            <ProductCard key={product.id} product={product} addControl={addControl} layout="masonry" />
+          ))}
+        </div>
       ) : (
         <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 260px))", gap: 22 }}>
           {catalog.items.map((product) => (
