@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./agent-server": "./src/agent-server.ts",
     "./ai-provider": "./src/ai-provider.ts",
     "./assistant-client": "./src/assistant-client.ts",
     "./assistant-server": "./src/assistant-server.ts",
