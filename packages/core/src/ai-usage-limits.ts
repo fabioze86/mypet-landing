@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { getHubServiceClient } from "./supabase";
 
 // Teto de uso dos assistentes de IA, para que abuso não vire custo imprevisto
@@ -43,8 +43,12 @@ export function getAiLimits(scope: AiScope): AiLimits {
   };
 }
 
+// Com AI_IP_HASH_SECRET, HMAC: sem o segredo não dá para recuperar o IP por
+// força bruta. Sem a variável, sha256 puro (ambientes antigos seguem iguais).
 function shortHash(value: string): string {
-  return createHash("sha256").update(value).digest("hex").slice(0, 32);
+  const secret = process.env.AI_IP_HASH_SECRET;
+  const hash = secret ? createHmac("sha256", secret) : createHash("sha256");
+  return hash.update(value).digest("hex").slice(0, 32);
 }
 
 export function hashClientIp(headers: Headers): string {

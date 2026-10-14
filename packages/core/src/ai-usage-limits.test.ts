@@ -29,6 +29,31 @@ describe("hashClientIp", () => {
   });
 });
 
+describe("hash com segredo (AI_IP_HASH_SECRET)", () => {
+  it("IP: muda em relação ao sem segredo e continua estável com 32 caracteres", () => {
+    const semSegredo = hashClientIp(headers());
+    vi.stubEnv("AI_IP_HASH_SECRET", "x");
+    const comSegredo = hashClientIp(headers());
+    expect(comSegredo).not.toBe(semSegredo);
+    expect(comSegredo).toMatch(/^[0-9a-f]{32}$/);
+    expect(hashClientIp(headers())).toBe(comSegredo);
+    vi.stubEnv("AI_IP_HASH_SECRET", "y");
+    expect(hashClientIp(headers())).not.toBe(comSegredo);
+  });
+
+  it("comprador: a chave da cota também usa o segredo", async () => {
+    rpc.mockResolvedValue({ data: "ok", error: null });
+    await consumeAiQuota("agente_cliente", "mypetbrasil", headers(), "buyer-1");
+    vi.stubEnv("AI_IP_HASH_SECRET", "x");
+    await consumeAiQuota("agente_cliente", "mypetbrasil", headers(), "buyer-1");
+    await consumeAiQuota("agente_cliente", "mypetbrasil", headers(), "buyer-1");
+    const [semSegredo, comSegredo, denovo] = rpc.mock.calls.map((c) => c[1].p_ip_hash);
+    expect(comSegredo).not.toBe(semSegredo);
+    expect(comSegredo).toBe(denovo);
+    expect(comSegredo).toMatch(/^[0-9a-f]{32}$/);
+  });
+});
+
 describe("getAiLimits", () => {
   it("usa os padrões e aceita override por env", () => {
     expect(getAiLimits("duvidas").ipDailyMax).toBe(30);
