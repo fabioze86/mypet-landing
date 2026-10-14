@@ -161,9 +161,12 @@ export function useAgentChat({
 
   const chat = useChat<AgentMessage>({ id: conversation.id, messages: conversation.messages, transport });
 
+  // Não grava durante o streaming: evita mensagem parcial e uma escrita por token.
+  const streaming = chat.status === "submitted" || chat.status === "streaming";
   useEffect(() => {
+    if (streaming) return;
     saveStoredConversation(safeSessionStorage(), { id: conversation.id, messages: chat.messages });
-  }, [conversation.id, chat.messages]);
+  }, [conversation.id, chat.messages, streaming]);
 
   const error = chat.error ? parseAgentError(chat.error) : null;
   const errorCode = error?.code ?? null;
@@ -171,12 +174,18 @@ export function useAgentChat({
     if (errorCode && RESET_CODES.has(errorCode)) onConversationReset(RESET_NOTICE);
   }, [errorCode, onConversationReset]);
 
-  const busy = chat.status === "submitted" || chat.status === "streaming";
+  const busy = streaming;
+  // Espelho síncrono de busy: duas chamadas no mesmo tick não passam as duas.
+  const sendingRef = useRef(false);
+  useEffect(() => {
+    sendingRef.current = busy;
+  }, [busy]);
   const { sendMessage } = chat;
   const sendText = useCallback(
     (text: string) => {
       const trimmed = text.trim();
-      if (!trimmed || busy) return false;
+      if (!trimmed || busy || sendingRef.current) return false;
+      sendingRef.current = true;
       void sendMessage({ text: trimmed });
       return true;
     },
