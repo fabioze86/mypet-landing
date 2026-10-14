@@ -60,6 +60,21 @@ async function validateHistory(messages: UIMessage[], tools: ToolSet): Promise<U
   }
 }
 
+// Só grava o turno quando a resposta terminou bem e tem texto: respostas
+// abortadas, com erro ou vazias deixariam no histórico uma mensagem inválida.
+export function shouldSaveTurn({
+  isAborted,
+  finishReason,
+  responseMessage,
+}: {
+  isAborted: boolean;
+  finishReason?: string;
+  responseMessage: UIMessage;
+}): boolean {
+  if (isAborted || finishReason === "error") return false;
+  return responseMessage.parts.some((part) => part.type === "text" && part.text.trim().length > 0);
+}
+
 export function createAgentHandler(config: AgentConfig) {
   return async function POST(req: NextRequest): Promise<Response> {
     const foreign = rejectForeignRequest(req);
@@ -136,8 +151,9 @@ export function createAgentHandler(config: AgentConfig) {
         originalMessages: messages,
         generateMessageId: () => crypto.randomUUID(),
         onError: () => UNAVAILABLE_MESSAGE,
-        onEnd: async ({ responseMessage }) => {
+        onEnd: async ({ isAborted, finishReason, responseMessage }) => {
           if (!store) return;
+          if (!shouldSaveTurn({ isAborted, finishReason, responseMessage })) return;
           await saveTurn(store, { conversationId: id, mode, messages: [message, responseMessage] });
         },
       }),

@@ -24,10 +24,10 @@ export async function openStreamWithFallback<T extends { type: string }>(
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
-        if (value.type === "error") {
+        if (value.type === "error" || value.type === "abort") {
           console.error(
             `[agent-stream] provedor "${candidate.provider}" falhou antes de responder:`,
-            (value as { error?: unknown }).error,
+            value.type === "abort" ? "abortado (timeout ou cancelamento)" : (value as { error?: unknown }).error,
           );
           failed = true;
           break;

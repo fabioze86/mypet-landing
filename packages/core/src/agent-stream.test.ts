@@ -82,4 +82,31 @@ describe("openStreamWithFallback", () => {
     const stream = await openStreamWithFallback([{ provider: "openai", open: () => streamOf(parts) }]);
     expect(await readAll(stream!)).toEqual(parts);
   });
+
+  it("abort antes do primeiro conteúdo troca de provedor", async () => {
+    const stream = await openStreamWithFallback([
+      { provider: "openai", open: () => streamOf([{ type: "start" }, { type: "abort" }]) },
+      { provider: "google", open: () => streamOf(ok) },
+    ]);
+    expect(await readAll(stream!)).toEqual(ok);
+  });
+
+  it("devolve null quando todos abortam antes do conteúdo", async () => {
+    const stream = await openStreamWithFallback([
+      { provider: "openai", open: () => streamOf([{ type: "start" }, { type: "abort" }]) },
+      { provider: "google", open: () => streamOf([{ type: "abort" }]) },
+    ]);
+    expect(stream).toBeNull();
+  });
+
+  it("abort depois do primeiro conteúdo passa adiante sem trocar de provedor", async () => {
+    const parts = [{ type: "start" }, { type: "text-delta", value: "Oi" }, { type: "abort" }];
+    const second = vi.fn(() => streamOf(ok));
+    const stream = await openStreamWithFallback([
+      { provider: "openai", open: () => streamOf(parts) },
+      { provider: "google", open: second },
+    ]);
+    expect(await readAll(stream!)).toEqual(parts);
+    expect(second).not.toHaveBeenCalled();
+  });
 });

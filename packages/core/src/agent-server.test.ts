@@ -19,7 +19,7 @@ import { getAssistantModelChain } from "./ai-provider";
 import { consumeAiQuota } from "./ai-usage-limits";
 import { getCatalogLineItems } from "./catalog-line-items";
 import { ensureConversation, loadHistory, saveTurn } from "./agent-conversations";
-import { createAgentHandler, type AgentBuyer } from "./agent-server";
+import { createAgentHandler, shouldSaveTurn, type AgentBuyer } from "./agent-server";
 
 const usage = {
   inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined },
@@ -241,5 +241,86 @@ describe("POST /api/agente", () => {
   it("rejeita requisição de outra origem", async () => {
     const res = await handler()(makeRequest(validBody, { origin: "https://evil.example" }));
     expect(res.status).toBe(403);
+  });
+
+  it("não grava quando o modelo não devolve texto", async () => {
+    useModels(
+      new MockLanguageModelV4({
+        doStream: async () => ({ stream: simulateReadableStream({ chunks: [finish("stop")] }) }),
+      }),
+    );
+    const res = await handler()(makeRequest(validBody));
+    await res.text();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(saveTurn).not.toHaveBeenCalled();
+  });
+
+  it("erro do provedor depois do primeiro texto: transmite o parcial e não grava", async () => {
+    useModels(
+      new MockLanguageModelV4({
+        doStream: async () => ({
+          stream: simulateReadableStream({
+            chunks: [
+              { type: "text-start" as const, id: "t1" },
+              { type: "text-delta" as const, id: "t1", delta: "Parcial" },
+              { type: "error" as const, error: new Error("caiu") },
+            ],
+          }),
+        }),
+      }),
+    );
+    const res = await handler()(makeRequest(validBody));
+    expect(await res.text()).toContain("Parcial");
+    await new Promise((r) => setTimeout(r, 50));
+    expect(saveTurn).not.toHaveBeenCalled();
+  });
+
+  describe("carrinho no prompt", () => {
+    const cart = [{ id: "p1", name: "Shampoo Neutro 5L", qty: 10, unitPrice: 89.9 }];
+
+    it("cliente: o carrinho chega ao modelo", async () => {
+      const model = textModel("Oi.");
+      useModels(model);
+      await (await handler({ id: "b1", empresa: "Pet Shop X" })(makeRequest({ ...validBody, cart }))).text();
+      expect(JSON.stringify(model.doStreamCalls[0].prompt)).toContain("- 10 x Shampoo Neutro 5L (id p1)");
+    });
+
+    it("visitante: o carrinho não chega ao modelo", async () => {
+      const model = textModel("Oi.");
+      useModels(model);
+      await (await handler()(makeRequest({ ...validBody, cart }))).text();
+      expect(JSON.stringify(model.doStreamCalls[0].prompt)).not.toContain("Shampoo Neutro 5L");
+    });
+  });
+});
+
+describe("shouldSaveTurn", () => {
+  const text = { type: "text", text: "Olá" };
+  const msg = (parts: unknown[]) => ({ id: "a", role: "assistant", parts }) as never;
+  it("aborted → false", () => {
+    expect(shouldSaveTurn({ isAborted: true, finishReason: "stop", responseMessage: msg([text]) })).toBe(false);
+  });
+  it("finishReason error → false", () => {
+    expect(shouldSaveTurn({ isAborted: false, finishReason: "error", responseMessage: msg([text]) })).toBe(false);
+  });
+  it("sem partes → false", () => {
+    expect(shouldSaveTurn({ isAborted: false, finishReason: "stop", responseMessage: msg([]) })).toBe(false);
+  });
+  it("só parte de ferramenta → false", () => {
+    expect(
+      shouldSaveTurn({
+        isAborted: false,
+        finishReason: "tool-calls",
+        responseMessage: msg([{ type: "tool-buscar_produtos", toolCallId: "c1", state: "input-available", input: {} }]),
+      }),
+    ).toBe(false);
+  });
+  it("texto só com espaços → false", () => {
+    expect(
+      shouldSaveTurn({ isAborted: false, finishReason: "stop", responseMessage: msg([{ type: "text", text: "  \n " }]) }),
+    ).toBe(false);
+  });
+  it("resposta normal → true", () => {
+    expect(shouldSaveTurn({ isAborted: false, finishReason: "stop", responseMessage: msg([text]) })).toBe(true);
   });
 });
