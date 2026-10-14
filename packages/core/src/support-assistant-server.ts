@@ -3,6 +3,7 @@ import { generateText } from "ai";
 import { getAssistantModelChain } from "./ai-provider";
 import { AI_REQUEST_TIMEOUT_MS, parseAssistantRequest, type ConversationLimits } from "./assistant-server";
 import { consumeAiQuota } from "./ai-usage-limits";
+import { formatKnowledge } from "./agent-prompt";
 import { getArtigosAjudaPublicados, type ArtigoAjuda } from "./help-center";
 import { rejectForeignRequest } from "./request-guards";
 
@@ -18,8 +19,6 @@ export type SupportAssistantConfig = {
   faq: readonly SupportFaqItem[];
 };
 
-const MAX_ARTICLE_CHARS = 4000;
-const MAX_KNOWLEDGE_CHARS = 60000;
 const MAX_REPLY_TOKENS = 500;
 // Mesmo limite do campo na UI (faq-assistant.tsx, maxLength=500).
 const CONVERSATION_LIMITS: ConversationLimits = {
@@ -27,23 +26,6 @@ const CONVERSATION_LIMITS: ConversationLimits = {
   maxMessageLength: 500,
   maxTotalChars: 6000,
 };
-
-function formatKnowledge(faq: readonly SupportFaqItem[], artigos: ArtigoAjuda[]): string {
-  const parts = faq.map((item) => `### ${item.q}\n${item.a}`);
-  for (const artigo of artigos) {
-    const corpo = artigo.corpoMarkdown.slice(0, MAX_ARTICLE_CHARS);
-    parts.push(`### ${artigo.titulo} (artigo: /central-de-ajuda/a/${artigo.slug})\n${corpo}`);
-  }
-
-  let total = 0;
-  const kept: string[] = [];
-  for (const part of parts) {
-    if (total + part.length > MAX_KNOWLEDGE_CHARS) break;
-    kept.push(part);
-    total += part.length;
-  }
-  return kept.join("\n\n");
-}
 
 export function buildSupportSystemPrompt(
   siteName: string,
