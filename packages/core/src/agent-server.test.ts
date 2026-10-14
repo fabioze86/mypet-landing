@@ -1,8 +1,13 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import { NextRequest } from "next/server";
-import { simulateReadableStream } from "ai";
+import { simulateReadableStream, streamText } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 
+// streamText real, só embrulhado para registrar as opções da chamada.
+vi.mock("ai", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("ai")>();
+  return { ...actual, streamText: vi.fn(actual.streamText) };
+});
 vi.mock("./ai-provider", () => ({ getAssistantModelChain: vi.fn() }));
 vi.mock("./ai-usage-limits", () => ({ consumeAiQuota: vi.fn(async () => null), hashClientIp: () => "iphash" }));
 vi.mock("./help-center", () => ({ getArtigosAjudaPublicados: vi.fn(async () => []) }));
@@ -92,12 +97,17 @@ const lineItem = {
 const conversationId = "3f1c2a7e-8b4d-4c1a-9f2e-1a2b3c4d5e6f";
 const userMessage = { id: "m1", role: "user", parts: [{ type: "text", text: "Tem shampoo?" }] };
 
-function makeRequest(body: unknown, headers: Record<string, string> = {}): NextRequest {
+function makeRequest(body: unknown, headers: Record<string, string> = {}, signal?: AbortSignal): NextRequest {
   return new NextRequest("http://localhost/api/agente", {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
+    signal,
   });
+}
+
+function countOccurrences(haystack: string, needle: string): number {
+  return haystack.split(needle).length - 1;
 }
 
 function handler(buyer: AgentBuyer | null | Error = null) {
@@ -213,6 +223,64 @@ describe("POST /api/agente", () => {
     expect(saved.mode).toBe("visitante");
     expect(saved.messages[0]).toEqual({ id: "m1", role: "user", parts: [{ type: "text", text: "Tem shampoo?" }] });
     expect(saved.messages[1].role).toBe("assistant");
+  });
+
+  it("id da pergunta já no histórico: a pergunta chega ao modelo uma vez só", async () => {
+    const model = textModel("Temos sim.");
+    useModels(model);
+    (loadHistory as Mock).mockResolvedValueOnce([
+      { id: "m1", role: "user", parts: [{ type: "text", text: "Tem shampoo?" }] },
+      { id: "a0", role: "assistant", parts: [{ type: "text", text: "Resposta antiga." }] },
+    ]);
+    await (await handler()(makeRequest(validBody))).text();
+
+    const prompt = JSON.stringify(model.doStreamCalls[0].prompt);
+    expect(countOccurrences(prompt, "Tem shampoo?")).toBe(1);
+    expect(prompt).toContain("Resposta antiga.");
+  });
+
+  it("id da pergunta igual ao de uma resposta do histórico: a resposta sai do prompt", async () => {
+    const model = textModel("Oi.");
+    useModels(model);
+    (loadHistory as Mock).mockResolvedValueOnce([
+      { id: "m1", role: "assistant", parts: [{ type: "text", text: "Resposta antiga." }] },
+    ]);
+    await (await handler()(makeRequest(validBody))).text();
+    const prompt = JSON.stringify(model.doStreamCalls[0].prompt);
+    expect(prompt).not.toContain("Resposta antiga.");
+    expect(countOccurrences(prompt, "Tem shampoo?")).toBe(1);
+  });
+
+  it("streamText: timeout total e por trecho, sinal da requisição e OpenAI sem store", async () => {
+    const model = textModel("Oi.");
+    useModels(model);
+    const controller = new AbortController();
+    await (await handler()(makeRequest(validBody, {}, controller.signal))).text();
+
+    expect(streamText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timeout: { totalMs: 45_000, chunkMs: 15_000 },
+        providerOptions: { openai: { store: false } },
+      }),
+    );
+    expect(model.doStreamCalls[0].providerOptions).toEqual({ openai: { store: false } });
+
+    const signal = model.doStreamCalls[0].abortSignal;
+    expect(signal).toBeDefined();
+    expect(signal!.aborted).toBe(false);
+    controller.abort();
+    expect(signal!.aborted).toBe(true);
+  });
+
+  it("502 estruturado quando a configuração do provedor é inválida", async () => {
+    (getAssistantModelChain as Mock).mockImplementationOnce(() => {
+      throw new Error('AI_PROVIDER desconhecido: "x"');
+    });
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.error.code).toBe("AI_PROVIDER_ERROR");
+    expect(body.error.message).toBe("Não foi possível responder agora. Tente novamente em instantes.");
   });
 
   it("403 quando a conversa pertence a outro comprador", async () => {

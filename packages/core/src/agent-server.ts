@@ -33,7 +33,7 @@ export type AgentConfig = {
   resolveBuyer: (req: NextRequest) => Promise<AgentBuyer | null>;
 };
 
-const AGENT_TIMEOUT_MS = 45_000;
+const AGENT_TIMEOUT = { totalMs: 45_000, chunkMs: 15_000 };
 const MAX_STEPS = 5;
 const MAX_REPLY_TOKENS = 600;
 const UNAVAILABLE_MESSAGE = "Não foi possível responder agora. Tente novamente em instantes.";
@@ -112,21 +112,33 @@ export function createAgentHandler(config: AgentConfig) {
     const store = access === "ok" ? supabase : null;
 
     const tools = { buscar_produtos: buildCatalogTool({ channel: config.channel, showPrices: mode === "cliente" }) };
-    const history = store ? await loadHistory(store, id) : [];
+    // O id da pergunta vem do navegador: se já estiver no histórico (reenvio,
+    // ou id de uma resposta), a versão do banco sai para não duplicar.
+    const history = (store ? await loadHistory(store, id) : []).filter((item) => item.id !== message.id);
     const messages = await validateHistory([...history, message], tools);
-    const artigos = await getArtigosAjudaPublicados();
-    const instructions = buildAgentInstructions({
-      siteName: config.siteName,
-      mode,
-      empresa: buyer?.empresa ?? null,
-      cart: mode === "cliente" ? cart : [],
-      faq: config.faq,
-      artigos,
-    });
-    const modelMessages = await convertToModelMessages(messages, { tools, ignoreIncompleteToolCalls: true });
+
+    let instructions: string;
+    let modelMessages: Awaited<ReturnType<typeof convertToModelMessages>>;
+    let chain: ReturnType<typeof getAssistantModelChain>;
+    try {
+      const artigos = await getArtigosAjudaPublicados();
+      instructions = buildAgentInstructions({
+        siteName: config.siteName,
+        mode,
+        empresa: buyer?.empresa ?? null,
+        cart: mode === "cliente" ? cart : [],
+        faq: config.faq,
+        artigos,
+      });
+      modelMessages = await convertToModelMessages(messages, { tools, ignoreIncompleteToolCalls: true });
+      chain = getAssistantModelChain();
+    } catch (error) {
+      console.error("[agent] falha ao preparar a chamada ao modelo:", error);
+      return errorResponse(502, "AI_PROVIDER_ERROR", UNAVAILABLE_MESSAGE);
+    }
 
     const stream = await openStreamWithFallback(
-      getAssistantModelChain().map((candidate) => ({
+      chain.map((candidate) => ({
         provider: candidate.provider,
         open: () =>
           streamText({
@@ -137,7 +149,13 @@ export function createAgentHandler(config: AgentConfig) {
             stopWhen: isStepCount(MAX_STEPS),
             maxOutputTokens: MAX_REPLY_TOKENS,
             maxRetries: 1,
-            abortSignal: AbortSignal.timeout(AGENT_TIMEOUT_MS),
+            // chunkMs: provedor que para de mandar trechos aborta e, antes do
+            // primeiro conteúdo, cai no próximo provedor (agent-stream.ts).
+            timeout: AGENT_TIMEOUT,
+            // Cliente desconectou: para a chamada ao provedor.
+            abortSignal: req.signal,
+            // As conversas ficam no Supabase; nada guardado do lado da OpenAI.
+            providerOptions: { openai: { store: false } },
             onError: ({ error }) => console.error(`[agent] erro no provedor "${candidate.provider}":`, error),
           }).stream,
       })),
