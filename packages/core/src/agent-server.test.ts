@@ -324,3 +324,36 @@ describe("shouldSaveTurn", () => {
     expect(shouldSaveTurn({ isAborted: false, finishReason: "stop", responseMessage: msg([text]) })).toBe(true);
   });
 });
+
+describe("shouldSaveTurn sem finish", () => {
+  it("finishReason ausente → false", () => {
+    expect(
+      shouldSaveTurn({
+        isAborted: false,
+        finishReason: undefined,
+        responseMessage: { id: "a", role: "assistant", parts: [{ type: "text", text: "Olá" }] } as never,
+      }),
+    ).toBe(false);
+  });
+
+  it("desconexão no meio da resposta: não grava", async () => {
+    useModels(
+      new MockLanguageModelV4({
+        doStream: async () => ({
+          stream: new ReadableStream({
+            start(controller) {
+              controller.enqueue({ type: "text-start", id: "t1" });
+              controller.enqueue({ type: "text-delta", id: "t1", delta: "Parcial" });
+            },
+          }),
+        }),
+      }),
+    );
+    const res = await handler()(makeRequest(validBody));
+    const reader = res.body!.getReader();
+    await reader.read();
+    await reader.cancel();
+    await new Promise((r) => setTimeout(r, 100));
+    expect(saveTurn).not.toHaveBeenCalled();
+  });
+});

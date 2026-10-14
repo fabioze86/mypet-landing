@@ -71,7 +71,7 @@ export function shouldSaveTurn({
   finishReason?: string;
   responseMessage: UIMessage;
 }): boolean {
-  if (isAborted || finishReason === "error") return false;
+  if (isAborted || finishReason == null || finishReason === "error") return false;
   return responseMessage.parts.some((part) => part.type === "text" && part.text.trim().length > 0);
 }
 
