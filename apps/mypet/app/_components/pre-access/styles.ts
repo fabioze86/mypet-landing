@@ -38,6 +38,8 @@ export const LANDING_STYLES = `
   .pa-btn-primary:hover { background: var(--pa-green-dark); }
   .pa-btn-ghost { background: transparent; color: var(--pa-navy); border-color: var(--pa-line); }
   .pa-btn-ghost:hover { border-color: var(--pa-navy); }
+  .pa-btn-on-dark { color: #fff; border-color: rgba(255,255,255,0.55); }
+  .pa-btn-on-dark:hover { border-color: #fff; color: #fff; }
 
   /* sections */
   .pa-section { padding: 96px 0; }

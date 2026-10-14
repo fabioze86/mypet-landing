@@ -16,6 +16,11 @@ describe("Hero", () => {
     expect(link).toHaveAttribute("href", "/cadastro");
   });
 
+  it("tem um CTA para o agente", () => {
+    render(<Hero />);
+    expect(screen.getByRole("link", { name: "Perguntar ao agente" })).toHaveAttribute("href", "/agente");
+  });
+
   it("não usa em-dash na copy", () => {
     const { container } = render(<Hero />);
     expect(container.textContent ?? "").not.toMatch(/[–—]/);

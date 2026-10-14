@@ -45,7 +45,8 @@ export async function PedidoRapidoPageBody() {
       <SiteNav
         categories={categories}
         showMegaMenu={false}
-        homeHref="/pedido-rapido"
+        homeHref="/agente"
+        agenteHref="/agente"
         pedidoRapidoHref="/pedido-rapido"
         pedidosHref="/pedidos"
         faqHref="/perguntas-frequentes"

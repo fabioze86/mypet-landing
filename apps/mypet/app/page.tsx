@@ -46,6 +46,7 @@ export default async function LandingPage() {
             <a href="#condicoes">Condições</a>
             <a href="#categorias">Categorias</a>
             <a href={OFFICIAL_SITE_URL} target="_blank" rel="noopener noreferrer">mypetbrasil.com</a>
+            <a href="/agente">Agente My Pet</a>
             <a href="/cadastro" className="pa-nav-cta">Abrir tabela</a>
           </nav>
         </div>

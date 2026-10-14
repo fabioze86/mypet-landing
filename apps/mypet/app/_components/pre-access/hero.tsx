@@ -31,6 +31,7 @@ export function Hero() {
           </p>
           <div className="pa-hero-actions">
             <a href="/cadastro" className="pa-btn pa-btn-primary">Abrir tabela de preços</a>
+            <a href="/agente" className="pa-btn pa-btn-ghost pa-btn-on-dark">Perguntar ao agente</a>
           </div>
         </div>
       </div>

@@ -1,6 +1,5 @@
-import { clientConfig } from "@/client.config";
 import { commercialFaq } from "../../pre-access-content";
-import { FaqAssistant } from "./faq-assistant";
+import { AgentEntry } from "./agent-entry";
 
 export function CommercialFaq() {
   return (
@@ -16,7 +15,7 @@ export function CommercialFaq() {
             </details>
           ))}
         </div>
-        <FaqAssistant channel={clientConfig.catalogChannel} />
+        <AgentEntry />
       </div>
     </section>
   );

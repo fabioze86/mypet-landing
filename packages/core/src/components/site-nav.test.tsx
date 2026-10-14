@@ -106,3 +106,18 @@ describe("SiteNav — showMegaMenu", () => {
     expect(markup).not.toContain('class="site-nav-mega-menu-row"');
   });
 });
+
+describe("SiteNav — link do Agente", () => {
+  it("renderiza o link Agente quando agenteHref é informado", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        ClientConfigProvider,
+        { config },
+        createElement(CartProvider, null, createElement(SiteNav, { categories: [], agenteHref: "/agente" })),
+      ),
+    );
+
+    expect(markup).toContain('href="/agente"');
+    expect(markup).toContain(">Agente<");
+  });
+});

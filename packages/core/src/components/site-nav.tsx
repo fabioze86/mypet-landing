@@ -10,6 +10,7 @@ import { buildCategoryTree, type CategoryNode } from "../catalog-utils";
 
 export function SiteNav({
   categories,
+  agenteHref,
   balcaoHref,
   pedidoRapidoHref,
   pedidosHref,
@@ -19,6 +20,7 @@ export function SiteNav({
   showMegaMenu = true,
 }: {
   categories: CategoryNode[];
+  agenteHref?: string;
   balcaoHref?: string;
   pedidoRapidoHref?: string;
   pedidosHref?: string;
@@ -53,6 +55,7 @@ export function SiteNav({
   // No mobile os links de texto saem da barra e vão para o menu (☰), para a
   // marca e o carrinho não disputarem espaço com eles.
   const links: MobileMenuLink[] = [
+    ...(agenteHref ? [{ href: agenteHref, label: "Agente" }] : []),
     ...(pedidoRapidoHref ? [{ href: pedidoRapidoHref, label: "Consulte preços" }] : []),
     ...(balcaoHref ? [{ href: balcaoHref, label: "Balcão de Negócios" }] : []),
     ...(pedidosHref ? [{ href: pedidosHref, label: "Meus pedidos" }] : []),
@@ -81,6 +84,15 @@ export function SiteNav({
             <span className="site-nav-audience" style={{ fontSize: 13, color: palette.gray600, fontWeight: 600 }}>
               {audienceLabel ?? "Exclusivo para lojistas"}
             </span>
+          )}
+          {agenteHref && (
+            <Link
+              href={agenteHref}
+              className="site-nav-text-link"
+              style={{ fontSize: 13, fontWeight: 800, color: palette.pink, textDecoration: "none", whiteSpace: "nowrap" }}
+            >
+              Agente
+            </Link>
           )}
           {balcaoHref && (
             <Link
