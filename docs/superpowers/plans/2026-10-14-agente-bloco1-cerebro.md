@@ -33,6 +33,7 @@
 | `supabase/migrations/20261014120000_agent_conversations.sql` (novo) | Tabelas `agent_conversations` e `agent_messages` |
 | `packages/core/src/agent-catalog-tool.ts` (novo) | Ferramenta `buscar_produtos` |
 | `packages/core/src/agent-prompt.ts` (novo) | Tipos `AgentMode`/`AgentFaqItem`/`AgentCartItem`, base de conhecimento e instruções por modo |
+| `packages/core/src/support-assistant-server.ts` (modificar) | Passa a importar `formatKnowledge` de `agent-prompt` |
 | `packages/core/src/agent-request.ts` (novo) | Validação do corpo `{ id, message, cart }` |
 | `packages/core/src/test-utils/fake-supabase.ts` (novo) | Fake mínimo do cliente Supabase para testes |
 | `packages/core/src/agent-conversations.ts` (novo) | Abrir/verificar posse da conversa, carregar histórico, gravar turno |
@@ -476,7 +477,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   }): string;
   ```
 
-> `formatKnowledge` repete a função de `support-assistant-server.ts`, que será apagado no bloco 2 junto com `/api/duvidas`. Não mexer no arquivo antigo agora.
+> `formatKnowledge` passa a morar aqui. Em `packages/core/src/support-assistant-server.ts` (que será apagado no bloco 2), **remover** a função local `formatKnowledge` e as constantes `MAX_ARTICLE_CHARS`/`MAX_KNOWLEDGE_CHARS`, e importar `formatKnowledge` de `./agent-prompt` (o tipo `SupportFaqItem` é compatível com `AgentFaqItem`). Rodar também `src/support-assistant-server.test.ts` no Step 4 e incluir o arquivo no commit.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -642,13 +643,13 @@ ${formatKnowledge(faq, artigos)}`;
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `pnpm --filter @mypet/core exec vitest run src/agent-prompt.test.ts`
-Expected: PASS (6 testes).
+Run: `pnpm --filter @mypet/core exec vitest run src/agent-prompt.test.ts src/support-assistant-server.test.ts`
+Expected: PASS (6 testes novos + os do assistente antigo, inalterados).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/core/src/agent-prompt.ts packages/core/src/agent-prompt.test.ts
+git add packages/core/src/agent-prompt.ts packages/core/src/agent-prompt.test.ts packages/core/src/support-assistant-server.ts
 git commit -m "feat(agente): instruções do agente por modo (visitante/cliente)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
