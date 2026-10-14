@@ -1,7 +1,7 @@
 # Agente My Pet — Etapa 1: consulta ao catálogo do Hub
 
 Data: 2026-10-14
-Status: aprovado
+Status: substituída por 2026-10-14-agente-plataforma-design.md
 
 ## Contexto e visão
 

@@ -1,5 +1,7 @@
 # Agente My Pet — Etapa 1 (catálogo do Hub) Implementation Plan
 
+> **SUBSTITUÍDO** por `docs/superpowers/specs/2026-10-14-agente-plataforma-design.md`. Não executar este plano.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** O assistente de dúvidas (`/api/duvidas`) passa a consultar produtos do catálogo do Hub: visitante vê nome/marca/variação; comprador cadastrado vê também preço e link para a tabela.
