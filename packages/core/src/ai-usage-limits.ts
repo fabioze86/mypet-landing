@@ -5,7 +5,7 @@ import { getHubServiceClient } from "./supabase";
 // no provedor. Contagem no Supabase (função consume_ai_quota), pois a Vercel
 // roda várias instâncias e contador em memória não vale entre elas.
 
-export type AiScope = "assistant" | "duvidas";
+export type AiScope = "assistant" | "duvidas" | "agente_cliente";
 
 export type AiLimits = {
   ipBurstMax: number;
@@ -19,6 +19,8 @@ const DEFAULT_LIMITS: Record<AiScope, AiLimits> = {
   assistant: { ipBurstMax: 15, ipBurstWindowSeconds: 600, ipDailyMax: 80, globalDailyMax: 2000 },
   // Dúvidas da home: público anônimo, respostas curtas.
   duvidas: { ipBurstMax: 8, ipBurstWindowSeconds: 600, ipDailyMax: 30, globalDailyMax: 1000 },
+  // Agente /agente com cliente cadastrado: contado por comprador, não por IP.
+  agente_cliente: { ipBurstMax: 20, ipBurstWindowSeconds: 600, ipDailyMax: 80, globalDailyMax: 3000 },
 };
 
 function envInt(name: string): number | undefined {
@@ -41,15 +43,19 @@ export function getAiLimits(scope: AiScope): AiLimits {
   };
 }
 
+function shortHash(value: string): string {
+  return createHash("sha256").update(value).digest("hex").slice(0, 32);
+}
+
 export function hashClientIp(headers: Headers): string {
   const ip =
     headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip")?.trim() || "unknown";
-  return createHash("sha256").update(ip).digest("hex").slice(0, 32);
+  return shortHash(ip);
 }
 
 const LIMIT_MESSAGES: Record<string, string> = {
   ip_burst: "Você enviou muitas perguntas seguidas. Aguarde alguns minutos e tente de novo.",
-  ip_daily: "Você atingiu o limite de perguntas de hoje. Volte amanhã ou fale com o nosso time pelo WhatsApp.",
+  ip_daily: "Você atingiu o limite de perguntas de hoje. Volte amanhã ou consulte a nossa central de ajuda.",
   global_daily: "O assistente está temporariamente indisponível. Tente novamente mais tarde.",
 };
 
@@ -60,12 +66,14 @@ function errorResponse(status: number, code: string, message: string, headers?: 
 /**
  * Consome uma unidade da cota. Devolve null se pode seguir, ou a Response de
  * erro pronta (429 limite, 503 desligado/indisponível). Falha fechada: sem
- * conseguir contar, não chama a IA.
+ * conseguir contar, não chama a IA. Com `subjectKey` (id do comprador), a cota
+ * individual é por comprador em vez de por IP.
  */
 export async function consumeAiQuota(
   scope: AiScope,
   channel: string,
   headers: Headers,
+  subjectKey?: string,
 ): Promise<Response | null> {
   if (process.env.AI_ASSISTANTS_DISABLED === "true") {
     return errorResponse(503, "AI_DISABLED", LIMIT_MESSAGES.global_daily);
@@ -77,7 +85,7 @@ export async function consumeAiQuota(
     const { data, error } = await getHubServiceClient().rpc("consume_ai_quota", {
       p_scope: scope,
       p_channel: channel,
-      p_ip_hash: hashClientIp(headers),
+      p_ip_hash: subjectKey ? shortHash(`buyer:${subjectKey}`) : hashClientIp(headers),
       p_ip_burst_max: limits.ipBurstMax,
       p_ip_burst_window_seconds: limits.ipBurstWindowSeconds,
       p_ip_daily_max: limits.ipDailyMax,

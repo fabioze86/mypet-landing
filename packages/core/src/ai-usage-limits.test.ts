@@ -76,3 +76,36 @@ describe("consumeAiQuota", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 });
+
+describe("escopo agente_cliente", () => {
+  it("tem limites próprios, ajustáveis por env", () => {
+    expect(getAiLimits("agente_cliente")).toEqual({
+      ipBurstMax: 20,
+      ipBurstWindowSeconds: 600,
+      ipDailyMax: 80,
+      globalDailyMax: 3000,
+    });
+    vi.stubEnv("AI_LIMIT_AGENTE_CLIENTE_IP_DAILY", "120");
+    expect(getAiLimits("agente_cliente").ipDailyMax).toBe(120);
+  });
+
+  it("conta por comprador quando recebe subjectKey, não pelo IP", async () => {
+    rpc.mockResolvedValue({ data: "ok", error: null });
+    await consumeAiQuota("agente_cliente", "mypetbrasil", headers(), "buyer-1");
+    await consumeAiQuota("agente_cliente", "mypetbrasil", headers({ "x-forwarded-for": "9.9.9.9" }), "buyer-1");
+    const [first, second] = rpc.mock.calls.map((c) => c[1].p_ip_hash);
+    expect(first).toBe(second);
+    expect(first).not.toBe(hashClientIp(headers()));
+    expect(first).toHaveLength(32);
+  });
+});
+
+describe("mensagens de limite", () => {
+  it("limite diário orienta para a central de ajuda, sem WhatsApp", async () => {
+    rpc.mockResolvedValue({ data: "ip_daily", error: null });
+    const res = await consumeAiQuota("duvidas", "mypetbrasil", headers());
+    const body = await res?.json();
+    expect(body.error.message).toContain("central de ajuda");
+    expect(body.error.message).not.toMatch(/whatsapp/i);
+  });
+});
