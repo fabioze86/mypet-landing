@@ -83,7 +83,7 @@ createAgentHandler({
 
 Fluxo: `rejectForeignRequest` → validação do corpo → identificação do comprador (falha = visitante) → cota → conversa (cria/recupera) → `streamText` com prompt e ferramentas do modo → resposta em stream de UI messages → ao terminar, grava as mensagens.
 
-**Corpo da requisição** (formato do `useChat`): `id` da conversa (uuid gerado no cliente), `messages` (UI messages), `cart` (snapshot do carrinho: `{ id, name, qty, unitPrice }[]`, máx. 50 itens, validado). Limites: até 20 mensagens, 500 caracteres por mensagem do usuário; o servidor manda ao modelo só as últimas 12.
+**Corpo da requisição** (`useChat` com `prepareSendMessagesRequest`): `id` da conversa (uuid gerado no cliente), `message` (**só a última mensagem do usuário**: UI message com partes de texto, até 500 caracteres) e `cart` (snapshot do carrinho: `{ id, name, qty, unitPrice }[]`, máx. 50 itens, validado). O histórico é carregado **do banco** (últimas 12 mensagens da conversa) — o servidor nunca confia em mensagens de assistente ou resultados de ferramenta enviados pelo navegador (evita preço ou produto forjado no histórico).
 
 **Modo** é decidido só no servidor pelo cookie (`requireBuyer`). Nenhum dado do corpo altera o modo nem o comprador.
 
@@ -145,10 +145,12 @@ agent_messages (
   id uuid primary key default gen_random_uuid(),
   conversation_id uuid not null references agent_conversations(id) on delete cascade,
   role text not null check (role in ('user','assistant')),
-  content text not null,            -- texto da mensagem
-  tool_calls jsonb null,            -- nomes e entradas das ferramentas usadas
+  message_id text not null,         -- id da UI message (useChat)
+  content text not null,            -- texto da mensagem (para leitura)
+  parts jsonb not null,             -- UI message parts completas (texto + ferramentas), usadas para recarregar o histórico
   mode text not null check (mode in ('visitante','cliente')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (conversation_id, message_id)
 )
 ```
 
@@ -156,7 +158,7 @@ RLS ligado, sem políticas para `anon`/`authenticated` (só o service role do se
 
 ### 3.2 Gravação
 
-No fim de cada resposta: upsert da conversa (`updated_at`, e `buyer_id` quando o modo for cliente), insert da última mensagem do usuário e da resposta. Se a conversa já existe com outro `buyer_id`, não sobrescreve (cria nova conversa). Falha ao gravar é logada e não afeta a resposta.
+Antes de responder: cria a conversa se não existe; se existe sem `buyer_id` e o pedido vem de um cliente, grava o `buyer_id` (conversão). Se a conversa pertence a **outro** comprador (ou a um comprador e o pedido vem de visitante), responde 403 `CONVERSATION_FORBIDDEN` e o navegador começa uma conversa nova. No fim de cada resposta: upsert (por `conversation_id` + `message_id`) da mensagem do usuário e da resposta, e atualiza `updated_at`. Falha do banco é logada e não derruba a resposta (segue sem histórico e sem gravar).
 
 ### 3.3 Origem dos pedidos
 
