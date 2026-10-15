@@ -1,5 +1,5 @@
 // Reposição pela compra habitual, em código puro (sem IA): para cada produto
-// comprado em pelo menos 2 dias distintos (UTC), compara os dias desde a última compra com o
+// comprado em pelo menos 2 dias distintos (calendário de São Paulo), compara os dias desde a última compra com o
 // intervalo médio entre compras.
 
 export type ReplenishmentOrder = { status: string; createdAt: string; items: { productId: string; qty: number }[] };
@@ -19,9 +19,9 @@ export type ReplenishmentPlan = {
 const DAY_MS = 86_400_000;
 const DUE_RATIO = 0.8;
 
-// Uma compra = um dia (UTC). Pedidos do mesmo produto no mesmo dia somam
-// quantidade na mesma compra; `time` é o horário do último pedido do dia.
-type Purchase = { day: number; time: number; qty: number };
+// Uma compra = um dia do calendário de São Paulo. Pedidos do mesmo produto no mesmo dia somam
+// quantidade na mesma compra; `time` é o horário do primeiro pedido do dia.
+type Purchase = { day: string; time: number; qty: number };
 
 function sumByProduct(items: { productId: string; qty: number }[]): Map<string, number> {
   const totals = new Map<string, number>();
@@ -29,7 +29,9 @@ function sumByProduct(items: { productId: string; qty: number }[]): Map<string, 
   return totals;
 }
 
-const utcDay = (time: number) => Math.floor(time / DAY_MS);
+const MIN_AVERAGE_DAYS = 2;
+const spFormat = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" });
+const spDay = (time: number) => spFormat.format(new Date(time));
 
 export function computeReplenishment(orders: ReplenishmentOrder[], now: Date, limit: number): ReplenishmentPlan {
   const valid = orders
@@ -41,13 +43,12 @@ export function computeReplenishment(orders: ReplenishmentOrder[], now: Date, li
 
   const history = new Map<string, Purchase[]>();
   for (const order of valid) {
-    const day = utcDay(order.time);
+    const day = spDay(order.time);
     for (const [productId, qty] of sumByProduct(order.items)) {
       const purchases = history.get(productId) ?? [];
       const last = purchases[purchases.length - 1];
       if (last && last.day === day) {
         last.qty += qty;
-        last.time = order.time;
       } else {
         purchases.push({ day, time: order.time, qty });
       }
@@ -59,11 +60,12 @@ export function computeReplenishment(orders: ReplenishmentOrder[], now: Date, li
   let hasRepeat = false;
   for (const [productId, purchases] of history) {
     if (purchases.length < 2) continue;
-    hasRepeat = true;
     const first = purchases[0].time;
     const last = purchases[purchases.length - 1].time;
     const lastQty = purchases[purchases.length - 1].qty;
     const average = (last - first) / (purchases.length - 1) / DAY_MS;
+    if (average < MIN_AVERAGE_DAYS) continue;
+    hasRepeat = true;
     const since = (now.getTime() - last) / DAY_MS;
     if (average <= 0 || since < DUE_RATIO * average) continue;
     due.push({
@@ -87,8 +89,8 @@ export function computeReplenishment(orders: ReplenishmentOrder[], now: Date, li
 
   // Sem repetição: a última compra = todos os pedidos do último dia, somados.
   const lastOrder = valid[valid.length - 1];
-  const lastDay = utcDay(lastOrder.time);
-  const lastDayItems = valid.filter((o) => utcDay(o.time) === lastDay).flatMap((o) => o.items);
+  const lastDay = spDay(lastOrder.time);
+  const lastDayItems = valid.filter((o) => spDay(o.time) === lastDay).flatMap((o) => o.items);
   const since = Math.floor((now.getTime() - lastOrder.time) / DAY_MS);
   return {
     tipo: "compra_recente",

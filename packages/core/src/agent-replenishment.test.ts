@@ -95,6 +95,25 @@ describe("computeReplenishment", () => {
     });
   });
 
+  it("pedidos minutos antes e depois das 21h de São Paulo (dias UTC distintos) são uma compra só", () => {
+    const orders: ReplenishmentOrder[] = [
+      { status: "entregue", createdAt: "2026-10-10T23:30:00Z", items: [{ productId: "racao", qty: 1 }] },
+      { status: "entregue", createdAt: "2026-10-11T00:10:00Z", items: [{ productId: "racao", qty: 2 }] },
+    ];
+    expect(computeReplenishment(orders, now, 8)).toEqual({
+      tipo: "compra_recente",
+      itens: [{ productId: "racao", daysSinceLast: 4, averageIntervalDays: null, lastQty: 3 }],
+    });
+  });
+
+  it("intervalo médio menor que 2 dias é ignorado e cai em compra_recente", () => {
+    const orders = [order("2026-10-08", [["racao", 1]]), order("2026-10-09", [["racao", 2]])];
+    expect(computeReplenishment(orders, now, 8)).toEqual({
+      tipo: "compra_recente",
+      itens: [{ productId: "racao", daysSinceLast: 6, averageIntervalDays: null, lastQty: 2 }],
+    });
+  });
+
   it("pedido com createdAt inválido é descartado", () => {
     const orders: ReplenishmentOrder[] = [
       order("2026-08-16", [["racao", 1]]),
