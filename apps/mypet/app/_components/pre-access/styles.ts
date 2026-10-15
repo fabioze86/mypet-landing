@@ -156,7 +156,7 @@ export const LANDING_STYLES = `
   .pa-faq details[open] summary::after { content: "\\2212"; }
   .pa-faq details p { margin: 0; padding: 0 4px 18px; color: var(--pa-muted); font-size: 14px; line-height: 1.6; }
 
-  /* assistente de dúvidas (IA) */
+  /* entrada do agente (home) */
   .pa-ai { margin-top: 40px; padding: 24px; background: #fff; border: 1px solid var(--pa-line); border-radius: var(--pa-r-card); }
   .pa-ai-title { margin: 0 0 4px; font-family: var(--pa-geist); font-weight: 700; font-size: 18px; color: var(--pa-navy); }
   .pa-ai-lead { margin: 0 0 16px; color: var(--pa-muted); font-size: 14px; line-height: 1.5; }

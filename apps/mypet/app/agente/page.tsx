@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
 import { LANDING_STYLES } from "../_components/pre-access/styles";
@@ -9,6 +10,7 @@ import { initialQuestionFrom } from "./agent-params";
 
 export const metadata: Metadata = {
   title: `Agente My Pet - ${clientConfig.name}`,
+  alternates: { canonical: canonicalUrl(clientConfig.domain, "/agente") },
   description:
     "Tire dúvidas sobre pedido, entrega e pagamento e encontre produtos da tabela de preços da My Pet Brasil.",
 };

@@ -61,7 +61,7 @@
     "@radix-ui/react-navigation-menu": "^1.2.18",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.108.2",
-    "ai": "^7.0.19",
+    "ai": "7.0.19",
     "web-push": "^3.6.7",
     "zod": "^4.4.3"
   },

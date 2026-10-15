@@ -257,14 +257,17 @@ de ambiente, não de código. O perfil do visitante (pet shop revendedor vs.
 banho-e-tosa) é inferido pela IA a cada conversa e vive apenas em memória
 da sessão do navegador; nada é persistido no Supabase nesta fase.
 
-### Assistente de dúvidas e limites de uso da IA
+### Agente de vendas (/agente) e limites de uso da IA
 
-A home do mypet tem um box de dúvidas (`FaqAssistant`) que chama
-`POST /api/duvidas` (`packages/core/src/support-assistant-server.ts`). Ele
-responde só com o FAQ comercial e os artigos publicados da Central de Ajuda,
-sem ferramentas nem catálogo.
+A página `/agente` (`apps/mypet/app/agente`) é o agente de vendas da My Pet.
+Ela chama `POST /api/agente` (`packages/core/src/agent-server.ts`). Visitante
+conversa sem ver preços (o servidor não os envia) e tem um painel de cadastro;
+cliente logado vê os preços do canal. O navegador manda só `{ id, message,
+cart }` e o servidor lê o histórico da conversa no banco; o lado do navegador
+fica em `packages/core/src/agent-client.ts` (a conversa vive no
+`sessionStorage` para sobreviver ao recarregamento depois do cadastro).
 
-`/api/assistant` e `/api/duvidas` são públicos e cada chamada custa tokens,
+`/api/assistant` e `/api/agente` são públicos e cada chamada custa tokens,
 então ambos passam por `packages/core/src/ai-usage-limits.ts`:
 
 - só JSON da própria origem (`rejectForeignRequest`);
@@ -275,8 +278,11 @@ então ambos passam por `packages/core/src/ai-usage-limits.ts`:
   e teto diário global por canal. Sem conseguir contar, a rota responde 503 e
   não chama a IA (falha fechada) — por isso exige `SUPABASE_SERVICE_ROLE_KEY`.
 
+O `/agente` conta a cota por escopo: visitante por IP (escopo `duvidas`) e
+cliente por comprador (escopo `agente_cliente`).
+
 Padrões (por escopo, em `ai-usage-limits.ts`) ajustáveis por env:
-`AI_LIMIT_{DUVIDAS|ASSISTANT}_IP_BURST`, `AI_LIMIT_{...}_IP_DAILY`,
+`AI_LIMIT_{DUVIDAS|AGENTE_CLIENTE|ASSISTANT}_IP_BURST`, `AI_LIMIT_{...}_IP_DAILY`,
 `AI_LIMIT_{...}_GLOBAL_DAILY`. `AI_ASSISTANTS_DISABLED=true` desliga os dois
 assistentes na hora (503), sem deploy de código.
 
