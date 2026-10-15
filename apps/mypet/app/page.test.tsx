@@ -49,11 +49,13 @@ describe("LandingPage", () => {
     expect(screen.queryByLabelText(/cnpj/i)).toBeNull();
   });
 
-  it("mostra o assistente de dúvidas com IA dentro do FAQ", async () => {
+  it("mostra a entrada para o agente My Pet dentro do FAQ", async () => {
     render(await LandingPage());
     const faq = screen.getByRole("region", { name: "Perguntas frequentes" });
-    expect(within(faq).getByRole("region", { name: /pergunte aqui/i })).toBeInTheDocument();
-    expect(within(faq).getByLabelText("Sua dúvida")).toBeInTheDocument();
+    expect(
+      within(faq).getByRole("form", { name: "Não achou sua dúvida? Pergunte ao agente My Pet" }),
+    ).toBeInTheDocument();
+    expect(within(faq).getByLabelText("Sua pergunta para o agente")).toBeInTheDocument();
   });
 
   it("a vitrine do catálogo mostra categorias sem qualquer preço", async () => {
