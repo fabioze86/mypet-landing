@@ -2,7 +2,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createUIMessageStreamResponse, type UIMessageChunk } from "ai";
-import { AGENT_STORAGE_KEY, useAgentChat, type AgentCartItem } from "./agent-client";
+import {
+  AGENT_STORAGE_KEY,
+  newConversation,
+  useAgentChat,
+  useAgentConversation,
+  type AgentCartItem,
+} from "./agent-client";
 
 const conversation = { id: "3f1c2a7e-8b4d-4c1a-9f2e-1a2b3c4d5e6f", messages: [] };
 const cart = [{ productId: "p1", quantity: 2 }] as unknown as AgentCartItem[];
@@ -144,5 +150,56 @@ describe("useAgentChat", () => {
       }
     }
     setItem.mockRestore();
+  });
+});
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+describe("useAgentConversation", () => {
+  it("devolve a conversa guardada no sessionStorage", async () => {
+    const saved = {
+      id: "3f1c2a7e-8b4d-4c1a-9f2e-1a2b3c4d5e6f",
+      messages: [{ id: "m1", role: "user", parts: [{ type: "text", text: "Oi" }] }],
+    };
+    window.sessionStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(saved));
+    const { result } = renderHook(() => useAgentConversation());
+    await waitFor(() => expect(result.current.conversation).not.toBeNull());
+    expect(result.current.conversation).toEqual(saved);
+  });
+
+  it("sem nada guardado, começa uma conversa nova", async () => {
+    const { result } = renderHook(() => useAgentConversation());
+    await waitFor(() => expect(result.current.conversation).not.toBeNull());
+    expect(result.current.conversation?.id).toMatch(UUID);
+    expect(result.current.conversation?.messages).toEqual([]);
+  });
+
+  it("reset grava a conversa nova, troca o id e expõe o aviso até clearNotice", async () => {
+    const { result } = renderHook(() => useAgentConversation());
+    await waitFor(() => expect(result.current.conversation).not.toBeNull());
+    const oldId = result.current.conversation?.id;
+    act(() => result.current.reset("aviso"));
+    expect(result.current.conversation?.id).not.toBe(oldId);
+    expect(result.current.notice).toBe("aviso");
+    const stored = JSON.parse(window.sessionStorage.getItem(AGENT_STORAGE_KEY) ?? "null");
+    expect(stored).toEqual({ id: result.current.conversation?.id, messages: [] });
+    act(() => result.current.clearNotice());
+    expect(result.current.notice).toBeNull();
+  });
+});
+
+describe("newConversation", () => {
+  it("gera uuid v4 mesmo sem crypto.randomUUID (contexto não seguro)", () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, "randomUUID", { value: undefined, configurable: true });
+    try {
+      const a = newConversation().id;
+      const b = newConversation().id;
+      expect(a).toMatch(UUID);
+      expect(b).toMatch(UUID);
+      expect(a).not.toBe(b);
+    } finally {
+      Object.defineProperty(crypto, "randomUUID", { value: original, configurable: true, writable: true });
+    }
   });
 });
