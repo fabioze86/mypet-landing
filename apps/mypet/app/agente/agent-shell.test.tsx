@@ -36,15 +36,14 @@ vi.mock("./cart-panel", () => ({
     </div>
   ),
 }));
+type ShellCartItem = { id: string; name: string; sku: string; brand: null; img: string; qty: number; unitPrice?: number };
+const DEFAULT_ITEMS: ShellCartItem[] = [
+  { id: "p1", name: "Shampoo", sku: "S1", brand: null, img: "/x.jpg", qty: 2, unitPrice: 10 },
+  { id: "p2", name: "Condicionador", sku: "S2", brand: null, img: "/y.jpg", qty: 1, unitPrice: 5.5 },
+];
+const shellCart = vi.hoisted(() => ({ items: [] as ShellCartItem[] }));
 vi.mock("@mypet/core/components/cart-provider", () => ({
-  useCart: () => ({
-    cart: {
-      items: [
-        { id: "p1", name: "Shampoo", sku: "S1", brand: null, img: "/x.jpg", qty: 2, unitPrice: 10 },
-        { id: "p2", name: "Condicionador", sku: "S2", brand: null, img: "/y.jpg", qty: 1, unitPrice: 5.5 },
-      ],
-    },
-  }),
+  useCart: () => ({ cart: { items: shellCart.items } }),
 }));
 vi.mock("../_components/pre-access/access-form", () => ({
   AccessForm: ({ redirectTo }: { redirectTo?: string }) => <form aria-label={`cadastro ${redirectTo}`} />,
@@ -72,7 +71,10 @@ function mockViewport(mobile: boolean) {
   );
 }
 
-beforeEach(() => mockViewport(false));
+beforeEach(() => {
+  mockViewport(false);
+  shellCart.items = DEFAULT_ITEMS;
+});
 afterEach(() => {
   vi.unstubAllGlobals();
   document.body.style.overflow = "";
@@ -199,6 +201,31 @@ describe("AgentShell", () => {
     fireEvent.click(screen.getByRole("button", { name: /Ver seu pedido/ }));
     fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("cliente (celular): barra indica itens sem preço no total", () => {
+    mockViewport(true);
+    shellCart.items = [...DEFAULT_ITEMS, { id: "p3", name: "Escova", sku: "S3", brand: null, img: "/z.jpg", qty: 1 }];
+    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    expect(
+      screen.getByRole("button", { name: /^Ver seu pedido · 4 itens · R\$\s?25,50 \+ itens sem preço$/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("cliente (celular): barra sem itens sem preço não mostra o aviso", () => {
+    mockViewport(true);
+    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    expect(screen.getByRole("button", { name: /Ver seu pedido/ }).textContent).not.toContain("sem preço");
+  });
+
+  it("cliente: intenção com cadeado não abre painel nem move o foco", () => {
+    mockViewport(true);
+    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    const lock = screen.getByRole("button", { name: "cadeado" });
+    lock.focus();
+    fireEvent.click(lock);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(lock).toHaveFocus();
   });
 
   it("rodapé informa que as conversas são guardadas", () => {

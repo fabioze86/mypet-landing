@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { formatBRL } from "@mypet/core/catalog-utils";
 import { useCart } from "@mypet/core/components/cart-provider";
 import { clientConfig } from "@/client.config";
 import { AgentChat, type AgentPageMode } from "./agent-chat";
@@ -9,7 +10,6 @@ import { CartPanel } from "./cart-panel";
 import { useSheetDialog } from "./use-sheet-dialog";
 
 const { name: SITE_NAME, logo } = clientConfig;
-const brl = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 
 // SSR-safe: false até montar no navegador
 function useIsMobile() {
@@ -38,9 +38,12 @@ function CartBar({
   const { cart } = useCart();
   const count = cart.items.reduce((sum, item) => sum + item.qty, 0);
   const total = cart.items.reduce((sum, item) => sum + (item.unitPrice ?? 0) * item.qty, 0);
+  // mesma regra do painel: o total não inclui itens sem preço, então avisa
+  const hasUnpriced = cart.items.some((item) => item.unitPrice == null);
   return (
     <button type="button" className="ag-unlock-bar ag-cart-bar" ref={barRef} hidden={hidden} onClick={onOpen}>
-      Ver seu pedido · {count} {count === 1 ? "item" : "itens"} · {brl(total)}
+      Ver seu pedido · {count} {count === 1 ? "item" : "itens"} · {formatBRL(total)}
+      {hasUnpriced && " + itens sem preço"}
     </button>
   );
 }
@@ -77,6 +80,8 @@ export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; ini
   useSheetDialog({ active: cartModal, onClose: handleClose, focusRef: cartHeadingRef });
   const handleLocked = useCallback(
     (nextReason: string) => {
+      // intenções com cadeado só existem para o visitante
+      if (!isVisitor) return;
       setReason(nextReason);
       if (isMobile) {
         setSheetOpen(true);
@@ -86,7 +91,7 @@ export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; ini
       headingRef.current?.closest("aside")?.scrollIntoView?.({ block: "nearest" });
       headingRef.current?.focus();
     },
-    [isMobile],
+    [isMobile, isVisitor],
   );
 
   return (

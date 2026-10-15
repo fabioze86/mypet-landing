@@ -74,6 +74,11 @@ export const AGENT_STYLES = `
   .ag-cart-title:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
   .ag-cart-empty, .ag-cart-done { margin: 0; color: var(--pa-muted); font-size: 14px; line-height: 1.55; }
   .ag-cart-done { color: var(--pa-green-dark); font-weight: 600; }
+  .ag-cart-done p { margin: 0; }
+  .ag-cart-done p + p { margin-top: 8px; }
+  .ag-cart-done a { color: var(--pa-green-dark); text-decoration: underline; text-underline-offset: 2px; }
+  .ag-cart-done:focus { outline: none; }
+  .ag-cart-done:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 4px; border-radius: 4px; }
   .ag-cart-empty a { color: var(--pa-green-dark); font-weight: 600; }
   .ag-cart-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; }
   .ag-cart-item { display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--pa-line); }
@@ -103,6 +108,8 @@ export const AGENT_STYLES = `
     .ag-cart-aside.is-open { display: block; }
     .ag-cart-aside .ag-cart { position: static; border: 0; }
     .ag-cart-aside .ag-cart-title { padding-right: 44px; }
+    /* o diálogo já rola: sem rolagem dentro de rolagem */
+    .ag-cart-aside .ag-cart-items { max-height: none; overflow: visible; }
     .ag-access-close { display: block; position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--pa-bg-soft); font-size: 20px; color: var(--pa-navy); cursor: pointer; }
     .ag-unlock-bar[hidden] { display: none; }
     .ag-access-close:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }

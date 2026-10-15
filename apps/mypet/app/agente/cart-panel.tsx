@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { formatBRL } from "@mypet/core/catalog-utils";
 import { useCart } from "@mypet/core/components/cart-provider";
 import { finalizeQuote } from "../cotacao/actions";
 import { buildOrderWhatsAppUrl, hasWhatsAppNumber } from "../cotacao/whatsapp-order";
 
-const brl = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 const SEND_FAILED = "Não foi possível enviar seu pedido agora. Tente novamente em instantes.";
 const NO_WHATSAPP = "Não foi possível abrir o WhatsApp agora. Tente novamente mais tarde.";
 
-type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
+// "sent" guarda a URL do WhatsApp: o window.open roda depois do await e pode
+// ser bloqueado (ex.: iOS Safari), então a confirmação mostra um link visível.
+type SendState =
+  | { kind: "idle" }
+  | { kind: "sending" }
+  | { kind: "sent"; whatsappUrl: string | null }
+  | { kind: "error"; message: string };
 
 export function CartPanel({
   conversationId,
@@ -20,6 +26,12 @@ export function CartPanel({
 }) {
   const { cart, updateQty, removeItem, clear } = useCart();
   const [state, setState] = useState<SendState>({ kind: "idle" });
+  const doneRef = useRef<HTMLDivElement>(null);
+  const sent = state.kind === "sent";
+  // o botão de envio some com a confirmação: leva o foco até ela (senão cai no <body>)
+  useEffect(() => {
+    if (sent) doneRef.current?.focus();
+  }, [sent]);
   const [seenItems, setSeenItems] = useState(cart.items);
   // Itens mudaram: o erro some; "enviado" só some quando chegam itens novos
   // (o clear() logo após o envio esvazia o carrinho e a mensagem deve ficar).
@@ -54,7 +66,7 @@ export function CartPanel({
     const url = buildOrderWhatsAppUrl(cart.items, result.buyer);
     if (url) window.open(url, "_blank");
     clear();
-    setState({ kind: "sent" });
+    setState({ kind: "sent", whatsappUrl: url });
   }
 
   return (
@@ -64,9 +76,19 @@ export function CartPanel({
       </h2>
 
       {state.kind === "sent" ? (
-        <p className="ag-cart-done" role="status">
-          Pedido enviado! Abrimos o WhatsApp com o seu pedido. Nosso time confirma estoque, frete e pagamento por lá.
-        </p>
+        <div className="ag-cart-done" role="status" tabIndex={-1} ref={doneRef}>
+          <p>
+            Pedido enviado! Abrimos o WhatsApp com o seu pedido. Nosso time confirma estoque, frete e pagamento por lá.
+          </p>
+          {state.whatsappUrl && (
+            <p>
+              O WhatsApp não abriu?{" "}
+              <a href={state.whatsappUrl} target="_blank" rel="noopener noreferrer">
+                Abrir WhatsApp
+              </a>
+            </p>
+          )}
+        </div>
       ) : cart.items.length === 0 ? (
         <p className="ag-cart-empty">
           Seu pedido está vazio. Peça ao agente (ex.: “põe 10 do shampoo neutro 5L”) ou use a{" "}
@@ -80,7 +102,7 @@ export function CartPanel({
                 <div className="ag-cart-item-info">
                   <span className="ag-cart-item-name">{item.name}</span>
                   <span className="ag-cart-item-price">
-                    {item.unitPrice != null ? brl(item.unitPrice * item.qty) : "Preço na tabela"}
+                    {item.unitPrice != null ? formatBRL(item.unitPrice * item.qty) : "Preço na tabela"}
                   </span>
                 </div>
                 <div className="ag-cart-stepper">
@@ -118,7 +140,7 @@ export function CartPanel({
               Total{" "}
               {hasUnpriced && <small className="ag-cart-total-note">+ itens sem preço</small>}
             </span>
-            <strong>{brl(total)}</strong>
+            <strong>{formatBRL(total)}</strong>
           </p>
           {state.kind === "error" && (
             <p className="ag-cart-error" role="alert">

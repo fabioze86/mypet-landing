@@ -68,6 +68,22 @@ describe("CartPanel", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Pedido enviado!");
   });
 
+  it("depois do envio mostra o link visível Abrir WhatsApp com a URL do pedido e leva o foco à confirmação", async () => {
+    cartState.items = [item];
+    buildOrderWhatsAppUrl.mockReturnValueOnce("https://wa.me/5511999998888?text=pedido");
+    finalizeQuote.mockResolvedValue({ ok: true, buyer: { nome: "Ana", empresa: "X", whatsapp: "55", cnpj: null } });
+    render(<CartPanel conversationId={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" }));
+    const link = await screen.findByRole("link", { name: "Abrir WhatsApp" });
+    expect(link).toHaveAttribute("href", "https://wa.me/5511999998888?text=pedido");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    // a tentativa automática continua
+    expect(open).toHaveBeenCalledWith("https://wa.me/5511999998888?text=pedido", "_blank");
+    // o botão some com o envio: o foco vai para a confirmação, não para o <body>
+    await waitFor(() => expect(screen.getByRole("status")).toHaveFocus());
+  });
+
   it("mostra o erro do envio e mantém o pedido", async () => {
     cartState.items = [item];
     finalizeQuote.mockResolvedValue({ ok: false, error: "Não foi possível registrar seu pedido." });
