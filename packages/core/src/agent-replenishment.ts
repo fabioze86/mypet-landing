@@ -1,5 +1,5 @@
 // Reposição pela compra habitual, em código puro (sem IA): para cada produto
-// comprado em pelo menos 2 pedidos, compara os dias desde a última compra com o
+// comprado em pelo menos 2 dias distintos (UTC), compara os dias desde a última compra com o
 // intervalo médio entre compras.
 
 export type ReplenishmentOrder = { status: string; createdAt: string; items: { productId: string; qty: number }[] };
@@ -19,7 +19,9 @@ export type ReplenishmentPlan = {
 const DAY_MS = 86_400_000;
 const DUE_RATIO = 0.8;
 
-type ProductHistory = { dates: number[]; lastQty: number };
+// Uma compra = um dia (UTC). Pedidos do mesmo produto no mesmo dia somam
+// quantidade na mesma compra; `time` é o horário do último pedido do dia.
+type Purchase = { day: number; time: number; qty: number };
 
 function sumByProduct(items: { productId: string; qty: number }[]): Map<string, number> {
   const totals = new Map<string, number>();
@@ -27,31 +29,41 @@ function sumByProduct(items: { productId: string; qty: number }[]): Map<string, 
   return totals;
 }
 
+const utcDay = (time: number) => Math.floor(time / DAY_MS);
+
 export function computeReplenishment(orders: ReplenishmentOrder[], now: Date, limit: number): ReplenishmentPlan {
   const valid = orders
-    .filter((o) => o.status !== "cancelado" && o.items.length > 0)
-    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+    .map((o) => ({ ...o, time: Date.parse(o.createdAt) }))
+    // createdAt inválido (NaN) descarta o pedido
+    .filter((o) => o.status !== "cancelado" && o.items.length > 0 && Number.isFinite(o.time))
+    .sort((a, b) => a.time - b.time);
   if (valid.length === 0) return { tipo: "sem_historico", itens: [] };
 
-  const history = new Map<string, ProductHistory>();
+  const history = new Map<string, Purchase[]>();
   for (const order of valid) {
-    const time = Date.parse(order.createdAt);
+    const day = utcDay(order.time);
     for (const [productId, qty] of sumByProduct(order.items)) {
-      const entry = history.get(productId) ?? { dates: [], lastQty: 0 };
-      entry.dates.push(time);
-      entry.lastQty = qty;
-      history.set(productId, entry);
+      const purchases = history.get(productId) ?? [];
+      const last = purchases[purchases.length - 1];
+      if (last && last.day === day) {
+        last.qty += qty;
+        last.time = order.time;
+      } else {
+        purchases.push({ day, time: order.time, qty });
+      }
+      history.set(productId, purchases);
     }
   }
 
   const due: (ReplenishmentSuggestion & { ratio: number })[] = [];
   let hasRepeat = false;
-  for (const [productId, { dates, lastQty }] of history) {
-    if (dates.length < 2) continue;
+  for (const [productId, purchases] of history) {
+    if (purchases.length < 2) continue;
     hasRepeat = true;
-    const first = dates[0];
-    const last = dates[dates.length - 1];
-    const average = (last - first) / (dates.length - 1) / DAY_MS;
+    const first = purchases[0].time;
+    const last = purchases[purchases.length - 1].time;
+    const lastQty = purchases[purchases.length - 1].qty;
+    const average = (last - first) / (purchases.length - 1) / DAY_MS;
     const since = (now.getTime() - last) / DAY_MS;
     if (average <= 0 || since < DUE_RATIO * average) continue;
     due.push({
@@ -73,11 +85,14 @@ export function computeReplenishment(orders: ReplenishmentOrder[], now: Date, li
     };
   }
 
+  // Sem repetição: a última compra = todos os pedidos do último dia, somados.
   const lastOrder = valid[valid.length - 1];
-  const since = Math.floor((now.getTime() - Date.parse(lastOrder.createdAt)) / DAY_MS);
+  const lastDay = utcDay(lastOrder.time);
+  const lastDayItems = valid.filter((o) => utcDay(o.time) === lastDay).flatMap((o) => o.items);
+  const since = Math.floor((now.getTime() - lastOrder.time) / DAY_MS);
   return {
     tipo: "compra_recente",
-    itens: [...sumByProduct(lastOrder.items)]
+    itens: [...sumByProduct(lastDayItems)]
       .slice(0, limit)
       .map(([productId, qty]) => ({ productId, daysSinceLast: since, averageIntervalDays: null, lastQty: qty })),
   };

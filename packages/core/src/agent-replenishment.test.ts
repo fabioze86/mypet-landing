@@ -70,4 +70,43 @@ describe("computeReplenishment", () => {
       ],
     });
   });
+
+  it("dois pedidos no mesmo dia com o mesmo produto contam como uma compra (compra_recente)", () => {
+    const orders: ReplenishmentOrder[] = [
+      { status: "entregue", createdAt: "2026-10-05T09:00:00Z", items: [{ productId: "racao", qty: 2 }] },
+      { status: "entregue", createdAt: "2026-10-05T17:00:00Z", items: [{ productId: "racao", qty: 3 }] },
+    ];
+    expect(computeReplenishment(orders, now, 8)).toEqual({
+      tipo: "compra_recente",
+      itens: [{ productId: "racao", daysSinceLast: 9, averageIntervalDays: null, lastQty: 5 }],
+    });
+  });
+
+  it("compras no mesmo dia somam na mesma data dentro do histórico de reposição", () => {
+    const orders: ReplenishmentOrder[] = [
+      { status: "entregue", createdAt: "2026-08-16T12:00:00Z", items: [{ productId: "racao", qty: 1 }] },
+      { status: "entregue", createdAt: "2026-09-15T08:00:00Z", items: [{ productId: "racao", qty: 2 }] },
+      { status: "entregue", createdAt: "2026-09-15T12:00:00Z", items: [{ productId: "racao", qty: 1 }] },
+    ];
+    // duas datas distintas, intervalo de 30 dias; a última compra soma 3
+    expect(computeReplenishment(orders, now, 8)).toEqual({
+      tipo: "reposicao",
+      itens: [{ productId: "racao", daysSinceLast: 30, averageIntervalDays: 30, lastQty: 3 }],
+    });
+  });
+
+  it("pedido com createdAt inválido é descartado", () => {
+    const orders: ReplenishmentOrder[] = [
+      order("2026-08-16", [["racao", 1]]),
+      { status: "entregue", createdAt: "não é data", items: [{ productId: "racao", qty: 9 }] },
+      order("2026-09-15", [["racao", 2]]),
+    ];
+    expect(computeReplenishment(orders, now, 8)).toEqual({
+      tipo: "reposicao",
+      itens: [{ productId: "racao", daysSinceLast: 30, averageIntervalDays: 30, lastQty: 2 }],
+    });
+    expect(
+      computeReplenishment([{ status: "entregue", createdAt: "", items: [{ productId: "a", qty: 1 }] }], now, 8),
+    ).toEqual({ tipo: "sem_historico", itens: [] });
+  });
 });
