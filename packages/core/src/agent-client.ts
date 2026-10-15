@@ -126,7 +126,7 @@ export function productsFromMessage(message: AgentMessage): AgentProduct[] {
   let products: AgentProduct[] = [];
   for (const part of message.parts) {
     const toolPart = part as { type: string; state?: string; output?: unknown };
-    const key = PRODUCT_TOOLS[toolPart.type];
+    const key = Object.hasOwn(PRODUCT_TOOLS, toolPart.type) ? PRODUCT_TOOLS[toolPart.type] : undefined;
     if (!key || toolPart.state !== "output-available") continue;
     const list = (toolPart.output as Record<string, unknown> | undefined)?.[key];
     if (Array.isArray(list)) products = list.filter(isAgentProduct);
@@ -144,6 +144,8 @@ function isCartChange(value: unknown): value is CartChange {
     typeof c.img === "string" &&
     (c.brand === null || typeof c.brand === "string") &&
     typeof c.unitPrice === "number" &&
+    Number.isFinite(c.unitPrice) &&
+    c.unitPrice >= 0 &&
     typeof c.qty === "number" &&
     Number.isInteger(c.qty) &&
     c.qty >= 0
@@ -214,8 +216,10 @@ export function useAgentChat({
     id: conversation.id,
     messages: conversation.messages,
     transport,
-    onFinish: ({ message, isAbort, isError }) => {
-      if (isAbort || isError || message.role !== "assistant") return;
+    // Também em abort/erro/desconexão: o servidor pode já ter executado alterar_pedido,
+    // e cartChangesFromMessage só lê partes concluídas (o consumidor aplica quantidades, idempotente).
+    onFinish: ({ message }) => {
+      if (message.role !== "assistant") return;
       onAssistantMessageRef.current?.(message);
     },
   });

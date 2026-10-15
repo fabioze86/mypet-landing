@@ -170,6 +170,27 @@ describe("mensagens", () => {
     expect(cartChangesFromMessage(message)).toEqual([change("a", 2), change("b", 0)]);
   });
 
+  it("cartChangesFromMessage ignora preço negativo ou não finito", () => {
+    const bad = (unitPrice: number) => ({ id: "a", name: "P", sku: "a", brand: null, img: "", unitPrice, qty: 1 });
+    const message = {
+      id: "a1",
+      role: "assistant",
+      parts: [
+        { type: "tool-alterar_pedido", toolCallId: "c1", state: "output-available", input: {}, output: { aplicados: [bad(-1), bad(NaN), bad(Infinity), bad(0)], recusados: [] } },
+      ],
+    } as unknown as AgentMessage;
+    expect(cartChangesFromMessage(message)).toEqual([bad(0)]);
+  });
+
+  it("productsFromMessage ignora partes com tipo herdado do Object", () => {
+    const message = {
+      id: "a1",
+      role: "assistant",
+      parts: [{ type: "constructor", state: "output-available", output: {} }],
+    } as unknown as AgentMessage;
+    expect(productsFromMessage(message)).toEqual([]);
+  });
+
   it("productsFromMessage também lê os itens de sugerir_reposicao", () => {
     const message = {
       id: "a1",

@@ -4,6 +4,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { createUIMessageStreamResponse, type UIMessageChunk } from "ai";
 import {
   AGENT_STORAGE_KEY,
+  cartChangesFromMessage,
   newConversation,
   useAgentChat,
   useAgentConversation,
@@ -20,6 +21,24 @@ function streamResponse(text = "Olá!") {
     { type: "text-delta", id: "t1", delta: text },
     { type: "text-end", id: "t1" },
     { type: "finish" },
+  ];
+  const stream = new ReadableStream<UIMessageChunk>({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(chunk);
+      controller.close();
+    },
+  });
+  return createUIMessageStreamResponse({ stream });
+}
+
+const CHANGE = { id: "a", name: "P a", sku: "a", brand: null, img: "", unitPrice: 10, qty: 2 };
+
+function toolStreamResponse(tail: UIMessageChunk[]) {
+  const chunks: UIMessageChunk[] = [
+    { type: "start" },
+    { type: "tool-input-available", toolCallId: "c1", toolName: "alterar_pedido", input: {} },
+    { type: "tool-output-available", toolCallId: "c1", output: { aplicados: [CHANGE], recusados: [] } },
+    ...tail,
   ];
   const stream = new ReadableStream<UIMessageChunk>({
     start(controller) {
@@ -166,6 +185,34 @@ describe("useAgentChat", () => {
     const message = onAssistantMessage.mock.calls[0][0];
     expect(message.role).toBe("assistant");
     expect(message.parts.some((p: { text?: string }) => p.text === "Olá!")).toBe(true);
+  });
+
+  it("onAssistantMessage traz as alterações do pedido da resposta concluída", async () => {
+    fetchMock.mockResolvedValue(toolStreamResponse([{ type: "finish" }]));
+    const onAssistantMessage = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentChat({ conversation, onConversationReset: vi.fn(), onAssistantMessage }),
+    );
+    act(() => {
+      result.current.sendText("Oi");
+    });
+    await waitFor(() => expect(onAssistantMessage).toHaveBeenCalledTimes(1));
+    expect(cartChangesFromMessage(onAssistantMessage.mock.calls[0][0])).toEqual([CHANGE]);
+  });
+
+  it("onAssistantMessage é chamado mesmo se o stream der erro depois de alterar_pedido", async () => {
+    fetchMock.mockResolvedValue(toolStreamResponse([{ type: "error", errorText: "falhou" }]));
+    const onAssistantMessage = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentChat({ conversation, onConversationReset: vi.fn(), onAssistantMessage }),
+    );
+    act(() => {
+      result.current.sendText("Oi");
+    });
+    await waitFor(() => expect(onAssistantMessage).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(result.current.busy).toBe(false));
+    expect(onAssistantMessage).toHaveBeenCalledTimes(1);
+    expect(cartChangesFromMessage(onAssistantMessage.mock.calls[0][0])).toEqual([CHANGE]);
   });
 
   it("onAssistantMessage não é chamado por mensagens restauradas", async () => {
