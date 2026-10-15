@@ -37,6 +37,11 @@ export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; ini
     wasModal.current = modal;
   }, [modal]);
 
+  // virou tela de computador com o painel aberto: fecha, para não reabrir sozinho ao voltar ao celular
+  useEffect(() => {
+    if (!isMobile) setSheetOpen(false);
+  }, [isMobile]);
+
   const handleQuestionUsed = useCallback(() => setQuestion(null), []);
   const handleClose = useCallback(() => setSheetOpen(false), []);
   const handleLocked = useCallback(
@@ -55,7 +60,7 @@ export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; ini
 
   return (
     <div className="ag-page">
-      <header className="pa-header">
+      <header className="pa-header" inert={modal}>
         <div className="pa-wrap pa-header-row">
           <a href="/" className="pa-brand" style={{ textDecoration: "none" }}>
             <span aria-hidden>{logo.emoji}</span>
@@ -108,7 +113,7 @@ export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; ini
         </button>
       )}
 
-      <footer className="ag-footer">
+      <footer className="ag-footer" inert={modal}>
         As conversas com o agente são guardadas para melhorar o atendimento. Dados de CNPJ e WhatsApp usados apenas
         para liberar a tabela de preços.
       </footer>

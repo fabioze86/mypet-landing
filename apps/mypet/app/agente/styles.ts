@@ -57,7 +57,8 @@ export const AGENT_STYLES = `
   .ag-benefits { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   .ag-benefits li { font-size: 14px; color: var(--pa-ink); }
   .ag-benefits li::before { content: "✓ "; color: var(--pa-green); font-weight: 700; }
-  .ag-access-reason:empty { display: none; }
+  .ag-access-reason:empty { min-height: 0; padding: 0; margin: 0; background: none; }
+  .ag-access form input { font-size: 16px; }
   .ag-chat-wrap { min-width: 0; }
   .ag-access-close { display: none; }
   .ag-unlock-bar { display: none; }

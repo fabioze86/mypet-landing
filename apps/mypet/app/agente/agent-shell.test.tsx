@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 
 vi.mock("./agent-chat", () => ({
   AgentChat: ({ onLockedIntent }: { onLockedIntent: (reason: string) => void }) => (
@@ -14,13 +14,22 @@ vi.mock("../_components/pre-access/access-form", () => ({
 
 import { AgentShell } from "./agent-shell";
 
+let mediaListeners: Array<() => void> = [];
+let mobileNow = false;
+
 function mockViewport(mobile: boolean) {
+  mobileNow = mobile;
+  mediaListeners = [];
   vi.stubGlobal(
     "matchMedia",
     vi.fn().mockImplementation(() => ({
-      matches: mobile,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      get matches() {
+        return mobileNow;
+      },
+      addEventListener: (_: string, fn: () => void) => mediaListeners.push(fn),
+      removeEventListener: (_: string, fn: () => void) => {
+        mediaListeners = mediaListeners.filter((l) => l !== fn);
+      },
     })),
   );
 }
@@ -72,6 +81,41 @@ describe("AgentShell", () => {
     expect(screen.getByRole("dialog", { name: "Acesso completo ao agente" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Cadastre-se para ver os preços da tabela.");
     fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("celular: com o painel aberto, cabeçalho, chat e rodapé ficam inert", () => {
+    mockViewport(true);
+    const { container } = render(<AgentShell mode="visitante" initialQuestion={null} />);
+    const regions = () => [
+      container.querySelector("header.pa-header"),
+      container.querySelector(".ag-chat-wrap"),
+      container.querySelector("footer.ag-footer"),
+    ];
+    for (const el of regions()) expect(el).not.toHaveAttribute("inert");
+    fireEvent.click(screen.getByRole("button", { name: "Liberar acesso completo" }));
+    for (const el of regions()) expect(el).toHaveAttribute("inert");
+    fireEvent.keyDown(document, { key: "Escape" });
+    for (const el of regions()) expect(el).not.toHaveAttribute("inert");
+  });
+
+  it("painel aberto no celular fecha ao virar tela de computador", () => {
+    mockViewport(true);
+    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    fireEvent.click(screen.getByRole("button", { name: "Liberar acesso completo" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    act(() => {
+      mobileNow = false;
+      mediaListeners.forEach((fn) => fn());
+    });
+    expect(screen.queryByRole("dialog")).toBeNull();
+
+    // voltar ao celular não reabre o painel sozinho
+    act(() => {
+      mobileNow = true;
+      mediaListeners.forEach((fn) => fn());
+    });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
