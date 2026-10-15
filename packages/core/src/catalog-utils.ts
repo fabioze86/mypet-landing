@@ -109,9 +109,16 @@ export function salePriceFromChannelPrices(prices: RawChannelPrice[] | null | un
   return Number.isFinite(value) ? value : null;
 }
 
+const BRL_FORMAT = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+/** Valor em reais no padrão pt-BR (ex.: "R$ 1.234,50"). */
+export function formatBRL(value: number): string {
+  return BRL_FORMAT.format(value);
+}
+
 export function formatPrice(value: number | null): string | null {
   if (value === null) return null;
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+  return formatBRL(value);
 }
 
 export function parsePage(raw: string | undefined): number {

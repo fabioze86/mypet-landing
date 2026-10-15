@@ -226,3 +226,13 @@ describe("buildSearchOrFilter", () => {
     );
   });
 });
+
+describe("formatBRL", () => {
+  it("formata em reais no padrão pt-BR, igual ao formatPrice", async () => {
+    const { formatBRL, formatPrice } = await import("./catalog-utils");
+    const normalize = (s: string) => s.replace(/\s/g, " ");
+    expect(normalize(formatBRL(899))).toBe("R$ 899,00");
+    expect(normalize(formatBRL(1234.5))).toBe("R$ 1.234,50");
+    expect(formatBRL(89.9)).toBe(formatPrice(89.9));
+  });
+});
