@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import type { AgentMessage } from "@mypet/core/agent-client";
 
@@ -9,6 +9,7 @@ const chat = vi.hoisted(() => ({
     error: null as { code: string | null; message: string } | null,
   },
   sendText: vi.fn(() => true),
+  clearNotice: vi.fn(),
 }));
 
 vi.mock("@mypet/core/agent-client", async (importOriginal) => {
@@ -18,7 +19,8 @@ vi.mock("@mypet/core/agent-client", async (importOriginal) => {
     useAgentConversation: () => ({
       conversation: { id: "3f1c2a7e-8b4d-4c1a-9f2e-1a2b3c4d5e6f", messages: [] },
       reset: vi.fn(),
-      notice: null,
+      notice: "Começamos uma nova conversa. Envie sua pergunta de novo.",
+      clearNotice: chat.clearNotice,
     }),
     useAgentChat: () => ({ ...chat.state, sendText: chat.sendText }),
   };
@@ -69,8 +71,11 @@ function renderChat(mode: "visitante" | "cliente", extra: Partial<Parameters<typ
 
 beforeEach(() => {
   chat.state = { messages: [], busy: false, error: null };
-  chat.sendText.mockClear();
+  chat.sendText = vi.fn(() => true);
+  chat.clearNotice.mockClear();
 });
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("AgentChat", () => {
   it("visitante: boas-vindas com intenções livres e com cadeado", () => {
@@ -122,6 +127,33 @@ describe("AgentChat", () => {
     renderChat("cliente");
     expect(screen.getByText("R$ 89,90")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver na tabela" })).toHaveAttribute("href", "/pedido-rapido");
+  });
+
+  it("cliente: produto sem preço (mensagem antiga de visitante) só convida a ver o preço na tabela", () => {
+    chat.state.messages = [assistantWithProducts(false)];
+    renderChat("cliente");
+    expect(screen.queryByText(/Sob consulta/)).toBeNull();
+    expect(screen.queryByRole("link", { name: "Ver na tabela" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Ver preço na tabela" })).toHaveAttribute("href", "/pedido-rapido");
+  });
+
+  it("aviso de conversa nova some quando uma pergunta é aceita, não quando é recusada", () => {
+    renderChat("visitante");
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    chat.sendText.mockReturnValueOnce(false);
+    fireEvent.click(screen.getByRole("button", { name: /Frete e prazos de entrega/ }));
+    expect(chat.clearNotice).not.toHaveBeenCalled();
+    const input = screen.getByLabelText("Sua pergunta");
+    fireEvent.change(input, { target: { value: "Tem shampoo?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Enviar" }));
+    expect(chat.clearNotice).toHaveBeenCalledTimes(1);
+  });
+
+  it("pergunta inicial tira só ?pergunta= da URL, mantendo os outros parâmetros", () => {
+    window.history.replaceState(null, "", "/agente?pergunta=x&utm_source=y");
+    const spy = vi.spyOn(window.history, "replaceState");
+    renderChat("visitante", { initialQuestion: "x" });
+    expect(spy).toHaveBeenCalledWith(null, "", "/agente?utm_source=y");
   });
 
   it("mostra o erro", () => {

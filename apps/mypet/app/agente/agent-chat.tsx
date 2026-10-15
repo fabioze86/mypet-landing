@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   messageText,
   productsFromMessage,
@@ -62,7 +62,7 @@ function renderWithLinks(text: string) {
 }
 
 export function AgentChat(props: AgentChatProps) {
-  const { conversation, reset, notice } = useAgentConversation();
+  const { conversation, reset, notice, clearNotice } = useAgentConversation();
   if (!conversation) {
     return (
       <section className="ag-chat" aria-labelledby="ag-chat-title" aria-busy="true">
@@ -70,7 +70,7 @@ export function AgentChat(props: AgentChatProps) {
       </section>
     );
   }
-  return <AgentChatSession key={conversation.id} conversation={conversation} onReset={reset} notice={notice} {...props} />;
+  return <AgentChatSession key={conversation.id} conversation={conversation} onReset={reset} notice={notice} onNoticeClear={clearNotice} {...props} />;
 }
 
 function ChatHead() {
@@ -88,17 +88,32 @@ function AgentChatSession({
   conversation,
   onReset,
   notice,
+  onNoticeClear,
   mode,
   initialQuestion,
   onInitialQuestionUsed,
   onLockedIntent,
-}: AgentChatProps & { conversation: StoredConversation; onReset: (notice?: string) => void; notice: string | null }) {
+}: AgentChatProps & {
+  conversation: StoredConversation;
+  onReset: (notice?: string) => void;
+  notice: string | null;
+  onNoticeClear: () => void;
+}) {
   const { cart } = useCart();
-  const { messages, sendText, busy, error } = useAgentChat({
+  const { messages, sendText: send, busy, error } = useAgentChat({
     conversation,
     getCart: () => cart.items.map((item) => ({ id: item.id, name: item.name, qty: item.qty, unitPrice: item.unitPrice ?? null })),
     onConversationReset: onReset,
   });
+  // pergunta aceita: o aviso de "conversa nova" já cumpriu o papel
+  const sendText = useCallback(
+    (text: string) => {
+      const accepted = send(text);
+      if (accepted) onNoticeClear();
+      return accepted;
+    },
+    [send, onNoticeClear],
+  );
   const [input, setInput] = useState("");
   const logRef = useRef<HTMLDivElement>(null);
   // StrictMode roda efeitos duas vezes em desenvolvimento: a ref evita enviar
@@ -113,7 +128,9 @@ function AgentChatSession({
     sentInitial.current = true;
     onInitialQuestionUsed();
     // a pergunta já foi enviada: tira o ?pergunta= da URL
-    window.history.replaceState(null, "", "/agente");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("pergunta");
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }, [initialQuestion, onInitialQuestionUsed, sendText]);
 
   useEffect(() => {

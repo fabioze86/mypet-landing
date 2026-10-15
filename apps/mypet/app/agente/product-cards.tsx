@@ -26,10 +26,19 @@ export function ProductCards({
           </div>
           {mode === "cliente" ? (
             <div className="ag-product-side">
-              <span className="ag-product-price">{p.priceLabel ?? "Sob consulta"}</span>
-              <a href="/pedido-rapido" className="ag-product-link">
-                Ver na tabela
-              </a>
+              {p.priceLabel ? (
+                <>
+                  <span className="ag-product-price">{p.priceLabel}</span>
+                  <a href="/pedido-rapido" className="ag-product-link">
+                    Ver na tabela
+                  </a>
+                </>
+              ) : (
+                // mensagem antiga de antes do cadastro: veio sem preço
+                <a href="/pedido-rapido" className="ag-product-link">
+                  Ver preço na tabela
+                </a>
+              )}
             </div>
           ) : (
             <button type="button" className="ag-product-lock" onClick={() => onLockedIntent(PRICE_LOCK_REASON)}>
