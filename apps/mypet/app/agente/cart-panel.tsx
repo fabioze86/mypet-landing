@@ -6,6 +6,7 @@ import { finalizeQuote } from "../cotacao/actions";
 import { buildOrderWhatsAppUrl, hasWhatsAppNumber } from "../cotacao/whatsapp-order";
 
 const brl = (n: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
+const SEND_FAILED = "Não foi possível enviar seu pedido agora. Tente novamente em instantes.";
 const NO_WHATSAPP = "Não foi possível abrir o WhatsApp agora. Tente novamente mais tarde.";
 
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
@@ -19,6 +20,14 @@ export function CartPanel({
 }) {
   const { cart, updateQty, removeItem, clear } = useCart();
   const [state, setState] = useState<SendState>({ kind: "idle" });
+  const [seenItems, setSeenItems] = useState(cart.items);
+  // Itens mudaram: o erro some; "enviado" só some quando chegam itens novos
+  // (o clear() logo após o envio esvazia o carrinho e a mensagem deve ficar).
+  if (seenItems !== cart.items) {
+    setSeenItems(cart.items);
+    if (state.kind === "error" || (state.kind === "sent" && cart.items.length > 0)) setState({ kind: "idle" });
+  }
+  const hasUnpriced = cart.items.some((item) => item.unitPrice == null);
   const total = cart.items.reduce((sum, item) => sum + (item.unitPrice ?? 0) * item.qty, 0);
 
   async function send() {
@@ -27,7 +36,13 @@ export function CartPanel({
       return;
     }
     setState({ kind: "sending" });
-    const result = await finalizeQuote(cart.items, conversationId ? { agentConversationId: conversationId } : {});
+    let result: Awaited<ReturnType<typeof finalizeQuote>>;
+    try {
+      result = await finalizeQuote(cart.items, conversationId ? { agentConversationId: conversationId } : {});
+    } catch {
+      setState({ kind: "error", message: SEND_FAILED });
+      return;
+    }
     if (!result.ok) {
       if (result.needsAuth) {
         window.location.assign("/agente");
@@ -65,7 +80,7 @@ export function CartPanel({
                 <div className="ag-cart-item-info">
                   <span className="ag-cart-item-name">{item.name}</span>
                   <span className="ag-cart-item-price">
-                    {item.unitPrice != null ? brl(item.unitPrice * item.qty) : "Sob consulta"}
+                    {item.unitPrice != null ? brl(item.unitPrice * item.qty) : "Preço na tabela"}
                   </span>
                 </div>
                 <div className="ag-cart-stepper">
@@ -76,7 +91,9 @@ export function CartPanel({
                   >
                     −
                   </button>
-                  <span aria-label={`Quantidade de ${item.name}`}>{item.qty}</span>
+                  <span className="ag-cart-qty" aria-live="polite">
+                    {item.qty}
+                  </span>
                   <button
                     type="button"
                     aria-label={`Aumentar quantidade de ${item.name}`}
@@ -97,7 +114,10 @@ export function CartPanel({
             ))}
           </ul>
           <p className="ag-cart-total">
-            <span>Total</span>
+            <span>
+              Total{" "}
+              {hasUnpriced && <small className="ag-cart-total-note">+ itens sem preço</small>}
+            </span>
             <strong>{brl(total)}</strong>
           </p>
           {state.kind === "error" && (

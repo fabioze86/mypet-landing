@@ -36,4 +36,22 @@ describe("applyCartChanges", () => {
     expect(cart.addItem).toHaveBeenCalledTimes(1);
     expect(cart.updateQty).not.toHaveBeenCalled();
   });
+
+  it("com linha avulsa e de campanha do mesmo produto, ignora a mudança e avisa", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const cart = { ...fakeCart([]), items: [{ id: "a" }, { id: "a", campaignId: "camp" }] };
+    applyCartChanges([change("a", 3), change("a", 0)], cart);
+    expect(cart.addItem).not.toHaveBeenCalled();
+    expect(cart.updateQty).not.toHaveBeenCalled();
+    expect(cart.removeItem).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it("só linha de campanha: quantidade 0 não faz nada", () => {
+    const cart = { ...fakeCart([]), items: [{ id: "a", campaignId: "camp" }] };
+    applyCartChanges([change("a", 0)], cart);
+    expect(cart.removeItem).not.toHaveBeenCalled();
+    expect(cart.addItem).not.toHaveBeenCalled();
+  });
 });

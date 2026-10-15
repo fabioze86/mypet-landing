@@ -79,17 +79,20 @@ export const AGENT_STYLES = `
   .ag-cart-stepper { display: flex; align-items: center; gap: 8px; }
   .ag-cart-stepper button { width: 32px; height: 32px; border: 1px solid var(--pa-line); border-radius: 8px; background: #fff; color: var(--pa-navy); font-size: 16px; cursor: pointer; }
   .ag-cart-stepper button:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
-  .ag-cart-stepper span { min-width: 28px; text-align: center; font-weight: 600; }
-  .ag-cart-remove { margin-left: auto; color: var(--pa-muted) !important; }
+  .ag-cart-qty { min-width: 28px; text-align: center; font-weight: 600; }
+  .ag-cart-stepper .ag-cart-remove { margin-left: auto; color: var(--pa-muted); }
   .ag-cart-total { display: flex; justify-content: space-between; margin: 14px 0; font-size: 16px; color: var(--pa-ink); }
+  .ag-cart-total-note { color: var(--pa-muted); font-size: 12px; }
   .ag-cart-error { margin: 0 0 10px; color: #B42318; font-size: 14px; }
   .ag-cart-send { width: 100%; padding: 14px; border: 0; border-radius: var(--pa-r-pill); background: var(--pa-green); color: #fff; font-family: var(--pa-geist); font-weight: 600; font-size: 15px; cursor: pointer; }
   .ag-cart-send:disabled { opacity: .6; cursor: default; }
   .ag-cart-send:focus-visible { outline: 2px solid var(--pa-navy); outline-offset: 2px; }
 
   @media (max-width: 900px) {
-    .ag-main,.ag-main--split { grid-template-columns: 1fr; padding: 12px 12px 88px; }
+    .ag-main, .ag-main--split { grid-template-columns: 1fr; padding: 12px 12px 88px; }
     .ag-chat { height: calc(100dvh - 68px - 100px); min-height: 420px; }
+    .ag-cart { position: static; }
+    .ag-cart-stepper button { width: 44px; height: 44px; }
     .ag-access { display: none; position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 60; max-height: 88dvh; overflow-y: auto; border-radius: 20px 20px 0 0; box-shadow: 0 -16px 40px rgba(15,31,69,0.25); }
     .ag-access.is-open { display: block; }
     .ag-access-close { display: block; position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--pa-bg-soft); font-size: 20px; color: var(--pa-navy); cursor: pointer; }
