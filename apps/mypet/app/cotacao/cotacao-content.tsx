@@ -3,13 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatBRL } from "@mypet/core/catalog-utils";
 import { useCart } from "@mypet/core/components/cart-provider";
 import type { Palette } from "@mypet/core/theme";
 import { finalizeQuote } from "./actions";
 import { buildOrderWhatsAppUrl, hasWhatsAppNumber } from "./whatsapp-order";
-
-const brl = (n: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
 
 export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   const { cart, removeItem, updateQty, clear } = useCart();
@@ -17,6 +15,9 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  // window.open roda depois do await e pode ser bloqueado (ex.: iOS Safari):
+  // a confirmação mostra a URL como link visível.
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
 
   const total = cart.items.reduce(
     (sum, item) => sum + (item.unitPrice != null ? item.unitPrice * item.qty : 0),
@@ -33,6 +34,19 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
         <p style={{ fontSize: 14, lineHeight: 1.55, color: PALETTE.gray600, margin: "0 0 20px" }}>
           Abrimos o WhatsApp com o seu pedido. Nosso time confirma estoque, frete e pagamento e fecha o pedido com você por lá.
         </p>
+        {whatsappUrl && (
+          <p style={{ fontSize: 14, lineHeight: 1.55, color: PALETTE.gray600, margin: "0 0 20px" }}>
+            O WhatsApp não abriu?{" "}
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: PALETTE.navy, fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 2 }}
+            >
+              Abrir WhatsApp
+            </a>
+          </p>
+        )}
         <div className="cq-done-actions">
           <Link href="/pedido-rapido" className="ba-btn ba-btn-primary">
             Fazer novo pedido
@@ -87,6 +101,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     if (url) window.open(url, "_blank");
 
     clear();
+    setWhatsappUrl(url);
     setSubmitted(true);
     setSubmitting(false);
   };
@@ -106,7 +121,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
               )}
               <p className="cq-name" style={{ color: PALETTE.navy }}>{item.name}</p>
               <p className="cq-meta" style={{ color: PALETTE.gray400 }}>
-                {[item.sku ? `SKU: ${item.sku}` : null, item.unitPrice != null ? `${brl(item.unitPrice)} / un.` : null]
+                {[item.sku ? `SKU: ${item.sku}` : null, item.unitPrice != null ? `${formatBRL(item.unitPrice)} / un.` : null]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
@@ -131,7 +146,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
               </button>
             </div>
             <div className="cq-subtotal" style={{ color: PALETTE.navy }}>
-              {item.unitPrice != null ? brl(item.unitPrice * item.qty) : "—"}
+              {item.unitPrice != null ? formatBRL(item.unitPrice * item.qty) : "—"}
             </div>
             <button
               type="button"
@@ -149,7 +164,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       <div className="ba-card" style={{ padding: 20 }}>
         <div className="cq-total" style={{ color: PALETTE.navy }}>
           <span style={{ fontSize: 15, fontWeight: 600 }}>Total:</span>
-          <span style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{brl(total)}</span>
+          <span style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{formatBRL(total)}</span>
         </div>
         {submitError && (
           <p style={{ color: "#C0392B", fontSize: 13, fontWeight: 600, margin: "0 0 12px", textAlign: "center" }}>{submitError}</p>

@@ -1,13 +1,20 @@
 // @vitest-environment jsdom
 import { createElement } from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, beforeEach, vi } from "vitest";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { ClientConfigProvider, type ClientConfig } from "@mypet/core/theme";
 import { CotacaoContent } from "./cotacao-content";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("./actions", () => ({ finalizeQuote: vi.fn() }));
+vi.mock("./whatsapp-order", () => ({
+  hasWhatsAppNumber: () => true,
+  buildOrderWhatsAppUrl: vi.fn(() => "https://wa.me/5511999998888?text=pedido"),
+}));
+
+import { finalizeQuote } from "./actions";
+import { buildOrderWhatsAppUrl } from "./whatsapp-order";
 
 const config: ClientConfig = {
   name: "My Pet Brasil",
@@ -67,5 +74,33 @@ describe("CotacaoContent — subtotal e total", () => {
 
     expect(screen.getByText(/Total:/)).toBeInTheDocument();
     expect(screen.getAllByText("R$ 150,00").length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("CotacaoContent — envio", () => {
+  const open = vi.fn();
+  beforeEach(() => {
+    localStorage.clear();
+    open.mockReset();
+    vi.stubGlobal("open", open);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("depois do envio mostra o link visível Abrir WhatsApp com a URL do pedido", async () => {
+    vi.mocked(finalizeQuote).mockResolvedValue({
+      ok: true,
+      buyer: { nome: "Ana", empresa: "Loja", whatsapp: "11999998888", cnpj: null },
+    });
+    renderWithCart([{ id: "p1", name: "Ração X", sku: "100", brand: "NAPI", img: "/img.jpg", qty: 2, unitPrice: 42.9 }]);
+    fireEvent.click(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" }));
+
+    const link = await screen.findByRole("link", { name: "Abrir WhatsApp" });
+    expect(link).toHaveAttribute("href", "https://wa.me/5511999998888?text=pedido");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    expect(buildOrderWhatsAppUrl).toHaveBeenCalled();
+    // a tentativa automática continua
+    expect(open).toHaveBeenCalledWith("https://wa.me/5511999998888?text=pedido", "_blank");
+    expect(screen.getByText("Pedido enviado!")).toBeInTheDocument();
   });
 });
