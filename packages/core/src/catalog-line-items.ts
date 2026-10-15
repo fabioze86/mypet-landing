@@ -183,3 +183,89 @@ export async function getCatalogLineItems(params: {
   cacheTag("catalog");
   return queryCatalogLineItems(params);
 }
+
+const MAX_IDS = 50;
+
+type RawLineItemByIdRow = RawLineItemProductRow & {
+  parent_product_id: string | null;
+  variant_axis: VariantAxisEntry[] | null;
+};
+
+type RawParentRow = {
+  id: string;
+  name: string;
+  brand: string | null;
+  product_assets: { url: string; type: string }[] | null;
+};
+
+function variantLabelOrNull(axis: VariantAxisEntry[] | null, sku: string): string | null {
+  const label = (axis ?? [])
+    .slice()
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
+    .map((a) => a.valor)
+    .join(" / ")
+    .trim();
+  if (!label || label.toLowerCase() === sku.trim().toLowerCase()) return null;
+  return label;
+}
+
+/**
+ * Linhas da tabela pelos ids (produto simples ou variação), com o preço atual
+ * do canal. Usado pelo agente para pôr produtos no pedido e sugerir reposição.
+ * Sem cache: o preço precisa ser o de agora.
+ */
+export async function queryLineItemsByIds(ids: string[], channel: string): Promise<CatalogLineItem[]> {
+  const unique = [...new Set(ids)].slice(0, MAX_IDS);
+  if (unique.length === 0) return [];
+  const supabase = getHubClient();
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      `${LINE_ITEM_PRODUCT_SELECT}, parent_product_id, variant_axis, product_channel_links!inner(channel)`,
+    )
+    .in("id", unique)
+    .eq("status", "active")
+    .neq("product_role", "parent")
+    .eq("product_channel_links.channel", channel)
+    .eq("product_channel_prices.channel", channel);
+
+  if (error) {
+    console.error("[catalog-line-items] erro ao buscar produtos por id:", error.message);
+    return [];
+  }
+
+  const rows = (data as unknown as RawLineItemByIdRow[]) ?? [];
+  const parentIds = [...new Set(rows.map((r) => r.parent_product_id).filter((id): id is string => Boolean(id)))];
+  const parents = new Map<string, RawParentRow>();
+  if (parentIds.length > 0) {
+    const { data: parentData, error: parentError } = await supabase
+      .from("products")
+      .select("id, name, brand, product_assets(url, type)")
+      .in("id", parentIds);
+    if (parentError) console.error("[catalog-line-items] erro ao buscar produtos-pai:", parentError.message);
+    for (const parent of (parentData as unknown as RawParentRow[]) ?? []) parents.set(parent.id, parent);
+  }
+
+  const byId = new Map<string, CatalogLineItem>();
+  for (const row of rows) {
+    const unitPrice = salePriceFromChannelPrices(row.product_channel_prices);
+    const sku = row.reference ?? "";
+    const parent = row.parent_product_id ? parents.get(row.parent_product_id) : undefined;
+    const ownImg = mainImage(row.product_assets);
+    byId.set(row.id, {
+      id: row.id,
+      name: parent?.name ?? row.name,
+      sku,
+      brand: parent?.brand ?? row.brand,
+      img: ownImg !== PLACEHOLDER_IMAGE || !parent ? ownImg : mainImage(parent.product_assets),
+      unitPrice,
+      priceLabel: formatPrice(unitPrice),
+      variantLabel: row.product_role === "variant" ? variantLabelOrNull(row.variant_axis, sku) : null,
+    });
+  }
+  return unique.flatMap((id) => {
+    const item = byId.get(id);
+    return item ? [item] : [];
+  });
+}
