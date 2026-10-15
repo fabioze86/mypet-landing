@@ -13,6 +13,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAssistantModelChain } from "./ai-provider";
 import { consumeAiQuota, hashClientIp } from "./ai-usage-limits";
 import { buildCatalogTool } from "./agent-catalog-tool";
+import { buildCustomerTools } from "./agent-customer-tools";
 import { ensureConversation, loadHistory, saveTurn, type ConversationAccess } from "./agent-conversations";
 import { buildAgentInstructions, type AgentFaqItem, type AgentMode } from "./agent-prompt";
 import { parseAgentRequest } from "./agent-request";
@@ -111,7 +112,11 @@ export function createAgentHandler(config: AgentConfig) {
     }
     const store = access === "ok" ? supabase : null;
 
-    const tools = { buscar_produtos: buildCatalogTool({ channel: config.channel, showPrices: mode === "cliente" }) };
+    const catalogTool = buildCatalogTool({ channel: config.channel, showPrices: mode === "cliente" });
+    // Visitante não recebe as ferramentas de pedido; o comprador delas é o do cookie.
+    const tools: ToolSet = buyer
+      ? { buscar_produtos: catalogTool, ...buildCustomerTools({ channel: config.channel, buyerId: buyer.id }) }
+      : { buscar_produtos: catalogTool };
     const history = store
       ? await loadHistory(store, id, mode === "visitante" ? { onlyMode: "visitante" } : {})
       : [];

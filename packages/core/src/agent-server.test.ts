@@ -12,7 +12,8 @@ vi.mock("./ai-provider", () => ({ getAssistantModelChain: vi.fn() }));
 vi.mock("./ai-usage-limits", () => ({ consumeAiQuota: vi.fn(async () => null), hashClientIp: () => "iphash" }));
 vi.mock("./help-center", () => ({ getArtigosAjudaPublicados: vi.fn(async () => []) }));
 vi.mock("./catalog", () => ({ getBrands: vi.fn(async () => []) }));
-vi.mock("./catalog-line-items", () => ({ getCatalogLineItems: vi.fn() }));
+vi.mock("./catalog-line-items", () => ({ getCatalogLineItems: vi.fn(), queryLineItemsByIds: vi.fn() }));
+vi.mock("./orders-server", () => ({ getOrdersByBuyer: vi.fn(async () => []) }));
 vi.mock("./supabase", () => ({ getHubServiceClient: () => ({}) }));
 vi.mock("./agent-conversations", () => ({
   ensureConversation: vi.fn(async () => "ok"),
@@ -163,6 +164,20 @@ describe("POST /api/agente", () => {
     await (await handler({ id: "b1", empresa: "Pet Shop X" })(makeRequest(validBody))).text();
     const prompt = JSON.stringify(model.doStreamCalls[0].prompt);
     expect(prompt).toContain("Você atende um cliente cadastrado: Pet Shop X.");
+  });
+
+  it("cliente recebe as ferramentas de pedido; visitante não", async () => {
+    const visitorModel = textModel("Oi.");
+    useModels(visitorModel);
+    await (await handler()(makeRequest(validBody))).text();
+    const visitorTools = (visitorModel.doStreamCalls[0].tools ?? []).map((t: { name: string }) => t.name);
+    expect(visitorTools).toEqual(["buscar_produtos"]);
+
+    const clientModel = textModel("Oi.");
+    useModels(clientModel);
+    await (await handler({ id: "b1", empresa: null })(makeRequest(validBody))).text();
+    const clientTools = (clientModel.doStreamCalls[0].tools ?? []).map((t: { name: string }) => t.name).sort();
+    expect(clientTools).toEqual(["alterar_pedido", "buscar_produtos", "status_pedidos", "sugerir_reposicao"]);
   });
 
   it("falha ao identificar comprador trata como visitante", async () => {
