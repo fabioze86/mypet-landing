@@ -231,9 +231,10 @@ export async function queryLineItemsByIds(ids: string[], channel: string): Promi
     .eq("product_channel_prices.channel", channel);
 
   if (error) {
-    console.error("[catalog-line-items] erro ao buscar produtos por id:", error.message);
+    console.error("[catalog-line-items] erro ao buscar produtos por id:", error.message, error);
     // Lança: o agente não pode tratar falha de consulta como "produto não existe".
-    throw new Error(`Falha ao consultar produtos por id: ${error.message}`);
+    // Mensagem genérica: o texto cru do banco não vai para o modelo.
+    throw new Error("Falha ao consultar produtos.");
   }
 
   const rows = (data as unknown as RawLineItemByIdRow[]) ?? [];

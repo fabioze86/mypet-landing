@@ -105,8 +105,12 @@ describe("queryLineItemsByIds", () => {
   });
 
   it("erro do banco na consulta principal lança", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    queue.push({ data: null, error: { message: "down" } });
-    await expect(queryLineItemsByIds(["s1"], "mypetbrasil")).rejects.toThrow();
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    queue.push({ data: null, error: { message: "permission denied for table products" } });
+    const err = await queryLineItemsByIds(["s1"], "mypetbrasil").catch((e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    // modelo vê só a mensagem genérica; o detalhe do banco fica no log
+    expect((err as Error).message).toBe("Falha ao consultar produtos.");
+    expect(log).toHaveBeenCalledWith(expect.any(String), expect.stringContaining("permission denied"), expect.anything());
   });
 });

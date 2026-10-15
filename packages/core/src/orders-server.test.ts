@@ -75,6 +75,71 @@ describe("createOrder", () => {
     expect("agent_conversation_id" in inserted).toBe(false);
   });
 
+  it("repete o insert sem agent_conversation_id quando a coluna não existe (PGRST204)", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const ordersInsert = vi.fn().mockReturnThis();
+    const single = vi
+      .fn()
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST204", message: "Could not find the 'agent_conversation_id' column" } })
+      .mockResolvedValueOnce({ data: { id: "o2" }, error: null });
+    const orderItemsInsert = vi.fn().mockResolvedValue({ error: null });
+    const supabase = {
+      from: vi.fn((table: string) => {
+        if (table === "orders") return { insert: ordersInsert, select: vi.fn().mockReturnThis(), single };
+        return { insert: orderItemsInsert };
+      }),
+    } as unknown as SupabaseClient;
+
+    const result = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items, agentConversationId: "c1" });
+
+    expect(result).toEqual({ orderId: "o2", error: null });
+    expect(ordersInsert).toHaveBeenCalledTimes(2);
+    expect(ordersInsert.mock.calls[0][0]).toHaveProperty("agent_conversation_id", "c1");
+    const retried = ordersInsert.mock.calls[1][0];
+    expect(retried).toEqual({ buyer_id: "b1", channel: "mypetbrasil", status: "pendente" });
+    expect("agent_conversation_id" in retried).toBe(false);
+    expect(orderItemsInsert).toHaveBeenCalledWith([
+      { order_id: "o2", product_id: "p1", product_name_snapshot: "Ração Premium 15kg", qty: 2 },
+    ]);
+  });
+
+  it("repete o insert também com código 42703", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const ordersInsert = vi.fn().mockReturnThis();
+    const single = vi
+      .fn()
+      .mockResolvedValueOnce({ data: null, error: { code: "42703", message: "column does not exist" } })
+      .mockResolvedValueOnce({ data: { id: "o3" }, error: null });
+    const supabase = {
+      from: vi.fn((table: string) => {
+        if (table === "orders") return { insert: ordersInsert, select: vi.fn().mockReturnThis(), single };
+        return { insert: vi.fn().mockResolvedValue({ error: null }) };
+      }),
+    } as unknown as SupabaseClient;
+
+    const result = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items, agentConversationId: "c1" });
+    expect(result).toEqual({ orderId: "o3", error: null });
+    expect(ordersInsert).toHaveBeenCalledTimes(2);
+  });
+
+  it("não repete o insert em outros erros, nem sem conversa", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const ordersInsert = vi.fn().mockReturnThis();
+    const single = vi.fn().mockResolvedValue({ data: null, error: { code: "23503", message: "fk" } });
+    const supabase = {
+      from: vi.fn(() => ({ insert: ordersInsert, select: vi.fn().mockReturnThis(), single })),
+    } as unknown as SupabaseClient;
+
+    const withConv = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items, agentConversationId: "c1" });
+    expect(withConv.orderId).toBeNull();
+    expect(ordersInsert).toHaveBeenCalledTimes(1);
+
+    single.mockResolvedValue({ data: null, error: { code: "PGRST204", message: "x" } });
+    const noConv = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items });
+    expect(noConv.orderId).toBeNull();
+    expect(ordersInsert).toHaveBeenCalledTimes(2);
+  });
+
   it("retorna erro genérico quando a criação do pedido falha", async () => {
     const supabase = {
       from: vi.fn(() => ({
@@ -168,8 +233,11 @@ describe("fetchRecentOrdersByBuyer", () => {
   });
 
   it("lança quando o Supabase falha", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    const { supabase } = build({ data: null, error: { message: "erro" } });
-    await expect(fetchRecentOrdersByBuyer(supabase, "b1", { channel: "mypetbrasil", limit: 5 })).rejects.toThrow();
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const { supabase } = build({ data: null, error: { message: "relation orders permission denied" } });
+    const err = await fetchRecentOrdersByBuyer(supabase, "b1", { channel: "mypetbrasil", limit: 5 }).catch((e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toBe("Falha ao consultar pedidos.");
+    expect(log).toHaveBeenCalledWith(expect.any(String), expect.stringContaining("permission denied"), expect.anything());
   });
 });

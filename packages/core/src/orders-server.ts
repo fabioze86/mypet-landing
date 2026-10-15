@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CartItem } from "./cart";
 import type { Channel } from "./channels";
 
+const MISSING_COLUMN_CODES = new Set(["PGRST204", "42703"]);
+
 export async function createOrder(
   supabase: SupabaseClient,
   input: { buyerId: string; channel: Channel; items: CartItem[]; agentConversationId?: string | null }
@@ -10,17 +12,25 @@ export async function createOrder(
     return { orderId: null, error: "O carrinho está vazio." };
   }
 
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      buyer_id: input.buyerId,
-      channel: input.channel,
-      status: "pendente",
-      // só manda a coluna quando há conversa (funciona antes da migration)
-      ...(input.agentConversationId ? { agent_conversation_id: input.agentConversationId } : {}),
-    })
-    .select("id")
-    .single();
+  const baseRow = { buyer_id: input.buyerId, channel: input.channel, status: "pendente" };
+  const insertOrder = (row: Record<string, unknown>) => supabase.from("orders").insert(row).select("id").single();
+
+  // só manda a coluna quando há conversa
+  let { data: order, error: orderError } = await insertOrder(
+    input.agentConversationId ? { ...baseRow, agent_conversation_id: input.agentConversationId } : baseRow,
+  );
+
+  // Rede de segurança: se a coluna agent_conversation_id não existir no banco
+  // (PGRST204 = coluna fora do cache do PostgREST; 42703 = coluna inexistente),
+  // grava o pedido sem o vínculo com a conversa em vez de perder o pedido.
+  if (orderError && input.agentConversationId && MISSING_COLUMN_CODES.has(String(orderError.code))) {
+    console.error(
+      "[orders] coluna agent_conversation_id indisponível; repetindo sem ela:",
+      orderError.code,
+      orderError.message,
+    );
+    ({ data: order, error: orderError } = await insertOrder(baseRow));
+  }
 
   if (orderError || !order) {
     console.error("[orders] erro ao criar pedido:", orderError?.message);
@@ -87,8 +97,9 @@ export async function fetchRecentOrdersByBuyer(
     .limit(limit);
 
   if (error) {
-    console.error("[orders] erro ao consultar pedidos recentes:", error.message);
-    throw new Error(`Falha ao consultar pedidos: ${error.message}`);
+    console.error("[orders] erro ao consultar pedidos recentes:", error.message, error);
+    // Mensagem genérica: o texto cru do banco não vai para o modelo.
+    throw new Error("Falha ao consultar pedidos.");
   }
   return mapOrderRows(data);
 }
