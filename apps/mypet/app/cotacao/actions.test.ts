@@ -3,9 +3,23 @@ import type { CartItem } from "@mypet/core/cart";
 
 const requireBuyer = vi.fn();
 const createOrder = vi.fn();
+const maybeSingle = vi.fn();
+const fromMock = vi.fn();
+const hubClient = {
+  __hub: true,
+  from: (table: string) => {
+    fromMock(table);
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      maybeSingle: () => maybeSingle(),
+    };
+    return chain;
+  },
+};
 
 vi.mock("@/lib/require-buyer", () => ({ requireBuyer: () => requireBuyer() }));
-vi.mock("@mypet/core/supabase", () => ({ getHubServiceClient: () => ({ __hub: true }) }));
+vi.mock("@mypet/core/supabase", () => ({ getHubServiceClient: () => hubClient }));
 vi.mock("@mypet/core/orders-server", () => ({
   createOrder: (client: unknown, input: unknown) => createOrder(client, input),
 }));
@@ -19,6 +33,8 @@ const ITEMS = [
 beforeEach(() => {
   requireBuyer.mockReset();
   createOrder.mockReset();
+  maybeSingle.mockReset();
+  fromMock.mockReset();
 });
 
 describe("finalizeQuote", () => {
@@ -49,8 +65,8 @@ describe("finalizeQuote", () => {
     const result = await finalizeQuote(ITEMS);
 
     expect(createOrder).toHaveBeenCalledWith(
-      { __hub: true },
-      { buyerId: "buyer-1", channel: "mypetbrasil", items: ITEMS },
+      hubClient,
+      { buyerId: "buyer-1", channel: "mypetbrasil", items: ITEMS, agentConversationId: null },
     );
     expect(result).toEqual({
       ok: true,
@@ -72,5 +88,42 @@ describe("finalizeQuote", () => {
     const result = await finalizeQuote(ITEMS);
 
     expect(result).toEqual({ ok: false, error: "x" });
+  });
+
+  describe("conversa do agente", () => {
+    const CONV = "123e4567-e89b-42d3-a456-426614174000";
+    const buyer = { id: "buyer-1", email: null, nome: "A", empresa: "B", whatsapp: "1", cnpj: null };
+
+    beforeEach(() => {
+      requireBuyer.mockResolvedValue(buyer);
+      createOrder.mockResolvedValue({ error: null });
+    });
+
+    it("liga o pedido à conversa quando ela é do comprador", async () => {
+      maybeSingle.mockResolvedValue({ data: { id: CONV }, error: null });
+      await finalizeQuote(ITEMS, { agentConversationId: CONV });
+      expect(fromMock).toHaveBeenCalledWith("agent_conversations");
+      expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: CONV }));
+    });
+
+    it("ignora a conversa de outro comprador", async () => {
+      maybeSingle.mockResolvedValue({ data: null, error: null });
+      await finalizeQuote(ITEMS, { agentConversationId: CONV });
+      expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: null }));
+    });
+
+    it("id que não é uuid não consulta a tabela", async () => {
+      await finalizeQuote(ITEMS, { agentConversationId: "nao-e-uuid" });
+      expect(fromMock).not.toHaveBeenCalled();
+      expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: null }));
+    });
+
+    it("falha na consulta não bloqueia o pedido", async () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      maybeSingle.mockResolvedValue({ data: null, error: { message: "x" } });
+      const result = await finalizeQuote(ITEMS, { agentConversationId: CONV });
+      expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: null }));
+      expect(result.ok).toBe(true);
+    });
   });
 });

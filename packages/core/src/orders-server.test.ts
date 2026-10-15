@@ -39,6 +39,42 @@ describe("createOrder", () => {
     expect(result).toEqual({ orderId: "o1", error: null });
   });
 
+  const buildCapture = () => {
+    const ordersInsert = vi.fn().mockReturnThis();
+    const supabase = {
+      from: vi.fn((table: string) => {
+        if (table === "orders") {
+          return {
+            insert: ordersInsert,
+            select: vi.fn().mockReturnThis(),
+            single: vi.fn().mockResolvedValue({ data: { id: "o1" }, error: null }),
+          };
+        }
+        return { insert: vi.fn().mockResolvedValue({ error: null }) };
+      }),
+    } as unknown as SupabaseClient;
+    return { supabase, ordersInsert };
+  };
+
+  it("grava agent_conversation_id quando o pedido vem de uma conversa do agente", async () => {
+    const { supabase, ordersInsert } = buildCapture();
+    await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items, agentConversationId: "c1" });
+    expect(ordersInsert).toHaveBeenCalledWith({
+      buyer_id: "b1",
+      channel: "mypetbrasil",
+      status: "pendente",
+      agent_conversation_id: "c1",
+    });
+  });
+
+  it("sem conversa não manda a coluna agent_conversation_id", async () => {
+    const { supabase, ordersInsert } = buildCapture();
+    await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items });
+    const inserted = ordersInsert.mock.calls[0][0];
+    expect(inserted).toEqual({ buyer_id: "b1", channel: "mypetbrasil", status: "pendente" });
+    expect("agent_conversation_id" in inserted).toBe(false);
+  });
+
   it("retorna erro genérico quando a criação do pedido falha", async () => {
     const supabase = {
       from: vi.fn(() => ({

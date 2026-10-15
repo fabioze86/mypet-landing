@@ -11,7 +11,34 @@ export type FinalizeQuoteResult =
   | { ok: true; buyer: { nome: string; empresa: string; whatsapp: string; cnpj: string | null } }
   | { ok: false; error: string; needsAuth?: boolean };
 
-export async function finalizeQuote(items: CartItem[]): Promise<FinalizeQuoteResult> {
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Só liga o pedido à conversa se ela for do próprio comprador.
+async function ownedConversationId(
+  supabase: ReturnType<typeof getHubServiceClient>,
+  buyerId: string,
+  id: string | undefined,
+): Promise<string | null> {
+  if (!id || !UUID_PATTERN.test(id)) return null;
+  try {
+    const { data, error } = await supabase
+      .from("agent_conversations")
+      .select("id")
+      .eq("id", id)
+      .eq("buyer_id", buyerId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? id : null;
+  } catch (error) {
+    console.error("[cotacao] falha ao conferir a conversa do agente:", error);
+    return null;
+  }
+}
+
+export async function finalizeQuote(
+  items: CartItem[],
+  options: { agentConversationId?: string } = {},
+): Promise<FinalizeQuoteResult> {
   const buyer = await requireBuyer();
 
   if (!buyer) {
@@ -22,10 +49,14 @@ export async function finalizeQuote(items: CartItem[]): Promise<FinalizeQuoteRes
     };
   }
 
-  const { error } = await createOrder(getHubServiceClient(), {
+  const supabase = getHubServiceClient();
+  const agentConversationId = await ownedConversationId(supabase, buyer.id, options.agentConversationId);
+
+  const { error } = await createOrder(supabase, {
     buyerId: buyer.id,
     channel: clientConfig.catalogChannel as Channel,
     items,
+    agentConversationId,
   });
 
   if (error) {

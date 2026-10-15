@@ -4,12 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@mypet/core/components/cart-provider";
-import { buildQuoteMessage, buildWhatsAppLink } from "@mypet/core/whatsapp";
 import type { Palette } from "@mypet/core/theme";
 import { finalizeQuote } from "./actions";
-
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
-const WHATSAPP_INTRO = "Olá! Quero fazer este pedido pela Tabela de Preços My Pet Brasil:";
+import { buildOrderWhatsAppUrl, hasWhatsAppNumber } from "./whatsapp-order";
 
 const brl = (n: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n);
@@ -67,7 +64,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
   }
 
   const handleSubmit = async () => {
-    if (!WHATSAPP_NUMBER) {
+    if (!hasWhatsAppNumber()) {
       setSubmitError("Não foi possível abrir o WhatsApp agora. Tente novamente mais tarde.");
       return;
     }
@@ -86,12 +83,8 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       return;
     }
 
-    const message = buildQuoteMessage(
-      cart.items,
-      { ...result.buyer, cnpj: result.buyer.cnpj ?? undefined },
-      WHATSAPP_INTRO,
-    );
-    window.open(buildWhatsAppLink(WHATSAPP_NUMBER, message), "_blank");
+    const url = buildOrderWhatsAppUrl(cart.items, result.buyer);
+    if (url) window.open(url, "_blank");
 
     clear();
     setSubmitted(true);

@@ -4,7 +4,7 @@ import type { Channel } from "./channels";
 
 export async function createOrder(
   supabase: SupabaseClient,
-  input: { buyerId: string; channel: Channel; items: CartItem[] }
+  input: { buyerId: string; channel: Channel; items: CartItem[]; agentConversationId?: string | null }
 ): Promise<{ orderId: string | null; error: string | null }> {
   if (input.items.length === 0) {
     return { orderId: null, error: "O carrinho está vazio." };
@@ -12,7 +12,13 @@ export async function createOrder(
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .insert({ buyer_id: input.buyerId, channel: input.channel, status: "pendente" })
+    .insert({
+      buyer_id: input.buyerId,
+      channel: input.channel,
+      status: "pendente",
+      // só manda a coluna quando há conversa (funciona antes da migration)
+      ...(input.agentConversationId ? { agent_conversation_id: input.agentConversationId } : {}),
+    })
     .select("id")
     .single();
 
