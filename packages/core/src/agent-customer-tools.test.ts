@@ -79,6 +79,12 @@ describe("alterar_pedido", () => {
     expect(out.aplicados).toEqual([expect.objectContaining({ id: "v1", name: "Shampoo Neutro", qty: 0 })]);
   });
 
+  it("a descrição aceita ids do pedido atual e explica \"mais N\"", () => {
+    const description = tools().alterar_pedido.description ?? "";
+    expect(description).toContain("PEDIDO ATUAL DO CLIENTE");
+    expect(description).toContain('"mais N" significa a quantidade atual no pedido + N');
+  });
+
   it("o esquema limita itens e quantidades", () => {
     const schema = tools().alterar_pedido.inputSchema as { safeParse: (v: unknown) => { success: boolean } };
     expect(schema.safeParse({ itens: [{ productId: "a", quantidade: 10000 }] }).success).toBe(false);

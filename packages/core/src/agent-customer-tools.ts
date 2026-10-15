@@ -39,12 +39,12 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
   return {
     alterar_pedido: tool({
       description:
-        "Coloca, muda a quantidade ou tira produtos do pedido do cliente. Use só ids que vieram de buscar_produtos ou sugerir_reposicao nesta conversa. Quantidade 0 tira o produto do pedido.",
+        "Coloca, muda a quantidade ou tira produtos do pedido do cliente. Use só ids que vieram de buscar_produtos ou sugerir_reposicao nesta conversa, ou que aparecem em PEDIDO ATUAL DO CLIENTE. Informe a quantidade final de cada produto: \"mais N\" significa a quantidade atual no pedido + N. Quantidade 0 tira o produto do pedido.",
       inputSchema: z.object({
         itens: z
           .array(
             z.object({
-              productId: z.string().min(1).describe("id do produto vindo de buscar_produtos ou sugerir_reposicao"),
+              productId: z.string().min(1).describe("id do produto vindo de buscar_produtos, sugerir_reposicao ou do pedido atual"),
               quantidade: z.number().int().min(0).max(MAX_QTY).describe("quantidade final no pedido; 0 tira"),
             }),
           )

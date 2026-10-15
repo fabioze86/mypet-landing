@@ -80,6 +80,16 @@ describe("buildAgentInstructions", () => {
     expect(visitante).not.toContain('"sugerir_reposicao"');
   });
 
+  it("cliente: aceita ids do pedido atual e explica que \"mais N\" é quantidade atual + N", () => {
+    expect(cliente).toContain(
+      'use a ferramenta "alterar_pedido" com os ids que vieram de "buscar_produtos" ou "sugerir_reposicao" ou que aparecem em "PEDIDO ATUAL DO CLIENTE" (quantidade 0 tira o produto)',
+    );
+    expect(cliente).toContain(
+      'A ferramenta recebe a quantidade final de cada produto: "mais N" significa a quantidade atual no pedido + N.',
+    );
+    expect(visitante).not.toContain("mais N");
+  });
+
   it("cliente: avisa que buscas anteriores podem estar sem preço", () => {
     const aviso =
       "Resultados de buscas anteriores nesta conversa podem estar sem preço (feitas antes do cadastro); se precisar de preço, busque de novo.";
