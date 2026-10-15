@@ -49,8 +49,12 @@ export async function finalizeQuote(
     };
   }
 
+  // Server action: os argumentos chegam do cliente sem garantia de tipo.
+  const opts: { agentConversationId?: unknown } = options && typeof options === "object" ? options : {};
+  const requestedConversationId = typeof opts.agentConversationId === "string" ? opts.agentConversationId : undefined;
+
   const supabase = getHubServiceClient();
-  const agentConversationId = await ownedConversationId(supabase, buyer.id, options.agentConversationId);
+  const agentConversationId = await ownedConversationId(supabase, buyer.id, requestedConversationId);
 
   const { error } = await createOrder(supabase, {
     buyerId: buyer.id,

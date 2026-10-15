@@ -118,6 +118,30 @@ describe("finalizeQuote", () => {
       expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: null }));
     });
 
+    it("options nulo é tratado como {}", async () => {
+      const result = await finalizeQuote(ITEMS, null as never);
+      expect(result.ok).toBe(true);
+      expect(fromMock).not.toHaveBeenCalled();
+      expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: null }));
+    });
+
+    it("options que não é objeto é tratado como {}", async () => {
+      const result = await finalizeQuote(ITEMS, "x" as never);
+      expect(result.ok).toBe(true);
+      expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: null }));
+    });
+
+    it("id que não é string vira null, sem consultar a tabela", async () => {
+      maybeSingle.mockResolvedValue({ data: { id: CONV }, error: null });
+      // um array de um elemento vira o próprio uuid quando convertido para texto
+      for (const bad of [[CONV], 123, { toString: () => CONV }]) {
+        createOrder.mockClear();
+        await finalizeQuote(ITEMS, { agentConversationId: bad } as never);
+        expect(createOrder).toHaveBeenCalledWith(hubClient, expect.objectContaining({ agentConversationId: null }));
+      }
+      expect(fromMock).not.toHaveBeenCalled();
+    });
+
     it("falha na consulta não bloqueia o pedido", async () => {
       vi.spyOn(console, "error").mockImplementation(() => {});
       maybeSingle.mockResolvedValue({ data: null, error: { message: "x" } });
