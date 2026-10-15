@@ -103,4 +103,15 @@ describe("CotacaoContent — envio", () => {
     expect(open).toHaveBeenCalledWith("https://wa.me/5511999998888?text=pedido", "_blank");
     expect(screen.getByText("Pedido enviado!")).toBeInTheDocument();
   });
+
+  it("se finalizeQuote lançar erro, mostra mensagem e destrava o botão", async () => {
+    vi.mocked(finalizeQuote).mockRejectedValue(new Error("falha de rede"));
+    renderWithCart([{ id: "p1", name: "Ração X", sku: "100", brand: "NAPI", img: "/img.jpg", qty: 2, unitPrice: 42.9 }]);
+    fireEvent.click(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" }));
+
+    expect(
+      await screen.findByText("Não foi possível enviar seu pedido agora. Tente novamente em instantes."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" })).toBeEnabled();
+  });
 });

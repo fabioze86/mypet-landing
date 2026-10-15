@@ -85,7 +85,14 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
     setSubmitting(true);
     setSubmitError("");
 
-    const result = await finalizeQuote(cart.items);
+    let result: Awaited<ReturnType<typeof finalizeQuote>>;
+    try {
+      result = await finalizeQuote(cart.items);
+    } catch {
+      setSubmitError("Não foi possível enviar seu pedido agora. Tente novamente em instantes.");
+      setSubmitting(false);
+      return;
+    }
 
     if (!result.ok) {
       if (result.needsAuth) {
