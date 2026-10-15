@@ -73,6 +73,24 @@ export function updateQty(cart: Cart, id: string, qty: number, campaignId?: stri
   };
 }
 
+// Define a linha SEM campanha de um produto: substitui seus dados (nome, sku,
+// marca, imagem, preço) pelos de `product` e a quantidade por `qty` (final,
+// não soma), mantendo a posição; se não existir, adiciona no fim; `qty <= 0`
+// remove só essa linha. Linhas de campanha do mesmo id nunca são tocadas.
+// Usado pelo agente, que devolve a quantidade final e o preço atual do canal.
+export function setLine(
+  cart: Cart,
+  product: Omit<CartItem, "qty" | "campaignId" | "campaignSlug">,
+  qty: number,
+): Cart {
+  // garante linha sem campanha mesmo se o objeto vier com esses campos
+  const { campaignId: _campaignId, campaignSlug: _campaignSlug, ...plain } = product as Omit<CartItem, "qty">;
+  const isTarget = (item: CartItem) => sameCartLine(item, plain.id, undefined);
+  if (qty <= 0) return { items: cart.items.filter((item) => !isTarget(item)) };
+  if (!cart.items.some(isTarget)) return { items: [...cart.items, { ...plain, qty }] };
+  return { items: cart.items.map((item) => (isTarget(item) ? { ...plain, qty } : item)) };
+}
+
 export function totalItems(cart: Cart): number {
   return cart.items.reduce((sum, item) => sum + item.qty, 0);
 }

@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useSyncExternalStore } from "re
 import {
   addItem as addItemPure,
   removeItem as removeItemPure,
+  setLine as setLinePure,
   totalItems as totalItemsPure,
   updateQty as updateQtyPure,
   type Cart,
@@ -57,6 +58,8 @@ type CartContextValue = {
   addItem: (product: Omit<CartItem, "qty">, qty: number) => void;
   removeItem: (id: string, campaignId?: string) => void;
   updateQty: (id: string, qty: number, campaignId?: string) => void;
+  /** Define a linha sem campanha (dados + quantidade final); ver `setLine` em ../cart. */
+  setLine: (product: Omit<CartItem, "qty" | "campaignId" | "campaignSlug">, qty: number) => void;
   totalItems: number;
   clear: () => void;
 };
@@ -84,6 +87,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     writeCart(updateQtyPure(readCart(), id, qty, campaignId));
   }, []);
 
+  const setLineFn = useCallback((product: Omit<CartItem, "qty" | "campaignId" | "campaignSlug">, qty: number) => {
+    writeCart(setLinePure(readCart(), product, qty));
+  }, []);
+
   const clearFn = useCallback(() => {
     writeCart(EMPTY_CART);
   }, []);
@@ -95,6 +102,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addItem: addItemFn,
         removeItem: removeItemFn,
         updateQty: updateQtyFn,
+        setLine: setLineFn,
         totalItems: totalItemsPure(cart),
         clear: clearFn,
       }}

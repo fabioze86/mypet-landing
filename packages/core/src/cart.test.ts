@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { addItem, removeItem, updateQty, totalItems, cartTotals, type Cart } from "./cart";
+import { addItem, removeItem, updateQty, setLine, totalItems, cartTotals, type Cart } from "./cart";
 
 const emptyCart: Cart = { items: [] };
 const product = { id: "p1", name: "RAÇÃO X", sku: "100", brand: "NAPI", img: "/img.jpg" };
@@ -211,5 +211,58 @@ describe("cartTotals", () => {
       { ...base, id: "b", qty: 4 },
     ]);
     expect(totals).toEqual({ totalUnits: 6, totalValue: 20, pricedLines: 1, unpricedLines: 1 });
+  });
+});
+
+describe("setLine", () => {
+  const fresh = { id: "p1", name: "RAÇÃO X 15kg", sku: "101", brand: "NAPI 2", img: "/novo.jpg", unitPrice: 99.9 };
+  const campaignLine = { ...product, qty: 4, campaignId: "camp", campaignSlug: "camp-slug", unitPrice: 50 };
+
+  it("substitui a linha sem campanha pelos dados novos e pela quantidade final, na mesma posição", () => {
+    const cart: Cart = {
+      items: [
+        { ...product, id: "p0", qty: 1 },
+        { ...product, qty: 2, unitPrice: 80, listPrice: 90 },
+        { ...product, id: "p2", qty: 3 },
+      ],
+    };
+    expect(setLine(cart, fresh, 7).items).toEqual([
+      { ...product, id: "p0", qty: 1 },
+      { ...fresh, qty: 7 },
+      { ...product, id: "p2", qty: 3 },
+    ]);
+  });
+
+  it("adiciona quando não existe linha sem campanha", () => {
+    expect(setLine(emptyCart, fresh, 2).items).toEqual([{ ...fresh, qty: 2 }]);
+  });
+
+  it("não mexe na linha de campanha do mesmo produto", () => {
+    const cart: Cart = { items: [campaignLine, { ...product, qty: 2 }] };
+    expect(setLine(cart, fresh, 5).items).toEqual([campaignLine, { ...fresh, qty: 5 }]);
+  });
+
+  it("só com linha de campanha: adiciona uma linha sem campanha separada", () => {
+    const cart: Cart = { items: [campaignLine] };
+    expect(setLine(cart, fresh, 1).items).toEqual([campaignLine, { ...fresh, qty: 1 }]);
+  });
+
+  it("quantidade <= 0 remove só a linha sem campanha", () => {
+    const cart: Cart = { items: [campaignLine, { ...product, qty: 2 }] };
+    expect(setLine(cart, fresh, 0).items).toEqual([campaignLine]);
+    expect(setLine(cart, fresh, -1).items).toEqual([campaignLine]);
+    expect(setLine({ items: [campaignLine] }, fresh, 0).items).toEqual([campaignLine]);
+  });
+
+  it("não devolve a linha com campanha mesmo que o produto informado tenha campaignId", () => {
+    const cart: Cart = { items: [campaignLine] };
+    const out = setLine(cart, { ...fresh, campaignId: "camp", campaignSlug: "camp-slug" } as never, 3);
+    expect(out.items).toEqual([campaignLine, { ...fresh, qty: 3 }]);
+  });
+
+  it("não altera o carrinho original", () => {
+    const cart: Cart = { items: [{ ...product, qty: 2 }] };
+    setLine(cart, fresh, 9);
+    expect(cart.items).toEqual([{ ...product, qty: 2 }]);
   });
 });
