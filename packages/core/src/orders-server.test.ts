@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createOrder, getOrdersByBuyer } from "./orders-server";
+import { createOrder, fetchRecentOrdersByBuyer, getOrdersByBuyer } from "./orders-server";
 import type { CartItem } from "./cart";
 
 const items: CartItem[] = [
@@ -97,5 +97,43 @@ describe("getOrdersByBuyer", () => {
 
     const orders = await getOrdersByBuyer(supabase, "b1");
     expect(orders).toEqual([]);
+  });
+});
+
+describe("fetchRecentOrdersByBuyer", () => {
+  const build = (result: unknown) => {
+    const eq = vi.fn().mockReturnThis();
+    const order = vi.fn().mockReturnThis();
+    const limit = vi.fn().mockResolvedValue(result);
+    const supabase = { from: vi.fn(() => ({ select: vi.fn().mockReturnThis(), eq, order, limit })) } as unknown as SupabaseClient;
+    return { supabase, eq, order, limit };
+  };
+
+  it("filtra por comprador e canal, ordena e limita", async () => {
+    const { supabase, eq, order, limit } = build({
+      data: [
+        {
+          id: "o1",
+          status: "pendente",
+          created_at: "2026-07-31T00:00:00Z",
+          order_items: [{ product_id: "p1", product_name_snapshot: "Ração", qty: 2 }],
+        },
+      ],
+      error: null,
+    });
+    const orders = await fetchRecentOrdersByBuyer(supabase, "b1", { channel: "mypetbrasil", limit: 5 });
+    expect(eq).toHaveBeenCalledWith("buyer_id", "b1");
+    expect(eq).toHaveBeenCalledWith("channel", "mypetbrasil");
+    expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
+    expect(limit).toHaveBeenCalledWith(5);
+    expect(orders).toEqual([
+      { id: "o1", status: "pendente", createdAt: "2026-07-31T00:00:00Z", items: [{ productId: "p1", name: "Ração", qty: 2 }] },
+    ]);
+  });
+
+  it("lança quando o Supabase falha", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { supabase } = build({ data: null, error: { message: "erro" } });
+    await expect(fetchRecentOrdersByBuyer(supabase, "b1", { channel: "mypetbrasil", limit: 5 })).rejects.toThrow();
   });
 });

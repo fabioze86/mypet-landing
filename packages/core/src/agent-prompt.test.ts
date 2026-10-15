@@ -48,6 +48,13 @@ describe("buildAgentInstructions", () => {
     }
   });
 
+  it("regra de erro de ferramenta nos dois modos", () => {
+    for (const prompt of [visitante, cliente]) {
+      expect(prompt).toContain("Se uma ferramenta der erro, diga que não conseguiu consultar agora");
+      expect(prompt).toContain("nunca conclua que não há pedidos, produtos ou reposição por causa de um erro");
+    }
+  });
+
   it("visitante: convite ao cadastro e sem pedido atual", () => {
     expect(visitante).toContain("Você atende visitantes que ainda não fizeram cadastro.");
     expect(visitante).toContain("se cadastra com CNPJ e WhatsApp");

@@ -52,6 +52,41 @@ type RawOrderRow = {
   order_items: { product_id: string; product_name_snapshot: string; qty: number }[] | null;
 };
 
+function mapOrderRows(data: unknown): OrderWithItems[] {
+  return ((data as RawOrderRow[] | null) ?? []).map((row) => ({
+    id: row.id,
+    status: row.status,
+    createdAt: row.created_at,
+    items: (row.order_items ?? []).map((it) => ({
+      productId: it.product_id,
+      name: it.product_name_snapshot,
+      qty: it.qty,
+    })),
+  }));
+}
+
+// Pedidos recentes do comprador num canal. Ao contrário de getOrdersByBuyer,
+// lança em caso de erro: o agente não pode confundir falha com "sem pedidos".
+export async function fetchRecentOrdersByBuyer(
+  supabase: SupabaseClient,
+  buyerId: string,
+  { channel, limit }: { channel: string; limit: number },
+): Promise<OrderWithItems[]> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("id, status, created_at, order_items(product_id, product_name_snapshot, qty)")
+    .eq("buyer_id", buyerId)
+    .eq("channel", channel)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("[orders] erro ao consultar pedidos recentes:", error.message);
+    throw new Error(`Falha ao consultar pedidos: ${error.message}`);
+  }
+  return mapOrderRows(data);
+}
+
 export async function getOrdersByBuyer(supabase: SupabaseClient, buyerId: string): Promise<OrderWithItems[]> {
   const { data, error } = await supabase
     .from("orders")

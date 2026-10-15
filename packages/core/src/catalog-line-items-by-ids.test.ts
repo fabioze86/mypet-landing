@@ -104,9 +104,9 @@ describe("queryLineItemsByIds", () => {
     expect(item.variantLabel).toBeNull();
   });
 
-  it("erro do banco devolve lista vazia", async () => {
+  it("erro do banco na consulta principal lança", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     queue.push({ data: null, error: { message: "down" } });
-    expect(await queryLineItemsByIds(["s1"], "mypetbrasil")).toEqual([]);
+    await expect(queryLineItemsByIds(["s1"], "mypetbrasil")).rejects.toThrow();
   });
 });

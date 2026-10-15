@@ -2,7 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import { queryLineItemsByIds, type CatalogLineItem } from "./catalog-line-items";
 import { computeReplenishment } from "./agent-replenishment";
-import { getOrdersByBuyer, type OrderWithItems } from "./orders-server";
+import { fetchRecentOrdersByBuyer } from "./orders-server";
 import { getHubServiceClient } from "./supabase";
 
 // Ferramentas do modo cliente. O comprador vem do cookie (buyerId passado pelo
@@ -22,6 +22,8 @@ export type CartRefusal = { productId: string; motivo: string };
 const MAX_CHANGE_ITEMS = 20;
 const MAX_QTY = 9999;
 const MAX_SUGGESTIONS = 8;
+const SUGGESTION_CANDIDATES = 30;
+const HISTORY_ORDERS = 100;
 const DEFAULT_STATUS_LIMIT = 5;
 const MAX_STATUS_LIMIT = 10;
 
@@ -31,15 +33,6 @@ function displayName(item: CatalogLineItem): string {
 
 function formatDate(iso: string): string {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(iso));
-}
-
-async function loadOrders(buyerId: string): Promise<OrderWithItems[]> {
-  try {
-    return await getOrdersByBuyer(getHubServiceClient(), buyerId);
-  } catch (error) {
-    console.error("[agent-customer-tools] falha ao carregar pedidos:", error);
-    return [];
-  }
 }
 
 export function buildCustomerTools({ channel, buyerId }: { channel: string; buyerId: string }) {
@@ -59,12 +52,14 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
           .max(MAX_CHANGE_ITEMS),
       }),
       execute: async ({ itens }) => {
+        // Produto repetido na mesma chamada: vale o último.
+        const lastById = new Map(itens.map((i) => [i.productId, i.quantidade]));
         const found = new Map(
-          (await queryLineItemsByIds(itens.map((i) => i.productId), channel)).map((item) => [item.id, item]),
+          (await queryLineItemsByIds([...lastById.keys()], channel)).map((item) => [item.id, item]),
         );
         const aplicados: CartChange[] = [];
         const recusados: CartRefusal[] = [];
-        for (const { productId, quantidade } of itens) {
+        for (const [productId, quantidade] of lastById) {
           const item = found.get(productId);
           if (!item) {
             recusados.push({ productId, motivo: "Produto não encontrado na tabela." });
@@ -92,7 +87,11 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
       description: "Sugere o que o cliente precisa repor, com base no histórico de pedidos dele.",
       inputSchema: z.object({}),
       execute: async () => {
-        const plan = computeReplenishment(await loadOrders(buyerId), new Date(), MAX_SUGGESTIONS);
+        const orders = await fetchRecentOrdersByBuyer(getHubServiceClient(), buyerId, {
+          channel,
+          limit: HISTORY_ORDERS,
+        });
+        const plan = computeReplenishment(orders, new Date(), SUGGESTION_CANDIDATES);
         if (plan.itens.length === 0) return { tipo: plan.tipo, itens: [] };
         const current = new Map(
           (await queryLineItemsByIds(plan.itens.map((s) => s.productId), channel)).map((item) => [item.id, item]),
@@ -101,7 +100,7 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
           tipo: plan.tipo,
           itens: plan.itens.flatMap((suggestion) => {
             const item = current.get(suggestion.productId);
-            if (!item) return [];
+            if (!item || item.unitPrice == null) return [];
             return [
               {
                 id: item.id,
@@ -117,7 +116,7 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
                 qtdUltimaCompra: suggestion.lastQty,
               },
             ];
-          }),
+          }).slice(0, MAX_SUGGESTIONS),
         };
       },
     }),
@@ -128,9 +127,12 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
         limite: z.number().int().min(1).max(MAX_STATUS_LIMIT).optional().describe("quantos pedidos mostrar"),
       }),
       execute: async ({ limite }) => {
-        const orders = await loadOrders(buyerId);
+        const orders = await fetchRecentOrdersByBuyer(getHubServiceClient(), buyerId, {
+          channel,
+          limit: limite ?? DEFAULT_STATUS_LIMIT,
+        });
         return {
-          pedidos: orders.slice(0, limite ?? DEFAULT_STATUS_LIMIT).map((order) => ({
+          pedidos: orders.map((order) => ({
             data: formatDate(order.createdAt),
             status: order.status,
             itens: order.items.length,
