@@ -151,6 +151,38 @@ describe("useAgentChat", () => {
     }
     setItem.mockRestore();
   });
+
+  it("onAssistantMessage é chamado uma vez com a resposta concluída", async () => {
+    const onAssistantMessage = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentChat({ conversation, getCart: () => cart, onConversationReset: vi.fn(), onAssistantMessage }),
+    );
+    act(() => {
+      result.current.sendText("Oi");
+    });
+    await waitFor(() => expect(onAssistantMessage).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(result.current.busy).toBe(false));
+    expect(onAssistantMessage).toHaveBeenCalledTimes(1);
+    const message = onAssistantMessage.mock.calls[0][0];
+    expect(message.role).toBe("assistant");
+    expect(message.parts.some((p: { text?: string }) => p.text === "Olá!")).toBe(true);
+  });
+
+  it("onAssistantMessage não é chamado por mensagens restauradas", async () => {
+    const onAssistantMessage = vi.fn();
+    const restored = {
+      id: conversation.id,
+      messages: [
+        { id: "m1", role: "user", parts: [{ type: "text", text: "Oi" }] },
+        { id: "m2", role: "assistant", parts: [{ type: "text", text: "Olá!" }] },
+      ],
+    } as unknown as Parameters<typeof useAgentChat>[0]["conversation"];
+    const { result } = renderHook(() =>
+      useAgentChat({ conversation: restored, onConversationReset: vi.fn(), onAssistantMessage }),
+    );
+    await waitFor(() => expect(result.current.messages).toHaveLength(2));
+    expect(onAssistantMessage).not.toHaveBeenCalled();
+  });
 });
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;

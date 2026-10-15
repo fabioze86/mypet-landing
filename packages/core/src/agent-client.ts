@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import type { AgentProduct } from "./agent-catalog-tool";
+import type { CartChange } from "./agent-customer-tools";
 import type { AgentCartItem } from "./agent-prompt";
 
 // Lado do navegador do agente /agente. A conversa fica no sessionStorage para
@@ -11,7 +12,7 @@ import type { AgentCartItem } from "./agent-prompt";
 // Ao servidor vão só { id, message, cart }: o histórico ele lê do banco.
 
 export type AgentMessage = UIMessage;
-export type { AgentProduct, AgentCartItem };
+export type { AgentProduct, AgentCartItem, CartChange };
 export type StoredConversation = { id: string; messages: AgentMessage[] };
 export type AgentError = { code: string | null; message: string };
 
@@ -116,15 +117,48 @@ function isAgentProduct(value: unknown): value is AgentProduct {
   );
 }
 
+const PRODUCT_TOOLS: Record<string, string> = {
+  "tool-buscar_produtos": "produtos",
+  "tool-sugerir_reposicao": "itens",
+};
+
 export function productsFromMessage(message: AgentMessage): AgentProduct[] {
   let products: AgentProduct[] = [];
   for (const part of message.parts) {
-    const toolPart = part as { type: string; state?: string; output?: { produtos?: unknown } };
-    if (toolPart.type !== "tool-buscar_produtos" || toolPart.state !== "output-available") continue;
-    const list = toolPart.output?.produtos;
+    const toolPart = part as { type: string; state?: string; output?: unknown };
+    const key = PRODUCT_TOOLS[toolPart.type];
+    if (!key || toolPart.state !== "output-available") continue;
+    const list = (toolPart.output as Record<string, unknown> | undefined)?.[key];
     if (Array.isArray(list)) products = list.filter(isAgentProduct);
   }
   return products.slice(0, MAX_CARD_PRODUCTS);
+}
+
+function isCartChange(value: unknown): value is CartChange {
+  if (!value || typeof value !== "object") return false;
+  const c = value as Record<string, unknown>;
+  return (
+    typeof c.id === "string" &&
+    typeof c.name === "string" &&
+    typeof c.sku === "string" &&
+    typeof c.img === "string" &&
+    (c.brand === null || typeof c.brand === "string") &&
+    typeof c.unitPrice === "number" &&
+    typeof c.qty === "number" &&
+    Number.isInteger(c.qty) &&
+    c.qty >= 0
+  );
+}
+
+export function cartChangesFromMessage(message: AgentMessage): CartChange[] {
+  const changes: CartChange[] = [];
+  for (const part of message.parts) {
+    const toolPart = part as { type: string; state?: string; output?: { aplicados?: unknown } };
+    if (toolPart.type !== "tool-alterar_pedido" || toolPart.state !== "output-available") continue;
+    const list = toolPart.output?.aplicados;
+    if (Array.isArray(list)) changes.push(...list.filter(isCartChange));
+  }
+  return changes;
 }
 
 // Carrega a conversa só depois de montar (sessionStorage não existe no servidor
@@ -153,13 +187,17 @@ export function useAgentChat({
   conversation,
   getCart,
   onConversationReset,
+  onAssistantMessage,
 }: {
   conversation: StoredConversation;
   getCart?: () => AgentCartItem[];
   onConversationReset: (notice: string) => void;
+  onAssistantMessage?: (message: AgentMessage) => void;
 }) {
   const getCartRef = useRef(getCart);
   getCartRef.current = getCart;
+  const onAssistantMessageRef = useRef(onAssistantMessage);
+  onAssistantMessageRef.current = onAssistantMessage;
 
   const transport = useMemo(
     () =>
@@ -172,7 +210,15 @@ export function useAgentChat({
     [],
   );
 
-  const chat = useChat<AgentMessage>({ id: conversation.id, messages: conversation.messages, transport });
+  const chat = useChat<AgentMessage>({
+    id: conversation.id,
+    messages: conversation.messages,
+    transport,
+    onFinish: ({ message, isAbort, isError }) => {
+      if (isAbort || isError || message.role !== "assistant") return;
+      onAssistantMessageRef.current?.(message);
+    },
+  });
 
   // Não grava durante o streaming: evita mensagem parcial e uma escrita por token.
   const streaming = chat.status === "submitted" || chat.status === "streaming";

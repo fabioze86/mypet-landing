@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   AGENT_STORAGE_KEY,
+  cartChangesFromMessage,
   loadStoredConversation,
   messageText,
   newConversation,
@@ -149,6 +150,37 @@ describe("mensagens", () => {
           state: "output-available",
           input: {},
           output: { total: 2, produtos: [product(1), { id: 2 }] },
+        },
+      ],
+    } as unknown as AgentMessage;
+    expect(productsFromMessage(message).map((p) => p.id)).toEqual(["p1"]);
+  });
+
+  it("cartChangesFromMessage junta os aplicados de todas as chamadas concluídas de alterar_pedido", () => {
+    const change = (id: string, qty: number) => ({ id, name: `P ${id}`, sku: id, brand: null, img: "", unitPrice: 10, qty });
+    const message = {
+      id: "a1",
+      role: "assistant",
+      parts: [
+        { type: "tool-alterar_pedido", toolCallId: "c1", state: "output-available", input: {}, output: { aplicados: [change("a", 2)], recusados: [] } },
+        { type: "tool-alterar_pedido", toolCallId: "c2", state: "output-error", input: {}, errorText: "x" },
+        { type: "tool-alterar_pedido", toolCallId: "c3", state: "output-available", input: {}, output: { aplicados: [change("b", 0), { id: 1 }], recusados: [] } },
+      ],
+    } as unknown as AgentMessage;
+    expect(cartChangesFromMessage(message)).toEqual([change("a", 2), change("b", 0)]);
+  });
+
+  it("productsFromMessage também lê os itens de sugerir_reposicao", () => {
+    const message = {
+      id: "a1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-sugerir_reposicao",
+          toolCallId: "c1",
+          state: "output-available",
+          input: {},
+          output: { tipo: "reposicao", itens: [{ ...product(1), unitPrice: 10, priceLabel: "R$ 10,00", ultimaCompraDias: 30, intervaloMedioDias: 30, qtdUltimaCompra: 2 }] },
         },
       ],
     } as unknown as AgentMessage;
