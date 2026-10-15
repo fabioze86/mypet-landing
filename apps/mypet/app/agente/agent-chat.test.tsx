@@ -18,6 +18,7 @@ const cartOps = vi.hoisted(() => ({
   addItem: vi.fn(),
   updateQty: vi.fn(),
   removeItem: vi.fn(),
+  setLine: vi.fn(),
 }));
 
 vi.mock("@mypet/core/agent-client", async (importOriginal) => {
@@ -42,6 +43,7 @@ vi.mock("@mypet/core/components/cart-provider", () => ({
     addItem: cartOps.addItem,
     updateQty: cartOps.updateQty,
     removeItem: cartOps.removeItem,
+    setLine: cartOps.setLine,
   }),
 }));
 
@@ -96,6 +98,7 @@ beforeEach(() => {
   cartOps.addItem.mockClear();
   cartOps.updateQty.mockClear();
   cartOps.removeItem.mockClear();
+  cartOps.setLine.mockClear();
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -183,10 +186,52 @@ describe("AgentChat", () => {
       ],
     } as unknown as AgentMessage;
     act(() => chat.lastArgs?.onAssistantMessage?.(message));
-    expect(cartOps.addItem).toHaveBeenCalledWith(
+    expect(cartOps.setLine).toHaveBeenCalledWith(
       { id: "p1", name: "Shampoo Neutro — 5L", sku: "S1", brand: "Pet Clean", img: "/x.jpg", unitPrice: 89.9 },
       10,
     );
+  });
+
+  const alterarPedido = (qty: number) =>
+    ({
+      id: `a-${qty}`,
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-alterar_pedido",
+          toolCallId: `c-${qty}`,
+          state: "output-available",
+          input: {},
+          output: {
+            aplicados: [{ id: "p1", name: "Shampoo Neutro — 5L", sku: "S1", brand: "Pet Clean", img: "/x.jpg", unitPrice: 79.9, qty }],
+          },
+        },
+      ],
+    }) as unknown as AgentMessage;
+
+  it("cliente: produto já no carrinho (sem campanha) recebe a quantidade final e o preço atual via setLine", () => {
+    cartOps.items = [{ id: "p1", qty: 3 }];
+    renderChat("cliente");
+    act(() => chat.lastArgs?.onAssistantMessage?.(alterarPedido(10)));
+    expect(cartOps.setLine).toHaveBeenCalledTimes(1);
+    expect(cartOps.setLine).toHaveBeenCalledWith(
+      { id: "p1", name: "Shampoo Neutro — 5L", sku: "S1", brand: "Pet Clean", img: "/x.jpg", unitPrice: 79.9 },
+      10,
+    );
+    expect(cartOps.addItem).not.toHaveBeenCalled();
+  });
+
+  it("cliente: o carrinho mais recente (cartRef) chega ao applyCartChanges", () => {
+    const props = { mode: "cliente" as const, initialQuestion: null, onInitialQuestionUsed: vi.fn(), onLockedIntent: vi.fn() };
+    const view = render(<AgentChat {...props} />);
+    // carrinho vazio: tirar (0) um produto que não está no pedido não faz nada
+    act(() => chat.lastArgs?.onAssistantMessage?.(alterarPedido(0)));
+    expect(cartOps.setLine).not.toHaveBeenCalled();
+    // o carrinho muda depois da montagem; a próxima resposta vê o produto e o tira
+    cartOps.items = [{ id: "p1", qty: 3 }];
+    view.rerender(<AgentChat {...props} />);
+    act(() => chat.lastArgs?.onAssistantMessage?.(alterarPedido(0)));
+    expect(cartOps.setLine).toHaveBeenCalledWith(expect.objectContaining({ id: "p1" }), 0);
   });
 
   it("cliente: mensagens já existentes (restauradas) não são reaplicadas no carrinho", () => {
@@ -206,8 +251,8 @@ describe("AgentChat", () => {
       } as unknown as AgentMessage,
     ];
     renderChat("cliente");
+    expect(cartOps.setLine).not.toHaveBeenCalled();
     expect(cartOps.addItem).not.toHaveBeenCalled();
-    expect(cartOps.updateQty).not.toHaveBeenCalled();
   });
 
   it("visitante: alterações do pedido não mexem no carrinho", () => {
@@ -226,6 +271,7 @@ describe("AgentChat", () => {
       ],
     } as unknown as AgentMessage;
     act(() => chat.lastArgs?.onAssistantMessage?.(message));
+    expect(cartOps.setLine).not.toHaveBeenCalled();
     expect(cartOps.addItem).not.toHaveBeenCalled();
   });
 

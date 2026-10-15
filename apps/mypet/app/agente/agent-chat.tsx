@@ -106,7 +106,7 @@ function AgentChatSession({
   notice: string | null;
   onNoticeClear: () => void;
 }) {
-  const { cart, addItem, updateQty, removeItem } = useCart();
+  const { cart, addItem, setLine } = useCart();
   // carrinho mais recente para aplicar as alterações do agente ao fim da resposta
   const cartRef = useRef(cart);
   useEffect(() => {
@@ -119,7 +119,7 @@ function AgentChatSession({
     // só mensagens novas do agente passam por aqui: as restauradas da sessão não são reaplicadas
     onAssistantMessage: (message) => {
       if (mode !== "cliente") return;
-      applyCartChanges(cartChangesFromMessage(message), { items: cartRef.current.items, addItem, updateQty, removeItem });
+      applyCartChanges(cartChangesFromMessage(message), { items: cartRef.current.items, setLine });
     },
   });
   // pergunta aceita: o aviso de "conversa nova" já cumpriu o papel
