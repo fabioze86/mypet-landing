@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import type { AgentMessage } from "@mypet/core/agent-client";
 
 const chat = vi.hoisted(() => ({
@@ -10,6 +10,14 @@ const chat = vi.hoisted(() => ({
   },
   sendText: vi.fn(() => true),
   clearNotice: vi.fn(),
+  lastArgs: null as null | { onAssistantMessage?: (message: AgentMessage) => void },
+}));
+
+const cartOps = vi.hoisted(() => ({
+  items: [] as { id: string; qty: number; campaignId?: string }[],
+  addItem: vi.fn(),
+  updateQty: vi.fn(),
+  removeItem: vi.fn(),
 }));
 
 vi.mock("@mypet/core/agent-client", async (importOriginal) => {
@@ -22,10 +30,20 @@ vi.mock("@mypet/core/agent-client", async (importOriginal) => {
       notice: "Começamos uma nova conversa. Envie sua pergunta de novo.",
       clearNotice: chat.clearNotice,
     }),
-    useAgentChat: () => ({ ...chat.state, sendText: chat.sendText }),
+    useAgentChat: (args: { onAssistantMessage?: (message: AgentMessage) => void }) => {
+      chat.lastArgs = args;
+      return { ...chat.state, sendText: chat.sendText };
+    },
   };
 });
-vi.mock("@mypet/core/components/cart-provider", () => ({ useCart: () => ({ cart: { items: [] } }) }));
+vi.mock("@mypet/core/components/cart-provider", () => ({
+  useCart: () => ({
+    cart: { items: cartOps.items },
+    addItem: cartOps.addItem,
+    updateQty: cartOps.updateQty,
+    removeItem: cartOps.removeItem,
+  }),
+}));
 
 import { AgentChat } from "./agent-chat";
 
@@ -73,6 +91,11 @@ beforeEach(() => {
   chat.state = { messages: [], busy: false, error: null };
   chat.sendText = vi.fn(() => true);
   chat.clearNotice.mockClear();
+  chat.lastArgs = null;
+  cartOps.items = [];
+  cartOps.addItem.mockClear();
+  cartOps.updateQty.mockClear();
+  cartOps.removeItem.mockClear();
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -93,7 +116,123 @@ describe("AgentChat", () => {
   it("cliente: sem intenções com cadeado", () => {
     renderChat("cliente");
     expect(screen.queryByRole("button", { name: /Ver preços/ })).toBeNull();
-    expect(screen.getByRole("button", { name: /Encontrar produtos e preços/ })).toBeInTheDocument();
+    expect(screen.queryByText("Exclusivo para cadastrados")).toBeNull();
+  });
+
+  it("cliente: intenções de pedido, reposição, status e frete", () => {
+    renderChat("cliente");
+    for (const label of ["Montar um pedido", "O que preciso repor?", "Status dos meus pedidos", "Frete e prazos de entrega"]) {
+      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+    }
+    expect(screen.getByText("Monte seu pedido conversando, veja o que repor e acompanhe seus pedidos.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /O que preciso repor\?/ }));
+    expect(chat.sendText).toHaveBeenCalledWith("O que eu preciso repor?");
+  });
+
+  it("cliente: cartão com preço tem botão Adicionar que põe 1 no pedido", () => {
+    vi.useFakeTimers();
+    try {
+      chat.state.messages = [assistantWithProducts(true)];
+      renderChat("cliente");
+      const add = screen.getByRole("button", { name: "Adicionar Shampoo Neutro — 5L ao pedido" });
+      expect(add).toHaveTextContent("Adicionar");
+      fireEvent.click(add);
+      expect(cartOps.addItem).toHaveBeenCalledWith(
+        { id: "p1", name: "Shampoo Neutro — 5L", sku: "S1", brand: "Pet Clean", img: "/x.jpg", unitPrice: 89.9 },
+        1,
+      );
+      expect(add).toHaveTextContent("Adicionado ✓");
+      act(() => {
+        vi.advanceTimersByTime(1500);
+      });
+      expect(add).toHaveTextContent(/^Adicionar$/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("cliente: produto sem preço não mostra Adicionar", () => {
+    chat.state.messages = [assistantWithProducts(false)];
+    renderChat("cliente");
+    expect(screen.queryByRole("button", { name: /^Adicionar/ })).toBeNull();
+  });
+
+  it("visitante: nenhum botão Adicionar", () => {
+    chat.state.messages = [assistantWithProducts(true)];
+    renderChat("visitante");
+    expect(screen.queryByRole("button", { name: /^Adicionar/ })).toBeNull();
+  });
+
+  it("cliente: alterações do pedido feitas pelo agente vão para o carrinho", () => {
+    renderChat("cliente");
+    const message = {
+      id: "a9",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-alterar_pedido",
+          toolCallId: "c9",
+          state: "output-available",
+          input: {},
+          output: {
+            aplicados: [
+              { id: "p1", name: "Shampoo Neutro — 5L", sku: "S1", brand: "Pet Clean", img: "/x.jpg", unitPrice: 89.9, qty: 10 },
+            ],
+          },
+        },
+      ],
+    } as unknown as AgentMessage;
+    act(() => chat.lastArgs?.onAssistantMessage?.(message));
+    expect(cartOps.addItem).toHaveBeenCalledWith(
+      { id: "p1", name: "Shampoo Neutro — 5L", sku: "S1", brand: "Pet Clean", img: "/x.jpg", unitPrice: 89.9 },
+      10,
+    );
+  });
+
+  it("cliente: mensagens já existentes (restauradas) não são reaplicadas no carrinho", () => {
+    chat.state.messages = [
+      {
+        id: "a8",
+        role: "assistant",
+        parts: [
+          {
+            type: "tool-alterar_pedido",
+            toolCallId: "c8",
+            state: "output-available",
+            input: {},
+            output: { aplicados: [{ id: "p1", name: "X", sku: "S1", brand: null, img: "/x.jpg", unitPrice: 1, qty: 3 }] },
+          },
+        ],
+      } as unknown as AgentMessage,
+    ];
+    renderChat("cliente");
+    expect(cartOps.addItem).not.toHaveBeenCalled();
+    expect(cartOps.updateQty).not.toHaveBeenCalled();
+  });
+
+  it("visitante: alterações do pedido não mexem no carrinho", () => {
+    renderChat("visitante");
+    const message = {
+      id: "a9",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-alterar_pedido",
+          toolCallId: "c9",
+          state: "output-available",
+          input: {},
+          output: { aplicados: [{ id: "p1", name: "X", sku: "S1", brand: null, img: "/x.jpg", unitPrice: 1, qty: 1 }] },
+        },
+      ],
+    } as unknown as AgentMessage;
+    act(() => chat.lastArgs?.onAssistantMessage?.(message));
+    expect(cartOps.addItem).not.toHaveBeenCalled();
+  });
+
+  it("avisa o id da conversa", () => {
+    const onConversationChange = vi.fn();
+    renderChat("cliente", { onConversationChange });
+    expect(onConversationChange).toHaveBeenCalledWith("3f1c2a7e-8b4d-4c1a-9f2e-1a2b3c4d5e6f");
   });
 
   it("envia a pergunta digitada e limpa o campo", () => {

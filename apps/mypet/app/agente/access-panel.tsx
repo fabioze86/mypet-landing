@@ -1,5 +1,6 @@
-import { useEffect, type RefObject } from "react";
+import type { RefObject } from "react";
 import { AccessForm } from "../_components/pre-access/access-form";
+import { useSheetDialog } from "./use-sheet-dialog";
 
 export function AccessPanel({
   reason,
@@ -14,20 +15,7 @@ export function AccessPanel({
   onClose: () => void;
   headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
-  useEffect(() => {
-    if (!modal) return;
-    headingRef.current?.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    function handleKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [modal, onClose, headingRef]);
+  useSheetDialog({ active: modal, onClose, focusRef: headingRef });
 
   return (
     <aside

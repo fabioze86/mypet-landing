@@ -1,12 +1,50 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 
-vi.mock("./agent-chat", () => ({
-  AgentChat: ({ onLockedIntent }: { onLockedIntent: (reason: string) => void }) => (
-    <button type="button" onClick={() => onLockedIntent("Cadastre-se para ver os preços da tabela.")}>
-      cadeado
-    </button>
+vi.mock("./agent-chat", async () => {
+  const { useEffect } = await import("react");
+  return {
+    AgentChat: ({
+      onLockedIntent,
+      onConversationChange,
+    }: {
+      onLockedIntent: (reason: string) => void;
+      onConversationChange?: (id: string) => void;
+    }) => {
+      useEffect(() => onConversationChange?.("conv-1"), [onConversationChange]);
+      return (
+        <button type="button" onClick={() => onLockedIntent("Cadastre-se para ver os preços da tabela.")}>
+          cadeado
+        </button>
+      );
+    },
+  };
+});
+vi.mock("./cart-panel", () => ({
+  CartPanel: ({
+    conversationId,
+    headingRef,
+  }: {
+    conversationId: string | null;
+    headingRef?: React.RefObject<HTMLHeadingElement | null>;
+  }) => (
+    <div>
+      <h2 ref={headingRef} tabIndex={-1}>
+        Seu pedido
+      </h2>
+      carrinho {String(conversationId)}
+    </div>
   ),
+}));
+vi.mock("@mypet/core/components/cart-provider", () => ({
+  useCart: () => ({
+    cart: {
+      items: [
+        { id: "p1", name: "Shampoo", sku: "S1", brand: null, img: "/x.jpg", qty: 2, unitPrice: 10 },
+        { id: "p2", name: "Condicionador", sku: "S2", brand: null, img: "/y.jpg", qty: 1, unitPrice: 5.5 },
+      ],
+    },
+  }),
 }));
 vi.mock("../_components/pre-access/access-form", () => ({
   AccessForm: ({ redirectTo }: { redirectTo?: string }) => <form aria-label={`cadastro ${redirectTo}`} />,
@@ -124,6 +162,43 @@ describe("AgentShell", () => {
     expect(screen.queryByRole("heading", { name: "Acesso completo ao agente" })).toBeNull();
     expect(screen.getByRole("link", { name: "Tabela de preços" })).toHaveAttribute("href", "/pedido-rapido");
     expect(screen.getByRole("link", { name: "Meus pedidos" })).toHaveAttribute("href", "/pedidos");
+  });
+
+  it("cliente (computador): carrinho ao lado com o id da conversa, sem painel de acesso", () => {
+    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    expect(screen.getByText(/carrinho conv-1/)).toBeInTheDocument();
+    expect(screen.queryByText("Acesso completo ao agente")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("cliente (celular): a barra abre o diálogo Seu pedido, Esc fecha e devolve o foco à barra", () => {
+    mockViewport(true);
+    const { container } = render(<AgentShell mode="cliente" initialQuestion={null} />);
+    const bar = screen.getByRole("button", { name: /Ver seu pedido · 3 itens · R\$\s?25,50/ });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(bar);
+
+    const dialog = screen.getByRole("dialog", { name: "Seu pedido" });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(screen.getByRole("heading", { name: "Seu pedido" })).toHaveFocus();
+    expect(document.body.style.overflow).toBe("hidden");
+    expect(container.querySelector(".ag-chat-wrap")).toHaveAttribute("inert");
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.body.style.overflow).toBe("");
+    expect(container.querySelector(".ag-chat-wrap")).not.toHaveAttribute("inert");
+    const again = screen.getByRole("button", { name: /Ver seu pedido/ });
+    expect(again).toBeVisible();
+    expect(again).toHaveFocus();
+  });
+
+  it("cliente (celular): o botão Fechar fecha o diálogo Seu pedido", () => {
+    mockViewport(true);
+    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    fireEvent.click(screen.getByRole("button", { name: /Ver seu pedido/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("rodapé informa que as conversas são guardadas", () => {

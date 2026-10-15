@@ -2,15 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  cartChangesFromMessage,
   messageText,
   productsFromMessage,
   useAgentChat,
   useAgentConversation,
   type AgentMessage,
+  type AgentProduct,
   type StoredConversation,
 } from "@mypet/core/agent-client";
 import { useCart } from "@mypet/core/components/cart-provider";
-import { PRICE_LOCK_REASON, ProductCards } from "./product-cards";
+import { applyCartChanges } from "./cart-sync";
+import { PRICE_LOCK_REASON, ProductCards, productDisplayName } from "./product-cards";
 
 export type AgentPageMode = "visitante" | "cliente";
 
@@ -19,6 +22,7 @@ type AgentChatProps = {
   initialQuestion: string | null;
   onInitialQuestionUsed: () => void;
   onLockedIntent: (reason: string) => void;
+  onConversationChange?: (id: string) => void;
 };
 
 type Intent = { label: string; question: string };
@@ -35,8 +39,10 @@ const VISITOR_INTENTS: Intent[] = [
 ];
 
 const CLIENT_INTENTS: Intent[] = [
-  { label: "Encontrar produtos e preços", question: "Quero ver produtos e preços." },
-  ...SHARED_INTENTS,
+  { label: "Montar um pedido", question: "Quero montar um pedido." },
+  { label: "O que preciso repor?", question: "O que eu preciso repor?" },
+  { label: "Status dos meus pedidos", question: "Como estão os meus pedidos?" },
+  SHARED_INTENTS[0],
 ];
 
 const LOCKED_INTENTS: LockedIntent[] = [
@@ -93,17 +99,28 @@ function AgentChatSession({
   initialQuestion,
   onInitialQuestionUsed,
   onLockedIntent,
+  onConversationChange,
 }: AgentChatProps & {
   conversation: StoredConversation;
   onReset: (notice?: string) => void;
   notice: string | null;
   onNoticeClear: () => void;
 }) {
-  const { cart } = useCart();
+  const { cart, addItem, updateQty, removeItem } = useCart();
+  // carrinho mais recente para aplicar as alterações do agente ao fim da resposta
+  const cartRef = useRef(cart);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
   const { messages, sendText: send, busy, error } = useAgentChat({
     conversation,
     getCart: () => cart.items.map((item) => ({ id: item.id, name: item.name, qty: item.qty, unitPrice: item.unitPrice ?? null })),
     onConversationReset: onReset,
+    // só mensagens novas do agente passam por aqui: as restauradas da sessão não são reaplicadas
+    onAssistantMessage: (message) => {
+      if (mode !== "cliente") return;
+      applyCartChanges(cartChangesFromMessage(message), { items: cartRef.current.items, addItem, updateQty, removeItem });
+    },
   });
   // pergunta aceita: o aviso de "conversa nova" já cumpriu o papel
   const sendText = useCallback(
@@ -113,6 +130,14 @@ function AgentChatSession({
       return accepted;
     },
     [send, onNoticeClear],
+  );
+  const handleAdd = useCallback(
+    (p: AgentProduct) =>
+      addItem(
+        { id: p.id, name: productDisplayName(p), sku: p.sku, brand: p.brand, img: p.img, unitPrice: p.unitPrice ?? undefined },
+        1,
+      ),
+    [addItem],
   );
   const [input, setInput] = useState("");
   const logRef = useRef<HTMLDivElement>(null);
@@ -132,6 +157,10 @@ function AgentChatSession({
     url.searchParams.delete("pergunta");
     window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }, [initialQuestion, onInitialQuestionUsed, sendText]);
+
+  useEffect(() => {
+    onConversationChange?.(conversation.id);
+  }, [conversation.id, onConversationChange]);
 
   useEffect(() => {
     const log = logRef.current;
@@ -159,7 +188,7 @@ function AgentChatSession({
             <h2>Como posso te ajudar hoje?</h2>
             <p>
               {mode === "cliente"
-                ? "Encontre produtos, confira preços e tire dúvidas sobre pedido, entrega e pagamento."
+                ? "Monte seu pedido conversando, veja o que repor e acompanhe seus pedidos."
                 : "Tire dúvidas sobre pedido, entrega e pagamento ou encontre produtos da tabela."}
             </p>
             <ul className="ag-intents">
@@ -197,7 +226,13 @@ function AgentChatSession({
           </div>
         ) : (
           messages.map((message) => (
-            <MessageView key={message.id} message={message} mode={mode} onLockedIntent={onLockedIntent} />
+            <MessageView
+              key={message.id}
+              message={message}
+              mode={mode}
+              onLockedIntent={onLockedIntent}
+              onAdd={mode === "cliente" ? handleAdd : undefined}
+            />
           ))
         )}
         {waiting && <p className="ag-msg ag-msg--muted">Pensando…</p>}
@@ -236,10 +271,12 @@ function MessageView({
   message,
   mode,
   onLockedIntent,
+  onAdd,
 }: {
   message: AgentMessage;
   mode: AgentPageMode;
   onLockedIntent: (reason: string) => void;
+  onAdd?: (product: AgentProduct) => void;
 }) {
   const text = messageText(message);
   if (message.role === "user") return <p className="ag-msg ag-msg--user">{text}</p>;
@@ -247,7 +284,9 @@ function MessageView({
   return (
     <div className="ag-turn">
       {text && <p className="ag-msg">{renderWithLinks(text)}</p>}
-      {products.length > 0 && <ProductCards products={products} mode={mode} onLockedIntent={onLockedIntent} />}
+      {products.length > 0 && (
+        <ProductCards products={products} mode={mode} onLockedIntent={onLockedIntent} onAdd={onAdd} />
+      )}
     </div>
   );
 }

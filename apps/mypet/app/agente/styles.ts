@@ -38,6 +38,8 @@ export const AGENT_STYLES = `
   .ag-product-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: 0 0 auto; }
   .ag-product-price { font-weight: 700; color: var(--pa-navy); font-size: 15px; }
   .ag-product-link { color: var(--pa-green-dark); font-weight: 600; font-size: 13px; text-decoration: none; }
+  .ag-product-add { margin-top: 4px; padding: 6px 12px; border: 0; border-radius: var(--pa-r-pill); background: var(--pa-green); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .ag-product-add:hover { background: var(--pa-green-dark); }
   .ag-product-lock { flex: 0 0 auto; background: none; border: 0; padding: 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--pa-green-dark); cursor: pointer; text-align: right; }
 
   .ag-error { margin: 0 20px 8px; color: #B42318; font-size: 14px; }
@@ -45,7 +47,7 @@ export const AGENT_STYLES = `
   .ag-form input { flex: 1; min-width: 0; border: 0; padding: 10px; font: inherit; font-size: 16px; color: var(--pa-ink); background: transparent; }
   .ag-form input:focus { outline: none; }
   .ag-form:focus-within { box-shadow: 0 0 0 3px var(--pa-green-soft); border-color: var(--pa-green); }
-  .ag-form button:focus-visible, .ag-intent:focus-visible, .ag-product-lock:focus-visible, .ag-product-link:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
+  .ag-form button:focus-visible, .ag-intent:focus-visible, .ag-product-lock:focus-visible, .ag-product-link:focus-visible, .ag-product-add:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
   .ag-form button { width: 40px; height: 40px; border: 0; border-radius: 10px; background: var(--pa-green); color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; }
   .ag-form button:disabled { background: var(--pa-line); color: var(--pa-muted); cursor: default; }
   .ag-disclaimer { margin: 8px 16px 14px; text-align: center; color: var(--pa-muted); font-size: 12px; }
@@ -65,6 +67,8 @@ export const AGENT_STYLES = `
 
   .ag-footer { padding: 16px 24px 24px; text-align: center; color: var(--pa-muted); font-size: 12px; line-height: 1.5; }
 
+  .ag-cart-aside { position: sticky; top: 92px; }
+  .ag-cart-aside .ag-cart { position: static; }
   .ag-cart { position: sticky; top: 92px; background: #fff; border: 1px solid var(--pa-line); border-radius: var(--pa-r-card); padding: 20px; }
   .ag-cart-title { font-family: var(--pa-geist); font-weight: 700; font-size: 20px; color: var(--pa-navy); margin: 0 0 12px; }
   .ag-cart-title:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
@@ -95,8 +99,13 @@ export const AGENT_STYLES = `
     .ag-cart-stepper button { width: 44px; height: 44px; }
     .ag-access { display: none; position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 60; max-height: 88dvh; overflow-y: auto; border-radius: 20px 20px 0 0; box-shadow: 0 -16px 40px rgba(15,31,69,0.25); }
     .ag-access.is-open { display: block; }
+    .ag-cart-aside { display: none; position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 60; max-height: 88dvh; overflow-y: auto; background: #fff; border-radius: 20px 20px 0 0; box-shadow: 0 -16px 40px rgba(15,31,69,0.25); }
+    .ag-cart-aside.is-open { display: block; }
+    .ag-cart-aside .ag-cart { position: static; border: 0; }
+    .ag-cart-aside .ag-cart-title { padding-right: 44px; }
     .ag-access-close { display: block; position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--pa-bg-soft); font-size: 20px; color: var(--pa-navy); cursor: pointer; }
     .ag-unlock-bar[hidden] { display: none; }
+    .ag-access-close:focus-visible { outline: 2px solid var(--pa-green); outline-offset: 2px; }
     .ag-unlock-bar { display: block; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 50; padding: 15px; border: 0; border-radius: var(--pa-r-pill); background: var(--pa-green); color: #fff; font-family: var(--pa-geist); font-weight: 600; font-size: 15px; box-shadow: 0 10px 24px rgba(0,166,81,0.35); cursor: pointer; }
     .ag-msg { max-width: 92%; }
     .ag-header-links a.ag-hide-mobile { display: none; }
