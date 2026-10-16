@@ -1,6 +1,8 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { getHubClient } from "@mypet/core/supabase";
 
+export { displayName } from "../_components/pop/text";
+
 // Lista curada dos "campeões de vendas" mostrados em /campeoes, na ordem do
 // ranking. A base do hub não expõe volume de venda para a chave anon, então a
 // lista é mantida à mão pelo SKU (products.reference). Para trocar um produto,
@@ -36,11 +38,6 @@ type Row = {
   brand: string | null;
   product_assets: { url: string; type: string }[] | null;
 };
-
-/** "PERFUME PET LIFE ALEGRIA - 1 LITRO" -> "Perfume Pet Life Alegria - 1 Litro" */
-export function displayName(name: string): string {
-  return name.toLowerCase().replace(/(^|[\s(/-])([a-zà-ú])/g, (_, sep: string, ch: string) => sep + ch.toUpperCase());
-}
 
 /** Ordena as linhas do banco pelo ranking curado e descarta as sem foto. */
 export function rankChampions(rows: readonly Row[]): Champion[] {

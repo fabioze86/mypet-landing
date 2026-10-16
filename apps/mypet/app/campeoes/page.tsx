@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
 import {
   CheckCircle,
   Lightning,
@@ -14,25 +13,13 @@ import { clientConfig } from "@/client.config";
 import { AccessForm } from "../_components/pre-access/access-form";
 import { commercialConditions } from "../pre-access-content";
 import { displayName, getChampions, type Champion } from "./champions-data";
-import { CHAMPIONS_STYLES } from "./styles";
+import { popFontVariables } from "../_components/pop/fonts";
+import { POP_STYLES } from "../_components/pop/styles";
 
 // Landing de campanha para tráfego do Instagram (bio, stories e anúncios).
 // Objetivo único: o lojista deixar CNPJ + WhatsApp e cair na tabela
 // (/pedido-rapido). Mesmas regras da home: nenhum preço de item aqui e nada
 // de "atacado", "cotação" ou "loja" na copy.
-
-const display = Barlow_Condensed({
-  variable: "--font-cp-display",
-  subsets: ["latin"],
-  style: ["italic"],
-  weight: ["700", "800", "900"],
-});
-
-const body = Barlow({
-  variable: "--font-cp-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
 
 const { name: SITE_NAME, logo } = clientConfig;
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
@@ -120,8 +107,8 @@ export default async function ChampionsPage() {
     : null;
 
   return (
-    <div className={`cp ${display.variable} ${body.variable}`}>
-      <style>{CHAMPIONS_STYLES}</style>
+    <div className={`cp ${popFontVariables}`}>
+      <style>{POP_STYLES}</style>
 
       <header className="cp-header">
         <div className="cp-wrap cp-header-row">

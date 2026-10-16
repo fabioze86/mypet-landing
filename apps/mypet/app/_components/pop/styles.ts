@@ -1,9 +1,9 @@
-// Estilo de /campeoes: visual "pop" dos criativos da campanha (céu claro,
+// Estilo das landings de campanha (/campeoes, /creators): visual "pop" dos criativos da campanha (céu claro,
 // título condensado em itálico, faixas inclinadas, produtos no pedestal).
-// Fontes Barlow / Barlow Condensed vêm de next/font em page.tsx
+// Fontes Barlow / Barlow Condensed vêm de ./fonts.ts
 // (--font-cp-body / --font-cp-display). Tudo prefixado com cp- para não
 // colidir com a landing principal.
-export const CHAMPIONS_STYLES = `
+export const POP_STYLES = `
   :root {
     --cp-bg: #f3f8fd; --cp-surface: #ffffff; --cp-fg: #0d2347; --cp-muted: #4d5f7d;
     --cp-line: #d5e2f1; --cp-azul: #073f95; --cp-azul-dark: #052e6e; --cp-laranja: #ff6817;
