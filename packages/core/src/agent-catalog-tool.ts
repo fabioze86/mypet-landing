@@ -55,7 +55,7 @@ export function buildCatalogTool({ channel, showPrices }: { channel: string; sho
     }),
     execute: async ({ query, marca }) => {
       const brand = await resolveBrand(marca, channel);
-      const result = await getCatalogLineItems({ q: query, brand, page: 1, channel });
+      const result = await getCatalogLineItems({ q: query, brand, page: 1, channel, matchWords: true });
       return {
         total: result.total,
         produtos: result.items.slice(0, MAX_TOOL_ITEMS).map((item) => toAgentProduct(item, showPrices)),

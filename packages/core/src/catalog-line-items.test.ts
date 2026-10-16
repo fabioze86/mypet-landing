@@ -201,6 +201,30 @@ describe("queryCatalogLineItems", () => {
     expect(result.items).toHaveLength(1);
     expect(result.items[0]).toMatchObject({ id: "p1", sku: "COL-P" });
   });
+
+  it("com matchWords, cada palavra vira um .or() próprio (AND entre palavras)", async () => {
+    await queryCatalogLineItems({ q: "shampoo neutro", page: 1, channel: "mypetbrasil", matchWords: true });
+
+    const ors = (calls["or"] ?? []).map((a) => String(a[0]));
+    expect(ors).toHaveLength(2);
+    expect(ors[0]).toContain("name.ilike.%shampoo%");
+    expect(ors[1]).toContain("name.ilike.%neutro%");
+  });
+
+  it("com matchWords, gera variantes sem acento e singular", async () => {
+    await queryCatalogLineItems({ q: "tapetes higiênicos", page: 1, channel: "mypetbrasil", matchWords: true });
+
+    const ors = (calls["or"] ?? []).map((a) => String(a[0]));
+    expect(ors).toHaveLength(2);
+    expect(ors[0]).toContain("name.ilike.%tapete%");
+    expect(ors[1]).toContain("name.ilike.%higienicos%");
+    expect(ors[1]).toContain("name.ilike.%higienico%");
+  });
+
+  it("sem matchWords mantém o .or() único de antes", async () => {
+    await queryCatalogLineItems({ q: "shampoo neutro", page: 1, channel: "mypetbrasil" });
+    expect(calls["or"]).toEqual([["name.ilike.%shampoo neutro%,reference.ilike.%shampoo neutro%"]]);
+  });
 });
 
 import { escapeOrFilterValue } from "./catalog-line-items";

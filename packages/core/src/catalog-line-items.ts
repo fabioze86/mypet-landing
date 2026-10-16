@@ -53,6 +53,25 @@ export function escapeOrFilterValue(value: string): string {
   return value.replace(/[,()]/g, (c) => `\\${c}`);
 }
 
+// Busca do agente: cada palavra precisa aparecer no nome (ou na referência),
+// em qualquer ordem, com ou sem acento e no singular.
+function wordFilters(q: string): string[] {
+  const words = q
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length >= 2)
+    .slice(0, 6);
+  return words.map((word) => {
+    const plain = word.normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const variants = new Set([word, plain]);
+    if (plain.length > 4 && plain.endsWith("s")) variants.add(plain.slice(0, -1));
+    const parts = [...variants].map((v) => `name.ilike.%${escapeOrFilterValue(v)}%`);
+    parts.push(`reference.ilike.%${escapeOrFilterValue(word)}%`);
+    return parts.join(",");
+  });
+}
+
 function lineItemVariantLabel(axis: VariantAxisEntry[], sku: string, fallbackIndex: number): string {
   const label = axis.map((a) => a.valor).join(" / ");
   const isJustReference = label.trim().toLowerCase() === sku.trim().toLowerCase();
@@ -99,8 +118,9 @@ export async function queryCatalogLineItems(params: {
   categoryId?: string | string[];
   page: number;
   channel: string;
+  matchWords?: boolean;
 }): Promise<CatalogLineItemsResult> {
-  const { q, brand, categoryId, page, channel } = params;
+  const { q, brand, categoryId, page, channel, matchWords } = params;
   const supabase = getHubClient();
   const { from, to } = pageRange(page);
 
@@ -113,7 +133,9 @@ export async function queryCatalogLineItems(params: {
     .eq("product_channel_prices.channel", channel)
     .order("name", { ascending: true });
 
-  if (q) {
+  if (q && matchWords) {
+    for (const filter of wordFilters(q)) query = query.or(filter);
+  } else if (q) {
     const safeQ = escapeOrFilterValue(q);
     query = query.or(`name.ilike.%${safeQ}%,reference.ilike.%${safeQ}%`);
   }
@@ -177,6 +199,7 @@ export async function getCatalogLineItems(params: {
   categoryId?: string | string[];
   page: number;
   channel: string;
+  matchWords?: boolean;
 }): Promise<CatalogLineItemsResult> {
   "use cache";
   cacheLife("days");

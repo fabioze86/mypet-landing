@@ -77,11 +77,11 @@ describe("buscar_produtos", () => {
 
   it("busca a primeira página do canal com a marca resolvida", async () => {
     await run(false, { query: "shampoo", marca: "pet clean" });
-    expect(getCatalogLineItems).toHaveBeenCalledWith({ q: "shampoo", brand: "Pet Clean", page: 1, channel: "mypetbrasil" });
+    expect(getCatalogLineItems).toHaveBeenCalledWith({ q: "shampoo", brand: "Pet Clean", page: 1, channel: "mypetbrasil", matchWords: true });
   });
 
   it("marca desconhecida: busca sem filtro de marca", async () => {
     await run(false, { query: "shampoo", marca: "Marca X" });
-    expect(getCatalogLineItems).toHaveBeenCalledWith({ q: "shampoo", brand: undefined, page: 1, channel: "mypetbrasil" });
+    expect(getCatalogLineItems).toHaveBeenCalledWith({ q: "shampoo", brand: undefined, page: 1, channel: "mypetbrasil", matchWords: true });
   });
 });
