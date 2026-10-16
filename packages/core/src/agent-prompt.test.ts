@@ -41,6 +41,8 @@ describe("buildAgentInstructions", () => {
       expect(prompt).toContain("Nunca prometa desconto");
       expect(prompt).toContain('"buscar_produtos"');
       expect(prompt).toContain("Não escreva preços no texto");
+      expect(prompt).toContain("Nunca liste os produtos no texto nem use markdown, imagens ou links");
+      expect(prompt).toContain("Encontrei 6 opções de shampoo neutro.");
       expect(prompt).toContain("/central-de-ajuda");
       expect(prompt).toContain('"atacado"');
       expect(prompt).not.toMatch(/fal(e|ar) com o (nosso )?time/i);

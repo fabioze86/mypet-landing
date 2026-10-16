@@ -85,3 +85,30 @@ describe("buscar_produtos", () => {
     expect(getCatalogLineItems).toHaveBeenCalledWith({ q: "shampoo", brand: undefined, page: 1, channel: "mypetbrasil", matchWords: true });
   });
 });
+
+describe("buscar_produtos: saída para o modelo", () => {
+  const toModel = async (showPrices: boolean) => {
+    const tool = buildCatalogTool({ channel: "mypetbrasil", showPrices });
+    const output = await run(showPrices, { query: "shampoo neutro" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (tool.toModelOutput as any)({ toolCallId: "t", input: { query: "shampoo neutro" }, output });
+  };
+
+  it("cliente: id, nome (com variação), marca e preço, sem img/sku", async () => {
+    const out = await toModel(true);
+    expect(out.type).toBe("json");
+    expect(out.value.total).toBe(10);
+    expect(out.value.produtos).toHaveLength(8);
+    expect(out.value.produtos[0]).toEqual({ id: "p1", nome: "Shampoo Neutro 1 — 5L", marca: "Pet Clean", preco: "R$ 11,00" });
+    expect(out.value.produtos[1].nome).toBe("Shampoo Neutro 2");
+    const json = JSON.stringify(out);
+    expect(json).not.toContain("img");
+    expect(json).not.toContain("sku");
+  });
+
+  it("visitante: sem preço", async () => {
+    const out = await toModel(false);
+    expect(out.value.produtos[0]).toEqual({ id: "p1", nome: "Shampoo Neutro 1 — 5L", marca: "Pet Clean" });
+    expect(JSON.stringify(out)).not.toContain("preco");
+  });
+});

@@ -61,5 +61,19 @@ export function buildCatalogTool({ channel, showPrices }: { channel: string; sho
         produtos: result.items.slice(0, MAX_TOOL_ITEMS).map((item) => toAgentProduct(item, showPrices)),
       };
     },
+    // O cartão na tela usa a saída completa; o modelo recebe só o resumo, sem
+    // imagem/sku, para não listar produtos nem montar markdown no texto.
+    toModelOutput: ({ output }) => ({
+      type: "json",
+      value: {
+        total: output.total,
+        produtos: output.produtos.map((p) => ({
+          id: p.id,
+          nome: p.variantLabel ? `${p.name} — ${p.variantLabel}` : p.name,
+          marca: p.brand,
+          ...(showPrices ? { preco: p.priceLabel } : {}),
+        })),
+      },
+    }),
   });
 }

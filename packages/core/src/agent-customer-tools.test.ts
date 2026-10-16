@@ -190,3 +190,43 @@ describe("status_pedidos", () => {
     await expect(run("status_pedidos", {})).rejects.toThrow("down");
   });
 });
+
+describe("saída para o modelo", () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const toModel = (name: "alterar_pedido" | "sugerir_reposicao", output: unknown) =>
+    (tools()[name].toModelOutput as any)({ toolCallId: "t", input: {}, output });
+
+  it("sugerir_reposicao: sem img nem sku", async () => {
+    (fetchRecentOrdersByBuyer as Mock).mockResolvedValue([
+      { id: "o1", status: "entregue", createdAt: "2026-08-16T12:00:00Z", items: [{ productId: "v1", name: "x", qty: 2 }] },
+      { id: "o2", status: "entregue", createdAt: "2026-09-15T12:00:00Z", items: [{ productId: "v1", name: "x", qty: 3 }] },
+    ]);
+    (queryLineItemsByIds as Mock).mockResolvedValue([lineItem("v1")]);
+    const out = toModel("sugerir_reposicao", await run("sugerir_reposicao", {}));
+    expect(out).toEqual({
+      type: "json",
+      value: {
+        tipo: "reposicao",
+        itens: [
+          { id: "v1", nome: "Shampoo Neutro — 5L", marca: "Pet Clean", preco: "R$ 89,90", ultimaCompraDias: 30, intervaloMedioDias: 30, qtdUltimaCompra: 3 },
+        ],
+      },
+    });
+    expect(JSON.stringify(out)).not.toMatch(/img|sku/);
+  });
+
+  it("alterar_pedido: aplicados resumidos e recusados", () => {
+    const out = toModel("alterar_pedido", {
+      aplicados: [{ id: "v1", name: "Shampoo — 5L", sku: "S", brand: "X", img: "/x.jpg", unitPrice: 89.9, qty: 2 }],
+      recusados: [{ productId: "v2", motivo: "Produto não encontrado na tabela." }],
+    });
+    expect(out).toEqual({
+      type: "json",
+      value: {
+        aplicados: [{ id: "v1", nome: "Shampoo — 5L", quantidade: 2, preco: 89.9 }],
+        recusados: [{ productId: "v2", motivo: "Produto não encontrado na tabela." }],
+      },
+    });
+    expect(JSON.stringify(out)).not.toMatch(/img|sku/);
+  });
+});

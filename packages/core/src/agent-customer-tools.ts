@@ -81,6 +81,13 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
         }
         return { aplicados, recusados };
       },
+      toModelOutput: ({ output }) => ({
+        type: "json",
+        value: {
+          aplicados: output.aplicados.map((a) => ({ id: a.id, nome: a.name, quantidade: a.qty, preco: a.unitPrice })),
+          recusados: output.recusados,
+        },
+      }),
     }),
 
     sugerir_reposicao: tool({
@@ -119,6 +126,21 @@ export function buildCustomerTools({ channel, buyerId }: { channel: string; buye
           }).slice(0, MAX_SUGGESTIONS),
         };
       },
+      toModelOutput: ({ output }) => ({
+        type: "json",
+        value: {
+          tipo: output.tipo,
+          itens: output.itens.map((i) => ({
+            id: i.id,
+            nome: i.variantLabel ? `${i.name} — ${i.variantLabel}` : i.name,
+            marca: i.brand,
+            preco: i.priceLabel,
+            ultimaCompraDias: i.ultimaCompraDias,
+            intervaloMedioDias: i.intervaloMedioDias,
+            qtdUltimaCompra: i.qtdUltimaCompra,
+          })),
+        },
+      }),
     }),
 
     status_pedidos: tool({
