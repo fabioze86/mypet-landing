@@ -11,3 +11,8 @@ allowBuilds:
 # pacote inteiro, entao versoes futuras continuam protegidas pela quarentena normal.
 minimumReleaseAgeExclude:
   - tsx@4.23.9
+# Dependências de build com vulnerabilidades altas (auditoria 2026-10-16),
+# puxadas pelo next/styled-jsx/postcss em versões antigas.
+overrides:
+  browserslist: ">=4.28.7"
+  source-map-js: ">=1.2.2"

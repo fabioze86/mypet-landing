@@ -5,7 +5,7 @@ const upsertMock = vi.fn();
 const fromCalls: string[] = [];
 
 vi.mock("./supabase", () => ({
-  getHubClient: () => ({
+  getHubServiceClient: () => ({
     from: (table: string) => {
       fromCalls.push(table);
       return { upsert: upsertMock };

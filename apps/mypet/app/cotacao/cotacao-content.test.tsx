@@ -33,11 +33,10 @@ const config: ClientConfig = {
 function renderWithCart(cartItems: Record<string, unknown>[]) {
   localStorage.setItem("mypet_cart", JSON.stringify({ items: cartItems }));
   return render(
-    createElement(
-      ClientConfigProvider,
-      { config },
-      createElement(CartProvider, null, createElement(CotacaoContent, { palette: config.palette })),
-    ),
+    createElement(ClientConfigProvider, {
+      config,
+      children: createElement(CartProvider, null, createElement(CotacaoContent, { palette: config.palette })),
+    }),
   );
 }
 

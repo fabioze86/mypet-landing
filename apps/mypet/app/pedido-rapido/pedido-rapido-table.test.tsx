@@ -36,10 +36,9 @@ const baseResult: CatalogLineItemsResult = {
 
 function renderTable(result = baseResult) {
   return render(
-    createElement(
-      ClientConfigProvider,
-      { config },
-      createElement(
+    createElement(ClientConfigProvider, {
+      config,
+      children: createElement(
         CartProvider,
         null,
         createElement(PedidoRapidoTable, {
@@ -49,7 +48,7 @@ function renderTable(result = baseResult) {
           palette: config.palette,
         }),
       ),
-    ),
+    }),
   );
 }
 

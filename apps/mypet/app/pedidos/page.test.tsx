@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const requireBuyer = vi.fn();
-const redirect = vi.fn(() => {
+const redirect = vi.fn((_to: string) => {
   throw new Error("REDIRECT");
 });
 

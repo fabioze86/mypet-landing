@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getHubClient } from "./supabase";
+import { getHubServiceClient } from "./supabase";
 import type { Channel } from "./channels";
 
 const MAX_ENDPOINT_LENGTH = 512;
@@ -52,7 +52,9 @@ export function createPushSubscribePostHandler(channel: Channel) {
       return Response.json({ error: "Inscrição inválida" }, { status: 400 });
     }
 
-    const supabase = getHubClient();
+    // service_role: anon não tem acesso a push_subscriptions (ver migration
+    // 20261016120000_security_hardening.sql).
+    const supabase = getHubServiceClient();
     const { error } = await supabase
       .from("push_subscriptions")
       .upsert({ channel, endpoint, p256dh, auth }, { onConflict: "endpoint" });
