@@ -4,6 +4,7 @@ import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
+import { GoogleAnalytics } from "./google-analytics";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -52,6 +53,7 @@ export default function RootLayout({
         <ClientConfigProvider config={clientConfig}>
           <CartProvider>{children}</CartProvider>
         </ClientConfigProvider>
+        <GoogleAnalytics />
       </body>
     </html>
   );
