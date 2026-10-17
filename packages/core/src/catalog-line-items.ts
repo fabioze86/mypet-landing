@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
-import { getHubClient } from "./supabase";
+import { getCatalogClient } from "./supabase";
 import {
   mapVariant,
   formatPrice,
@@ -86,7 +86,7 @@ async function fetchVariantsByParentIds(
   const map = new Map<string, ProductVariant[]>();
   if (parentIds.length === 0) return map;
 
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("products")
     .select(
@@ -121,7 +121,7 @@ export async function queryCatalogLineItems(params: {
   matchWords?: boolean;
 }): Promise<CatalogLineItemsResult> {
   const { q, brand, categoryId, page, channel, matchWords } = params;
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { from, to } = pageRange(page);
 
   let query = supabase
@@ -240,7 +240,7 @@ function variantLabelOrNull(axis: VariantAxisEntry[] | null, sku: string): strin
 export async function queryLineItemsByIds(ids: string[], channel: string): Promise<CatalogLineItem[]> {
   const unique = [...new Set(ids)].slice(0, MAX_IDS);
   if (unique.length === 0) return [];
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
 
   const { data, error } = await supabase
     .from("products")

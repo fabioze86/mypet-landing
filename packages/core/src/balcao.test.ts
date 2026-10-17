@@ -274,7 +274,7 @@ describe("getBalcaoEligibleProducts", () => {
     vi.resetModules();
     vi.doMock("next/cache", () => ({ cacheLife: () => {}, cacheTag: () => {} }));
     vi.doMock("./supabase", () => ({
-      getHubClient: () => ({
+      getCatalogClient: () => ({
         from: (table: string) => {
           if (table === "balcao_rules") {
             return {

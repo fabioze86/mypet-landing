@@ -18,7 +18,7 @@ function makeBuilder() {
   return builder;
 }
 
-vi.mock("./supabase", () => ({ getHubClient: () => ({ from: () => makeBuilder() }) }));
+vi.mock("./supabase", () => ({ getCatalogClient: () => ({ from: () => makeBuilder() }) }));
 
 import { queryLineItemsByIds } from "./catalog-line-items";
 

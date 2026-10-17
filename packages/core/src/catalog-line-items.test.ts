@@ -33,7 +33,7 @@ function makeBuilder(table: string) {
 }
 
 vi.mock("./supabase", () => ({
-  getHubClient: () => ({
+  getCatalogClient: () => ({
     from: (table: string) => makeBuilder(table),
   }),
 }));

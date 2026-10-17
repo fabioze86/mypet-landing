@@ -24,7 +24,7 @@ type QueryBuilder = {
 
 vi.mock("./supabase", () => {
   return {
-    getHubClient: () => {
+    getCatalogClient: () => {
       let currentTable = "";
       const builder = {} as QueryBuilder;
       const accumulate = (name: string) => (...args: unknown[]) => {

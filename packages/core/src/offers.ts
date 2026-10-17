@@ -9,7 +9,7 @@
  */
 
 import { cacheLife, cacheTag } from "next/cache";
-import { getHubClient } from "./supabase";
+import { getCatalogClient } from "./supabase";
 import { mainImage } from "./catalog-utils";
 import {
   buildOfferCampaign,
@@ -27,7 +27,7 @@ async function resolveProducts(channel: string, productIds: string[]): Promise<M
   const map = new Map<string, ResolvedProductInfo>();
   if (productIds.length === 0) return map;
 
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("v_produtos_resolvidos")
     .select("id, name, reference, description, product_assets(url, type), product_channel_links!inner(channel)")
@@ -65,7 +65,7 @@ async function resolveRealPrices(
   const priceByProductId = new Map<string, number>();
   if (productIds.length === 0) return priceByProductId;
 
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
 
   const { data, error } = await supabase
     .from("product_channel_prices")
@@ -117,7 +117,7 @@ type CampaignRowsResult = { ok: true; rows: RawOfferCampaignRow[] } | { ok: fals
  * vazio.
  */
 async function fetchActiveCampaignRows(channel: string): Promise<CampaignRowsResult> {
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("offer_campaigns")
     .select(OFFER_CAMPAIGN_SELECT)
@@ -132,7 +132,7 @@ async function fetchActiveCampaignRows(channel: string): Promise<CampaignRowsRes
 }
 
 async function fetchCampaignRowsBySlug(channel: string, slug: string): Promise<CampaignRowsResult> {
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("offer_campaigns")
     .select(OFFER_CAMPAIGN_SELECT)

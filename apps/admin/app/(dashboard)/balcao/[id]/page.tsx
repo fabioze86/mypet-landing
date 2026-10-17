@@ -21,7 +21,7 @@ export default async function EditBalcaoRulePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ error?: string; previewQty?: string }>;
 }) {
-  await requireAdminSession();
+  const { supabase } = await requireAdminSession();
   const { id } = await params;
   const { error, previewQty } = await searchParams;
 
@@ -59,7 +59,8 @@ export default async function EditBalcaoRulePage({
   // Prévia com preço-base do canal (product_channel_prices). Só quando escopo = sku.
   let previewBase: number | null = null;
   if (rule.scope === "sku" && rule.product_reference) {
-    const { data: p } = await getHubClient()
+    // Sessão do admin: product_channel_prices só é legível por admin_users.
+    const { data: p } = await supabase
       .from("products")
       .select("product_channel_prices(channel, sale_price)")
       .eq("reference", rule.product_reference)

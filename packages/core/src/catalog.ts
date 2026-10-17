@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
-import { getHubClient } from "./supabase";
+import { getCatalogClient } from "./supabase";
 import {
   mapProduct,
   mapVariant,
@@ -36,7 +36,7 @@ type RawCatalogVariantPriceRow = {
 async function applyStartingVariantPrices(items: CatalogResult["items"], channel: string) {
   if (items.length === 0) return items;
 
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("products")
     .select("parent_product_id, reference, product_channel_prices(sale_price), product_channel_links!inner(channel)")
@@ -85,7 +85,7 @@ export async function queryCatalog(params: {
   channel: string;
 }): Promise<CatalogResult> {
   const { q, brand, categoryId, page, channel } = params;
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { from, to } = pageRange(page);
 
   let query = supabase
@@ -137,7 +137,7 @@ export async function getBrands(channel: string): Promise<string[]> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("products")
     .select("brand, product_channel_links!inner(channel)")
@@ -160,7 +160,7 @@ export async function getProductCount(channel: string): Promise<number> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { count, error } = await supabase
     .from("products")
     .select("id, product_channel_links!inner(channel)", { count: "exact", head: true })
@@ -178,7 +178,7 @@ export async function getProductCategoryIds(channel: string): Promise<string[]> 
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("products")
     .select("category_id, product_channel_links!inner(channel), product_channel_prices!inner(channel)")
@@ -212,7 +212,7 @@ export async function getProductById(id: string, channel: string) {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("v_produtos_resolvidos")
     .select(
@@ -273,7 +273,7 @@ export async function getProductById(id: string, channel: string) {
 }
 
 async function getVariantsByParentId(parentId: string, channel: string): Promise<ProductVariant[]> {
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("products")
     .select(
@@ -299,7 +299,7 @@ export async function getSitemapProducts(
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const pageSize = 1000;
   const all: { id: string; updatedAt: string }[] = [];
   let from = 0;
@@ -331,7 +331,7 @@ export async function getCategories(): Promise<CategoryNode[]> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("categories")
     .select("id, parent_id, slug, name, level, sort_order")
@@ -360,7 +360,7 @@ export async function getChannelCategories(channel: string): Promise<CategoryNod
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("channel_categories")
     .select("id, name, slug, sort_order")
@@ -388,7 +388,7 @@ export async function queryCatalogByChannelCategory(params: {
   page: number;
 }): Promise<CatalogResult> {
   const { channel, categoryId, page } = params;
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { from, to } = pageRange(page);
   const { data, count, error } = await supabase
     .from("products")

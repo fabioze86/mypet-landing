@@ -9,7 +9,7 @@
  */
 
 import { cacheLife, cacheTag } from "next/cache";
-import { getHubClient } from "./supabase";
+import { getCatalogClient } from "./supabase";
 import { mainImage } from "./catalog-utils";
 import {
   resolveRuleForProduct,
@@ -59,7 +59,7 @@ export async function getBalcaoRules(channel: string): Promise<BalcaoRule[]> {
   cacheLife("hours");
   cacheTag("balcao");
 
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const { data, error } = await supabase
     .from("balcao_rules")
     .select(
@@ -109,7 +109,7 @@ export async function getBalcaoEligibleProducts(
   ];
   if (categoryIds.length === 0 && skuRefs.length === 0) return [];
 
-  const supabase = getHubClient();
+  const supabase = getCatalogClient();
   const orParts: string[] = [];
   if (categoryIds.length > 0) orParts.push(`category_id.in.(${categoryIds.join(",")})`);
   if (skuRefs.length > 0) {
