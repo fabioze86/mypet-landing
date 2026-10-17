@@ -88,7 +88,7 @@ Acesso: RLS ligado, `revoke all ... from anon, authenticated`. Só o
 | `duplicate_message` | id da mensagem já está no histórico | `{ message_id }` |
 | `provider_fallback` | um provedor falhou antes do primeiro conteúdo e outro assumiu (um evento por provedor que falhou) | `{ failed_provider, error }` |
 | `provider_error` | todos os provedores falharam antes do primeiro conteúdo (502), ou erro no meio do stream | `{ failures: [{ provider, error }] }` ou `{ finish_reason }` |
-| `aborted` | `onEnd` com `isAborted = true` | `{}` |
+| `aborted` | `onEnd` com `isAborted = true` ou sem `finishReason` (o AI SDK chama `onEnd` sem `finishReason` quando o navegador desconecta) | `{}` |
 | `empty_reply` | `onEnd` terminou bem mas sem texto | `{ finish_reason }` |
 
 `turn_started` é o único tipo que não é exceção: existe para o dashboard
@@ -117,9 +117,10 @@ Idempotente: desagenda o job pelo nome, se existir, antes de agendar.
 - `recordAgentEvent(supabase, event)`: monta a linha e insere em
   `agent_events`. Nunca lança erro; falhas vão para
   `console.error("[agent-events] ...")`.
-- Executado depois da resposta, via `after()` do `next/server`, para não somar
-  latência. Confirmar a API em `node_modules/next/dist/docs/` antes de
-  implementar.
+- Sem `after()` do Next (lança fora do escopo de requisição e não traz ganho
+  aqui): nos caminhos sem stream (429, 403, 409, 502) o evento é gravado com
+  `await` antes da resposta; nos caminhos com stream, as promessas pendentes
+  são aguardadas no `onEnd`.
 - Resume erros para `detail.error`: mensagem do erro, até 500 caracteres,
   sem stack.
 
@@ -143,11 +144,12 @@ Idempotente: desagenda o job pelo nome, se existir, antes de agendar.
 - Cota negada → `quota_blocked`.
 - `access === "forbidden"` → `conversation_forbidden`.
 - Id repetido → `duplicate_message`.
-- Logo antes de chamar o modelo → `turn_started`. **Exceção ao `after()`:**
-  com streaming, o `after()` só roda quando a resposta termina, o que
-  anularia o "ao vivo". O insert é disparado sem `await` antes do stream, e
-  a promessa é aguardada no `onEnd` (ou no caminho do 502), para a função
-  não morrer com o insert pendente. Não soma latência à resposta.
+- Falha ao preparar a chamada (configuração do provedor inválida) →
+  `provider_error` com `failures: [{ provider: "config", error }]`.
+- Logo antes de chamar o modelo → `turn_started`. O insert é disparado sem
+  `await` antes do stream, e a promessa é aguardada no `onEnd` (ou no caminho
+  do 502), para a função não morrer com o insert pendente. Não soma latência
+  à resposta.
 - Após `openStreamWithFallback`:
   - `first_token_ms = Date.now() - t0`;
   - um `provider_fallback` por item de `failures`, se houve vencedor;

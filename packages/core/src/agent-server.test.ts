@@ -9,23 +9,30 @@ vi.mock("ai", async (importOriginal) => {
   return { ...actual, streamText: vi.fn(actual.streamText) };
 });
 vi.mock("./ai-provider", () => ({ getAssistantModelChain: vi.fn() }));
-vi.mock("./ai-usage-limits", () => ({ consumeAiQuota: vi.fn(async () => null), hashClientIp: () => "iphash" }));
+vi.mock("./ai-usage-limits", () => ({ checkAiQuota: vi.fn(async () => null), hashClientIp: () => "iphash" }));
 vi.mock("./help-center", () => ({ getArtigosAjudaPublicados: vi.fn(async () => []) }));
 vi.mock("./catalog", () => ({ getBrands: vi.fn(async () => []) }));
 vi.mock("./catalog-line-items", () => ({ getCatalogLineItems: vi.fn(), queryLineItemsByIds: vi.fn() }));
 vi.mock("./orders-server", () => ({ getOrdersByBuyer: vi.fn(async () => []) }));
 vi.mock("./supabase", () => ({ getHubServiceClient: () => ({}) }));
-vi.mock("./agent-conversations", () => ({
+vi.mock("./agent-conversations", async (importOriginal) => ({
+  messageText: (await importOriginal<typeof import("./agent-conversations")>()).messageText,
   ensureConversation: vi.fn(async () => "ok"),
   loadHistory: vi.fn(async () => []),
   saveTurn: vi.fn(async () => {}),
 }));
+// Eventos: summarizeError real, gravação registrada.
+vi.mock("./agent-events", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./agent-events")>();
+  return { ...actual, recordAgentEvent: vi.fn(async () => {}) };
+});
 
 import { getAssistantModelChain } from "./ai-provider";
-import { consumeAiQuota } from "./ai-usage-limits";
+import { checkAiQuota } from "./ai-usage-limits";
+import { recordAgentEvent } from "./agent-events";
 import { getCatalogLineItems } from "./catalog-line-items";
 import { ensureConversation, loadHistory, saveTurn } from "./agent-conversations";
-import { createAgentHandler, shouldSaveTurn, type AgentBuyer } from "./agent-server";
+import { createAgentHandler, failedTurnEvent, shouldSaveTurn, type AgentBuyer } from "./agent-server";
 
 const usage = {
   inputTokens: { total: 1, noCache: 1, cacheRead: undefined, cacheWrite: undefined },
@@ -134,6 +141,12 @@ function useModels(...models: MockLanguageModelV4[]) {
   );
 }
 
+// Eventos gravados: [contexto, evento] de cada chamada a recordAgentEvent.
+function recorded() {
+  return (recordAgentEvent as Mock).mock.calls.map(([, context, event]) => ({ context, event }));
+}
+const kinds = () => recorded().map((r) => r.event.kind);
+
 describe("POST /api/agente", () => {
   it("responde em stream com o texto do modelo", async () => {
     useModels(textModel("Olá! Como posso ajudar?"));
@@ -184,22 +197,23 @@ describe("POST /api/agente", () => {
     useModels(searchThenTextModel("Encontrei."));
     const body = await (await handler(new Error("cookie"))(makeRequest(validBody))).text();
     expect(body).toContain('"unitPrice":null');
-    expect(consumeAiQuota).toHaveBeenCalledWith("duvidas", "mypetbrasil", expect.any(Headers));
+    expect(checkAiQuota).toHaveBeenCalledWith("duvidas", "mypetbrasil", expect.any(Headers));
   });
 
   it("cota: visitante por IP, cliente por comprador", async () => {
     useModels(textModel("Oi."));
     await (await handler()(makeRequest(validBody))).text();
-    expect(consumeAiQuota).toHaveBeenLastCalledWith("duvidas", "mypetbrasil", expect.any(Headers));
+    expect(checkAiQuota).toHaveBeenLastCalledWith("duvidas", "mypetbrasil", expect.any(Headers));
     await (await handler({ id: "b1", empresa: null })(makeRequest(validBody))).text();
-    expect(consumeAiQuota).toHaveBeenLastCalledWith("agente_cliente", "mypetbrasil", expect.any(Headers), "b1");
+    expect(checkAiQuota).toHaveBeenLastCalledWith("agente_cliente", "mypetbrasil", expect.any(Headers), "b1");
   });
 
   it("cota estourada: não chama a IA", async () => {
     useModels(textModel("Oi."));
-    (consumeAiQuota as Mock).mockResolvedValueOnce(
-      Response.json({ ok: false, error: { code: "RATE_LIMITED", message: "Aguarde." } }, { status: 429 }),
-    );
+    (checkAiQuota as Mock).mockResolvedValueOnce({
+      response: Response.json({ ok: false, error: { code: "RATE_LIMITED", message: "Aguarde." } }, { status: 429 }),
+      reason: "ip_burst",
+    });
     const res = await handler()(makeRequest(validBody));
     expect(res.status).toBe(429);
     expect(ensureConversation).not.toHaveBeenCalled();
@@ -309,7 +323,7 @@ describe("POST /api/agente", () => {
   it("400 para corpo inválido, sem consumir cota", async () => {
     const res = await handler()(makeRequest({ id: "x", message: userMessage }));
     expect(res.status).toBe(400);
-    expect(consumeAiQuota).not.toHaveBeenCalled();
+    expect(checkAiQuota).not.toHaveBeenCalled();
   });
 
   it("rejeita requisição de outra origem", async () => {
@@ -429,5 +443,197 @@ describe("shouldSaveTurn sem finish", () => {
     await reader.cancel();
     await new Promise((r) => setTimeout(r, 100));
     expect(saveTurn).not.toHaveBeenCalled();
+  });
+});
+
+describe("telemetria", () => {
+  it("caso feliz: turn_started com a pergunta e métricas na resposta", async () => {
+    useModels(textModel("Oi."));
+    await (await handler()(makeRequest(validBody))).text();
+    await vi.waitFor(() => expect(saveTurn).toHaveBeenCalled());
+
+    expect(kinds()).toEqual(["turn_started"]);
+    const [{ context, event }] = recorded();
+    expect(event.detail).toEqual({ message_id: "m1" });
+    expect(context).toEqual({
+      conversationId,
+      channel: "mypetbrasil",
+      mode: "visitante",
+      buyerId: null,
+      ipHash: "iphash",
+      question: "Tem shampoo?",
+    });
+
+    const [, saved] = (saveTurn as Mock).mock.calls[0];
+    expect(saved.metrics).toMatchObject({
+      provider: "openai",
+      model: "mock-model-id",
+      inputTokens: 1,
+      outputTokens: 1,
+      steps: 1,
+    });
+    expect(saved.metrics.latencyMs).toBeGreaterThanOrEqual(0);
+    expect(saved.metrics.firstTokenMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it("com ferramenta: soma tokens e conta os passos", async () => {
+    useModels(searchThenTextModel("Encontrei."));
+    await (await handler()(makeRequest(validBody))).text();
+    await vi.waitFor(() => expect(saveTurn).toHaveBeenCalled());
+    const [, saved] = (saveTurn as Mock).mock.calls[0];
+    expect(saved.metrics).toMatchObject({ inputTokens: 2, outputTokens: 2, steps: 2 });
+  });
+
+  it("cota negada: quota_blocked com motivo e pergunta, sem turn_started", async () => {
+    useModels(textModel("Oi."));
+    (checkAiQuota as Mock).mockResolvedValueOnce({
+      response: Response.json({ ok: false, error: { code: "RATE_LIMITED", message: "Aguarde." } }, { status: 429 }),
+      reason: "ip_daily",
+    });
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(429);
+    expect(recorded()).toEqual([
+      {
+        context: expect.objectContaining({ question: "Tem shampoo?", conversationId }),
+        event: { kind: "quota_blocked", detail: { reason: "ip_daily" } },
+      },
+    ]);
+  });
+
+  it("conversa proibida: conversation_forbidden", async () => {
+    useModels(textModel("Oi."));
+    (ensureConversation as Mock).mockResolvedValueOnce("forbidden");
+    const res = await handler({ id: "b2", empresa: null })(makeRequest(validBody));
+    expect(res.status).toBe(403);
+    expect(kinds()).toEqual(["conversation_forbidden"]);
+    expect(recorded()[0].context).toMatchObject({ buyerId: "b2", mode: "cliente" });
+  });
+
+  it("mensagem duplicada: duplicate_message", async () => {
+    useModels(textModel("Oi."));
+    (loadHistory as Mock).mockResolvedValueOnce([
+      { id: "m1", role: "user", parts: [{ type: "text", text: "Tem shampoo?" }] },
+    ]);
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(409);
+    expect(recorded().map((r) => r.event)).toEqual([{ kind: "duplicate_message", detail: { message_id: "m1" } }]);
+  });
+
+  it("troca de provedor: provider_fallback e métricas do vencedor", async () => {
+    useModels(failingModel(), textModel("Resposta do Gemini."));
+    await (await handler()(makeRequest(validBody))).text();
+    await vi.waitFor(() => expect(saveTurn).toHaveBeenCalled());
+
+    expect(kinds()).toEqual(["turn_started", "provider_fallback"]);
+    expect(recorded()[1].event).toEqual({
+      kind: "provider_fallback",
+      provider: "google",
+      detail: { failed_provider: "openai", error: "provedor fora do ar" },
+    });
+    expect((saveTurn as Mock).mock.calls[0][1].metrics.provider).toBe("google");
+  });
+
+  it("todos os provedores falham: provider_error com as falhas", async () => {
+    useModels(failingModel(), failingModel());
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(502);
+    expect(kinds()).toEqual(["turn_started", "provider_error"]);
+    expect(recorded()[1].event.detail).toEqual({
+      failures: [
+        { provider: "openai", error: "provedor fora do ar" },
+        { provider: "google", error: "provedor fora do ar" },
+      ],
+    });
+  });
+
+  it("configuração inválida do provedor: provider_error", async () => {
+    (getAssistantModelChain as Mock).mockImplementationOnce(() => {
+      throw new Error('AI_PROVIDER desconhecido: "x"');
+    });
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(502);
+    expect(recorded().map((r) => r.event)).toEqual([
+      { kind: "provider_error", detail: { failures: [{ provider: "config", error: 'AI_PROVIDER desconhecido: "x"' }] } },
+    ]);
+  });
+
+  it("resposta vazia: empty_reply", async () => {
+    useModels(
+      new MockLanguageModelV4({
+        doStream: async () => ({ stream: simulateReadableStream({ chunks: [finish("stop")] }) }),
+      }),
+    );
+    await (await handler()(makeRequest(validBody))).text();
+    await vi.waitFor(() => expect(kinds()).toContain("empty_reply"));
+    expect(recorded().find((r) => r.event.kind === "empty_reply")!.event).toMatchObject({
+      detail: { finish_reason: "stop" },
+      provider: "openai",
+    });
+  });
+
+  it("erro no meio do stream: provider_error com finish_reason", async () => {
+    useModels(
+      new MockLanguageModelV4({
+        doStream: async () => ({
+          stream: simulateReadableStream({
+            chunks: [
+              { type: "text-start" as const, id: "t1" },
+              { type: "text-delta" as const, id: "t1", delta: "Parcial" },
+              { type: "error" as const, error: new Error("caiu") },
+            ],
+          }),
+        }),
+      }),
+    );
+    await (await handler()(makeRequest(validBody))).text();
+    await vi.waitFor(() => expect(kinds()).toContain("provider_error"));
+    expect(recorded().find((r) => r.event.kind === "provider_error")!.event.detail).toEqual({ finish_reason: "error" });
+  });
+
+  it("desconexão no meio da resposta: aborted", async () => {
+    useModels(
+      new MockLanguageModelV4({
+        doStream: async () => ({
+          stream: new ReadableStream({
+            start(controller) {
+              controller.enqueue({ type: "text-start", id: "t1" });
+              controller.enqueue({ type: "text-delta", id: "t1", delta: "Parcial" });
+            },
+          }),
+        }),
+      }),
+    );
+    const res = await handler()(makeRequest(validBody));
+    const reader = res.body!.getReader();
+    await reader.read();
+    await reader.cancel();
+    await vi.waitFor(() => expect(kinds()).toContain("aborted"));
+  });
+
+  it("falha ao gravar evento não muda a resposta", async () => {
+    useModels(textModel("Oi."));
+    (recordAgentEvent as Mock).mockRejectedValueOnce(new Error("não deveria acontecer"));
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("Oi.");
+  });
+});
+
+describe("failedTurnEvent", () => {
+  it("abortado ou sem finishReason → aborted", () => {
+    expect(failedTurnEvent({ isAborted: true, finishReason: "stop" })).toEqual({ kind: "aborted" });
+    expect(failedTurnEvent({ isAborted: false, finishReason: undefined })).toEqual({ kind: "aborted" });
+  });
+  it("error → provider_error", () => {
+    expect(failedTurnEvent({ isAborted: false, finishReason: "error" })).toEqual({
+      kind: "provider_error",
+      detail: { finish_reason: "error" },
+    });
+  });
+  it("outro → empty_reply", () => {
+    expect(failedTurnEvent({ isAborted: false, finishReason: "stop" })).toEqual({
+      kind: "empty_reply",
+      detail: { finish_reason: "stop" },
+    });
   });
 });
