@@ -67,20 +67,26 @@ function errorResponse(status: number, code: string, message: string, headers?: 
   return Response.json({ ok: false, error: { code, message } }, { status, headers });
 }
 
+export type QuotaBlockReason = "disabled" | "unavailable" | "ip_burst" | "ip_daily" | "global_daily";
+export type QuotaBlock = { response: Response; reason: QuotaBlockReason };
+
+const LIMIT_REASONS = new Set<QuotaBlockReason>(["ip_burst", "ip_daily", "global_daily"]);
+
 /**
- * Consome uma unidade da cota. Devolve null se pode seguir, ou a Response de
- * erro pronta (429 limite, 503 desligado/indisponível). Falha fechada: sem
- * conseguir contar, não chama a IA. Com `subjectKey` (id do comprador), a cota
- * individual é por comprador em vez de por IP.
+ * Consome uma unidade da cota. Devolve null se pode seguir, ou o bloqueio com
+ * a Response de erro pronta (429 limite, 503 desligado/indisponível) e o
+ * motivo, para a telemetria. Falha fechada: sem conseguir contar, não chama a
+ * IA. Com `subjectKey` (id do comprador), a cota individual é por comprador em
+ * vez de por IP.
  */
-export async function consumeAiQuota(
+export async function checkAiQuota(
   scope: AiScope,
   channel: string,
   headers: Headers,
   subjectKey?: string,
-): Promise<Response | null> {
+): Promise<QuotaBlock | null> {
   if (process.env.AI_ASSISTANTS_DISABLED === "true") {
-    return errorResponse(503, "AI_DISABLED", LIMIT_MESSAGES.global_daily);
+    return { response: errorResponse(503, "AI_DISABLED", LIMIT_MESSAGES.global_daily), reason: "disabled" };
   }
 
   const limits = getAiLimits(scope);
@@ -99,7 +105,10 @@ export async function consumeAiQuota(
     result = typeof data === "string" ? data : null;
   } catch (error) {
     console.error(`[ai-usage-limits] falha ao consumir cota (${scope}):`, error);
-    return errorResponse(503, "UNAVAILABLE", "Não foi possível responder agora. Tente novamente em instantes.");
+    return {
+      response: errorResponse(503, "UNAVAILABLE", "Não foi possível responder agora. Tente novamente em instantes."),
+      reason: "unavailable",
+    };
   }
 
   if (result === "ok") return null;
@@ -107,7 +116,20 @@ export async function consumeAiQuota(
   if (result === "global_daily") {
     console.warn(`[ai-usage-limits] teto diário global atingido (${scope}/${channel})`);
   }
+  const reason: QuotaBlockReason = LIMIT_REASONS.has(result as QuotaBlockReason)
+    ? (result as QuotaBlockReason)
+    : "global_daily";
   const message = LIMIT_MESSAGES[result ?? ""] ?? LIMIT_MESSAGES.global_daily;
   const retryAfter = result === "ip_burst" ? String(limits.ipBurstWindowSeconds) : "3600";
-  return errorResponse(429, "RATE_LIMITED", message, { "Retry-After": retryAfter });
+  return { response: errorResponse(429, "RATE_LIMITED", message, { "Retry-After": retryAfter }), reason };
+}
+
+/** Como checkAiQuota, mas devolve só a Response de erro (ou null). */
+export async function consumeAiQuota(
+  scope: AiScope,
+  channel: string,
+  headers: Headers,
+  subjectKey?: string,
+): Promise<Response | null> {
+  return (await checkAiQuota(scope, channel, headers, subjectKey))?.response ?? null;
 }

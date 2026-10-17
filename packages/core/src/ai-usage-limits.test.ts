@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const rpc = vi.fn();
 vi.mock("./supabase", () => ({ getHubServiceClient: () => ({ rpc }) }));
 
-import { consumeAiQuota, getAiLimits, hashClientIp } from "./ai-usage-limits";
+import { checkAiQuota, consumeAiQuota, getAiLimits, hashClientIp } from "./ai-usage-limits";
 
 const headers = (h: Record<string, string> = {}) => new Headers({ "x-forwarded-for": "1.2.3.4, 10.0.0.1", ...h });
 
@@ -132,5 +132,45 @@ describe("mensagens de limite", () => {
     const body = await res?.json();
     expect(body.error.message).toContain("central de ajuda");
     expect(body.error.message).not.toMatch(/whatsapp/i);
+  });
+});
+
+describe("checkAiQuota", () => {
+  it("liberado: null", async () => {
+    rpc.mockResolvedValue({ data: "ok", error: null });
+    expect(await checkAiQuota("duvidas", "mypetbrasil", headers())).toBeNull();
+  });
+
+  it.each(["ip_burst", "ip_daily", "global_daily"] as const)("limite %s: motivo e 429", async (limit) => {
+    rpc.mockResolvedValue({ data: limit, error: null });
+    const blocked = await checkAiQuota("duvidas", "mypetbrasil", headers());
+    expect(blocked?.reason).toBe(limit);
+    expect(blocked?.response.status).toBe(429);
+  });
+
+  it("resultado desconhecido conta como global_daily", async () => {
+    rpc.mockResolvedValue({ data: "outra_coisa", error: null });
+    expect((await checkAiQuota("duvidas", "mypetbrasil", headers()))?.reason).toBe("global_daily");
+  });
+
+  it("desligado por env: disabled e 503", async () => {
+    vi.stubEnv("AI_ASSISTANTS_DISABLED", "true");
+    const blocked = await checkAiQuota("duvidas", "mypetbrasil", headers());
+    expect(blocked?.reason).toBe("disabled");
+    expect(blocked?.response.status).toBe(503);
+  });
+
+  it("falha ao contar: unavailable e 503", async () => {
+    rpc.mockResolvedValue({ data: null, error: { message: "down" } });
+    const blocked = await checkAiQuota("duvidas", "mypetbrasil", headers());
+    expect(blocked?.reason).toBe("unavailable");
+    expect(blocked?.response.status).toBe(503);
+  });
+
+  it("consumeAiQuota devolve a mesma Response", async () => {
+    rpc.mockResolvedValue({ data: "ip_daily", error: null });
+    const res = await consumeAiQuota("duvidas", "mypetbrasil", headers());
+    expect(res?.status).toBe(429);
+    expect((await res!.json()).error.code).toBe("RATE_LIMITED");
   });
 });
