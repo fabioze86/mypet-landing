@@ -80,3 +80,31 @@ export const PAGES: Record<PageKey, PageInfo> = {
       "Fale com a Zemann sobre implantação ou gestão contínua da sua operação na Amazon. Resposta em até 1 dia útil.",
   },
 };
+
+export type MenuGroup = { label: string; items: { page: PageInfo; hint: string }[] };
+
+export const MENU_GROUPS: MenuGroup[] = [
+  {
+    label: "Soluções",
+    items: [
+      { page: PAGES.marcas, hint: "Entrar e crescer na Amazon como vendor ou seller" },
+      { page: PAGES.sellers, hint: "Buy Box, pendências, Ads e margem por SKU" },
+      { page: PAGES.diagnostico, hint: "Auditoria da conta com plano de ação" },
+    ],
+  },
+  {
+    label: "Recursos",
+    items: [
+      { page: PAGES.guias, hint: "Guias práticos sobre Amazon" },
+      { page: PAGES.cases, hint: "Problema, solução e impacto" },
+      { page: PAGES.faq, hint: "Dúvidas antes de começar" },
+    ],
+  },
+  {
+    label: "Empresa",
+    items: [
+      { page: PAGES.sobre, hint: "Quem está por trás da Zemann" },
+      { page: PAGES.contato, hint: "Implantação e gestão contínua" },
+    ],
+  },
+];
