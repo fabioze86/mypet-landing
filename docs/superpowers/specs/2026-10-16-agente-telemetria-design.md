@@ -25,7 +25,9 @@ ela é histórico perdido.
    tempo até o primeiro conteúdo, tokens e número de passos.
 2. Todo turno que não vira resposta normal registra um evento com motivo e o
    texto da pergunta.
-3. A telemetria nunca muda o que o usuário recebe nem derruba uma resposta.
+3. Todo turno que chega ao modelo registra `turn_started` no momento do
+   envio, para o dashboard mostrar ao vivo quem está aguardando resposta.
+4. A telemetria nunca muda o que o usuário recebe nem derruba uma resposta.
 
 ## Decisões
 
@@ -80,6 +82,7 @@ Acesso: RLS ligado, `revoke all ... from anon, authenticated`. Só o
 
 | kind | quando | `detail` |
 |---|---|---|
+| `turn_started` | a pergunta passou por cota, posse da conversa e duplicidade, e o modelo vai ser chamado | `{ message_id }` (id da pergunta, o mesmo `message_id` da linha `user` gravada no fim) |
 | `quota_blocked` | `consumeAiQuota` negou | `{ reason: "ip_burst" \| "ip_daily" \| "global_daily" \| "disabled" \| "unavailable" }` |
 | `conversation_forbidden` | `ensureConversation` devolveu `forbidden` | `{}` |
 | `duplicate_message` | id da mensagem já está no histórico | `{ message_id }` |
@@ -87,6 +90,14 @@ Acesso: RLS ligado, `revoke all ... from anon, authenticated`. Só o
 | `provider_error` | todos os provedores falharam antes do primeiro conteúdo (502), ou erro no meio do stream | `{ failures: [{ provider, error }] }` ou `{ finish_reason }` |
 | `aborted` | `onEnd` com `isAborted = true` | `{}` |
 | `empty_reply` | `onEnd` terminou bem mas sem texto | `{ finish_reason }` |
+
+`turn_started` é o único tipo que não é exceção: existe para o dashboard
+(especificação B) mostrar "aguardando resposta" ao vivo. O turno está em
+andamento enquanto não houver, para o mesmo `conversation_id` e depois do
+`turn_started`, a linha `user` com o mesmo `message_id` em `agent_messages`
+nem um evento terminal (`provider_error`, `aborted`, `empty_reply`). Como
+último recurso, o dashboard considera encerrado o turno com mais de 60 s,
+para cobrir a morte da função sem `onEnd`.
 
 ### Retenção
 
@@ -132,6 +143,11 @@ Idempotente: desagenda o job pelo nome, se existir, antes de agendar.
 - Cota negada → `quota_blocked`.
 - `access === "forbidden"` → `conversation_forbidden`.
 - Id repetido → `duplicate_message`.
+- Logo antes de chamar o modelo → `turn_started`. **Exceção ao `after()`:**
+  com streaming, o `after()` só roda quando a resposta termina, o que
+  anularia o "ao vivo". O insert é disparado sem `await` antes do stream, e
+  a promessa é aguardada no `onEnd` (ou no caminho do 502), para a função
+  não morrer com o insert pendente. Não soma latência à resposta.
 - Após `openStreamWithFallback`:
   - `first_token_ms = Date.now() - t0`;
   - um `provider_fallback` por item de `failures`, se houve vencedor;
@@ -158,6 +174,9 @@ seguem estas regras:
 
 ## Testes (Vitest)
 
+- `agent-server.test.ts` (turno): `turn_started` gravado antes do stream,
+  com o `message_id` da pergunta, nos caminhos feliz, 502 e abortado; não
+  gravado em cota, conversa proibida ou duplicada.
 - `agent-events.test.ts`: linha montada por tipo; resumo de erro; erro do
   Supabase engolido.
 - `agent-stream.test.ts`: retorno com `provider` e `failures` (uma falha e um
@@ -185,7 +204,15 @@ seguem estas regras:
   ao `/agente`. As buscas do `/agente` já ficam nas `parts` das mensagens.
 - Erros 400 de entrada inválida: não chegam a ter conversa nem pergunta
   válida.
-- Dashboard, Realtime e policies de leitura: especificação B. Nota para B:
+- Presença ("página aberta sem perguntar"): fica para depois, se for preciso
+  medir abandono. Exigiria rota de sinal periódico e tabela temporária; o
+  Presence do Supabase pelo navegador do visitante não serve, porque com a
+  chave pública qualquer pessoa assinaria o canal.
+- Dashboard, Realtime e policies de leitura: especificação B. Escopo já
+  decidido para B, no "ao vivo": (1) mensagens aparecendo pelo Realtime em
+  `agent_messages`; (2) "conversando agora" (conversas com mensagem nos
+  últimos 5 minutos) e "aguardando resposta" (a partir de `turn_started`,
+  via Realtime em `agent_events`). Nota para B:
   o signup do Supabase Auth está aberto, então `authenticated` vale como
   "qualquer pessoa". Qualquer leitura pelo navegador precisa exigir
   `exists (select 1 from admin_users where id = auth.uid())`.
