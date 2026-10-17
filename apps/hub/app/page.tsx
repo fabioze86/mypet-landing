@@ -30,6 +30,11 @@ const SITES: SiteLink[] = [
     description: "Loja de consumidor final — cotação por WhatsApp",
     port: 4105,
   },
+  {
+    name: "Zemann",
+    description: "Site da consultoria de Amazon",
+    port: 4106,
+  },
 ];
 
 export default function HubPage() {
