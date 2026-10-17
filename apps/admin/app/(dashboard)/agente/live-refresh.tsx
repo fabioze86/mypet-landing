@@ -56,16 +56,11 @@ export function LiveRefresh({
     let channel = supabase.channel(conversationId ? `agente-conversa-${conversationId}` : "agente-lista");
     for (const table of TABLES) {
       const column = table === "agent_conversations" ? "id" : "conversation_id";
-      channel = channel.on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table,
-          ...(conversationId ? { filter: `${column}=eq.${conversationId}` } : {}),
-        },
-        schedule,
-      );
+      const filter = conversationId ? { filter: `${column}=eq.${conversationId}` } : {};
+      // Só INSERT e UPDATE: eventos DELETE não passam pela RLS (ver a migration).
+      channel = channel
+        .on("postgres_changes", { event: "INSERT", schema: "public", table, ...filter }, schedule)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table, ...filter }, schedule);
     }
     channel.subscribe((status) => {
       if (!active) return;
@@ -89,7 +84,8 @@ export function LiveRefresh({
   useEffect(() => {
     if (!hasLive && !unavailable) return;
     const id = setInterval(() => {
-      if (!document.hidden) router.refresh();
+      if (document.hidden) pendingRef.current = true;
+      else router.refresh();
     }, POLL_MS);
     return () => clearInterval(id);
   }, [hasLive, unavailable, router]);

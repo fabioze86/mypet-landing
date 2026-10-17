@@ -6,6 +6,11 @@
 -- escrita: quem grava continua sendo só o servidor do agente (service role).
 -- O Realtime aplica a RLS de cada assinante, então só administradores recebem
 -- os eventos. A view e a função são security invoker pelo mesmo motivo.
+--
+-- Limite conhecido do Realtime: eventos DELETE não passam pela RLS e entregam
+-- só a chave primária da linha apagada a qualquer authenticated com SELECT na
+-- tabela. Aqui isso expõe apenas ids (a retenção diária apaga agent_events);
+-- nenhum conteúdo. O painel assina só INSERT e UPDATE.
 
 do $$
 declare
@@ -27,6 +32,11 @@ begin
     end if;
   end loop;
 end $$;
+
+-- Indicadores do período (agent_dashboard_indicators) filtram respostas por data.
+create index if not exists agent_messages_assistant_created
+  on public.agent_messages (created_at desc)
+  where role = 'assistant';
 
 -- Uma linha por conversa, para a lista do painel.
 create or replace view public.v_agent_conversation_summary
@@ -63,7 +73,7 @@ left join lateral (
    limit 1
 ) o on true;
 
-revoke all on public.v_agent_conversation_summary from anon;
+revoke all on public.v_agent_conversation_summary from anon, authenticated;
 grant select on public.v_agent_conversation_summary to authenticated;
 
 -- Indicadores do período numa linha. p_mode nulo = todos os modos.

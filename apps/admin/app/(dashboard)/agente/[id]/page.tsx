@@ -114,7 +114,7 @@ async function ConversaContent({ params }: { params: Promise<{ id: string }> }) 
     now,
   ).has(id);
   const timeline = buildTimeline(messages, events);
-  const error = messagesResult.error ?? eventsResult.error;
+  const error = messagesResult.error ?? eventsResult.error ?? ordersResult.error;
   const total = order ? orderTotal(order) : null;
 
   return (
@@ -143,7 +143,7 @@ async function ConversaContent({ params }: { params: Promise<{ id: string }> }) 
         )}
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-600">Erro ao carregar mensagens: {error.message}</p>}
+      {error && <p className="mb-4 text-sm text-red-600">Erro ao carregar a conversa: {error.message}</p>}
 
       <div className="flex flex-col gap-3">
         {timeline.map((item) => {

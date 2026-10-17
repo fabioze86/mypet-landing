@@ -1,6 +1,9 @@
 // Preço em US$ por milhão de tokens (entrada/saída) dos modelos que o agente
-// /agente usa. Conferido em 2026-10-17 nas páginas de preço dos provedores;
-// atualizar à mão quando mudar. O painel mostra o custo sempre como estimativa.
+// /agente usa. Os de gemini-2.5-flash e claude-haiku-4-5 foram conferidos nas
+// páginas oficiais em 2026-10-17. O de gpt-4o-mini NÃO foi conferido na página
+// oficial (a OpenAI bloqueou o acesso em 2026-10-17): é o valor do anúncio do
+// modelo. Atualizar à mão quando mudar. O painel mostra o custo sempre como
+// estimativa.
 export const MODEL_PRICES_USD_PER_MILLION: Record<string, { input: number; output: number }> = {
   "gpt-4o-mini": { input: 0.15, output: 0.6 },
   "gemini-2.5-flash": { input: 0.3, output: 2.5 },
