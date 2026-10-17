@@ -44,9 +44,17 @@ create index if not exists agent_events_kind_created
 create index if not exists agent_events_conversation
   on public.agent_events (conversation_id, created_at desc)
   where conversation_id is not null;
+-- Deduplicação de quota_blocked por sujeito (agent-events.ts: shouldRecordQuotaBlock).
+create index if not exists agent_events_quota_ip
+  on public.agent_events (ip_hash, created_at desc)
+  where kind = 'quota_blocked' and buyer_id is null;
+create index if not exists agent_events_quota_buyer
+  on public.agent_events (buyer_id, created_at desc)
+  where kind = 'quota_blocked' and buyer_id is not null;
 
 alter table public.agent_events enable row level security;
 revoke all on table public.agent_events from anon, authenticated;
+revoke all on sequence public.agent_events_id_seq from anon, authenticated;
 
 -- Retenção: cron.schedule com o mesmo nome substitui o job existente.
 create extension if not exists pg_cron;

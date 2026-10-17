@@ -24,12 +24,14 @@ vi.mock("./agent-conversations", async (importOriginal) => ({
 // Eventos: summarizeError real, gravação registrada.
 vi.mock("./agent-events", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./agent-events")>();
-  return { ...actual, recordAgentEvent: vi.fn(async () => {}) };
+  return { ...actual, recordAgentEvent: vi.fn(async () => {}),
+    shouldRecordQuotaBlock: vi.fn(async () => true),
+  };
 });
 
 import { getAssistantModelChain } from "./ai-provider";
 import { checkAiQuota } from "./ai-usage-limits";
-import { recordAgentEvent } from "./agent-events";
+import { recordAgentEvent, shouldRecordQuotaBlock } from "./agent-events";
 import { getCatalogLineItems } from "./catalog-line-items";
 import { ensureConversation, loadHistory, saveTurn } from "./agent-conversations";
 import { createAgentHandler, failedTurnEvent, shouldSaveTurn, type AgentBuyer } from "./agent-server";
@@ -498,6 +500,59 @@ describe("telemetria", () => {
         event: { kind: "quota_blocked", detail: { reason: "ip_daily" } },
       },
     ]);
+  });
+
+  it("cota negada já registrada na janela: 429 igual e nenhum quota_blocked", async () => {
+    useModels(textModel("Oi."));
+    (checkAiQuota as Mock).mockResolvedValueOnce({
+      response: Response.json({ ok: false, error: { code: "RATE_LIMITED", message: "Aguarde." } }, { status: 429 }),
+      reason: "ip_burst",
+    });
+    (shouldRecordQuotaBlock as Mock).mockResolvedValueOnce(false);
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(429);
+    expect((await res.json()).error.code).toBe("RATE_LIMITED");
+    expect(shouldRecordQuotaBlock).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ ipHash: "iphash" }), "ip_burst");
+    expect(kinds()).toEqual([]);
+  });
+
+  it("checagem de deduplicação que lança não muda o 429", async () => {
+    useModels(textModel("Oi."));
+    (checkAiQuota as Mock).mockResolvedValueOnce({
+      response: Response.json({ ok: false, error: { code: "RATE_LIMITED", message: "Aguarde." } }, { status: 429 }),
+      reason: "ip_burst",
+    });
+    (shouldRecordQuotaBlock as Mock).mockRejectedValueOnce(new Error("boom"));
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(429);
+  });
+
+  it("saveTurn que falha: aguarda as gravações pendentes e a resposta chega", async () => {
+    useModels(textModel("Oi."));
+    let turnStartedDone = false;
+    (recordAgentEvent as Mock).mockImplementationOnce(async () => {
+      await new Promise((r) => setTimeout(r, 80));
+      turnStartedDone = true;
+    });
+    (saveTurn as Mock).mockRejectedValueOnce(new Error("banco caiu"));
+    const res = await handler()(makeRequest(validBody));
+    expect(res.status).toBe(200);
+    // O AI SDK repassa o erro do onEnd ao leitor do stream, depois do texto.
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let received = "";
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        received += decoder.decode(value);
+      }
+    } catch {
+      // esperado: o erro de saveTurn chega ao fim do stream
+    }
+    expect(received).toContain("Oi.");
+    await vi.waitFor(() => expect(saveTurn).toHaveBeenCalled());
+    expect(turnStartedDone).toBe(true);
   });
 
   it("conversa proibida: conversation_forbidden", async () => {

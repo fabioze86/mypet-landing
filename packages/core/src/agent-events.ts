@@ -76,3 +76,36 @@ export async function recordAgentEvent(
     console.error(`[agent-events] falha ao gravar "${event.kind}":`, error);
   }
 }
+
+// Janela (minutos) em que só o primeiro quota_blocked do mesmo sujeito é
+// gravado, por motivo. Um loop abusivo bloqueado a cada requisição não pode
+// gerar uma linha (com a pergunta) por requisição. Motivos fora da tabela
+// (global_daily, unavailable) são raros e importantes: sempre gravam.
+export const QUOTA_EVENT_WINDOW_MINUTES: Record<string, number> = { ip_burst: 10, ip_daily: 60, disabled: 60 };
+
+// Sujeito = comprador quando houver (a cota de cliente é por comprador), senão
+// o IP. Nunca lança: se a consulta falhar, grava (a telemetria falha aberta).
+// Requisições simultâneas podem gravar duas linhas: aceito.
+export async function shouldRecordQuotaBlock(
+  supabase: SupabaseClient | null,
+  context: AgentEventContext,
+  reason: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  if (!supabase) return false;
+  const windowMinutes = QUOTA_EVENT_WINDOW_MINUTES[reason];
+  if (windowMinutes === undefined) return true;
+  try {
+    const since = new Date(now.getTime() - windowMinutes * 60_000).toISOString();
+    const base = supabase.from("agent_events").select("id").eq("kind", "quota_blocked");
+    const bySubject = context.buyerId
+      ? base.eq("buyer_id", context.buyerId)
+      : base.is("buyer_id", null).eq("ip_hash", context.ipHash);
+    const { data, error } = await bySubject.gte("created_at", since).limit(1);
+    if (error) throw new Error(error.message);
+    return !data || data.length === 0;
+  } catch (error) {
+    console.error("[agent-events] falha ao checar bloqueio de cota recente:", error);
+    return true;
+  }
+}

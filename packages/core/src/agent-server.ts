@@ -23,7 +23,7 @@ import {
   saveTurn,
   type ConversationAccess,
 } from "./agent-conversations";
-import { recordAgentEvent, summarizeError, type AgentEvent, type AgentEventContext } from "./agent-events";
+import { recordAgentEvent, shouldRecordQuotaBlock, summarizeError, type AgentEvent, type AgentEventContext } from "./agent-events";
 import { buildAgentInstructions, type AgentFaqItem, type AgentMode } from "./agent-prompt";
 import { parseAgentRequest } from "./agent-request";
 import { openStreamWithFallback } from "./agent-stream";
@@ -162,7 +162,10 @@ export function createAgentHandler(config: AgentConfig) {
       ? await checkAiQuota("agente_cliente", config.channel, req.headers, buyer.id)
       : await checkAiQuota("duvidas", config.channel, req.headers);
     if (blocked) {
-      await logEvent({ kind: "quota_blocked", detail: { reason: blocked.reason } });
+      // Só o primeiro bloqueio do sujeito na janela vira linha; a checagem não
+      // muda a resposta, mesmo se falhar.
+      const record = await shouldRecordQuotaBlock(supabase, eventContext, blocked.reason).catch(() => true);
+      if (record) await logEvent({ kind: "quota_blocked", detail: { reason: blocked.reason } });
       return blocked.response;
     }
 
@@ -279,30 +282,34 @@ export function createAgentHandler(config: AgentConfig) {
         onError: () => UNAVAILABLE_MESSAGE,
         onEnd: async ({ isAborted, finishReason, responseMessage }) => {
           const latencyMs = Date.now() - t0;
-          if (!shouldSaveTurn({ isAborted, finishReason, responseMessage })) {
-            pending.push(logEvent({ ...failedTurnEvent({ isAborted, finishReason }), provider: winner.provider, latencyMs }));
-          } else if (store) {
-            const source = results[opened.index];
-            const [usage, steps] = await Promise.all([
-              withTimeout(source.totalUsage, USAGE_WAIT_MS),
-              withTimeout(source.steps, USAGE_WAIT_MS),
-            ]);
-            await saveTurn(store, {
-              conversationId: id,
-              mode,
-              messages: [message, responseMessage],
-              metrics: {
-                provider: winner.provider,
-                model: modelIdOf(winner.model),
-                latencyMs,
-                firstTokenMs,
-                inputTokens: usage?.inputTokens ?? null,
-                outputTokens: usage?.outputTokens ?? null,
-                steps: steps?.length ?? null,
-              },
-            });
+          // finally: um erro aqui não pode pular o await das gravações pendentes.
+          try {
+            if (!shouldSaveTurn({ isAborted, finishReason, responseMessage })) {
+              pending.push(logEvent({ ...failedTurnEvent({ isAborted, finishReason }), provider: winner.provider, latencyMs }));
+            } else if (store) {
+              const source = results[opened.index];
+              const [usage, steps] = await Promise.all([
+                withTimeout(source.totalUsage, USAGE_WAIT_MS),
+                withTimeout(source.steps, USAGE_WAIT_MS),
+              ]);
+              await saveTurn(store, {
+                conversationId: id,
+                mode,
+                messages: [message, responseMessage],
+                metrics: {
+                  provider: winner.provider,
+                  model: modelIdOf(winner.model),
+                  latencyMs,
+                  firstTokenMs,
+                  inputTokens: usage?.inputTokens ?? null,
+                  outputTokens: usage?.outputTokens ?? null,
+                  steps: steps?.length ?? null,
+                },
+              });
+            }
+          } finally {
+            await Promise.all(pending);
           }
-          await Promise.all(pending);
         },
       }),
     });

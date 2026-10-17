@@ -52,7 +52,7 @@ Mensagens antigas ficam nulas.
 | `provider` | text | provedor que respondeu de fato (`openai`, `google`, `google-vertex`) |
 | `model` | text | id do modelo |
 | `latency_ms` | integer | do início do handler até o fim da resposta |
-| `first_token_ms` | integer | do início do handler até o primeiro conteúdo do modelo |
+| `first_token_ms` | integer | do início do handler até a primeira parte de conteúdo do modelo (inclui cota, banco e preparo do prompt; pode ser uma parte de ferramenta) |
 | `input_tokens` | integer | soma de todos os passos |
 | `output_tokens` | integer | soma de todos os passos |
 | `steps` | integer | passos usados (máximo `MAX_STEPS = 5`) |
@@ -83,7 +83,7 @@ Acesso: RLS ligado, `revoke all ... from anon, authenticated`. Só o
 | kind | quando | `detail` |
 |---|---|---|
 | `turn_started` | a pergunta passou por cota, posse da conversa e duplicidade, e o modelo vai ser chamado | `{ message_id }` (id da pergunta, o mesmo `message_id` da linha `user` gravada no fim) |
-| `quota_blocked` | `consumeAiQuota` negou | `{ reason: "ip_burst" \| "ip_daily" \| "global_daily" \| "disabled" \| "unavailable" }` |
+| `quota_blocked` | `checkAiQuota` negou (só o primeiro bloqueio do mesmo sujeito na janela: 10 min para `ip_burst`, 60 min para `ip_daily` e `disabled`; `global_daily` e `unavailable` sempre) | `{ reason: "ip_burst" \| "ip_daily" \| "global_daily" \| "disabled" \| "unavailable" }` |
 | `conversation_forbidden` | `ensureConversation` devolveu `forbidden` | `{}` |
 | `duplicate_message` | id da mensagem já está no histórico | `{ message_id }` |
 | `provider_fallback` | um provedor falhou antes do primeiro conteúdo e outro assumiu (um evento por provedor que falhou) | `{ failed_provider, error }` |
@@ -97,7 +97,7 @@ andamento enquanto não houver, para o mesmo `conversation_id` e depois do
 `turn_started`, a linha `user` com o mesmo `message_id` em `agent_messages`
 nem um evento terminal (`provider_error`, `aborted`, `empty_reply`). Como
 último recurso, o dashboard considera encerrado o turno com mais de 60 s,
-para cobrir a morte da função sem `onEnd`.
+para cobrir a morte da função sem `onEnd`. Um `provider_error` de configuração (`provider: "config"`) não tem `turn_started` antes; o dashboard deve tratá-lo como turno encerrado.
 
 ### Retenção
 
@@ -114,9 +114,14 @@ Idempotente: desagenda o job pelo nome, se existir, antes de agendar.
 
 ### Módulo novo `packages/core/src/agent-events.ts`
 
-- `recordAgentEvent(supabase, event)`: monta a linha e insere em
+- `recordAgentEvent(supabase, context, event)`: monta a linha e insere em
   `agent_events`. Nunca lança erro; falhas vão para
   `console.error("[agent-events] ...")`.
+- `shouldRecordQuotaBlock(supabase, context, reason)`: decide se o
+  `quota_blocked` é gravado. Sujeito = comprador (`buyer_id`) quando houver,
+  senão o IP (`ip_hash`); só grava se não houver `quota_blocked` do mesmo
+  sujeito dentro da janela do motivo. Falha aberta: se a consulta falhar,
+  grava. Requisições simultâneas podem gravar duas linhas (aceito).
 - Sem `after()` do Next (lança fora do escopo de requisição e não traz ganho
   aqui): nos caminhos sem stream (429, 403, 409, 502) o evento é gravado com
   `await` antes da resposta; nos caminhos com stream, as promessas pendentes
@@ -193,7 +198,7 @@ seguem estas regras:
 
 ## Implantação
 
-1. Aplicar a migration no Supabase hub_catalogo (`hsguyfiyqpuligijcjlw`).
+1. Aplicar a migration no Supabase hub_catalogo (`hsguyfiyqpuligijcjlw`). **Obrigatório antes do código:** sem as colunas novas, o upsert da resposta falha e as respostas deixam de ser gravadas (a pergunta fica sem resposta no histórico).
 2. Fazer o deploy do código. Na ordem inversa, o código novo apenas logaria
    erro ao gravar, sem quebrar respostas.
 3. Verificar com uma conversa real em produção e uma consulta a
