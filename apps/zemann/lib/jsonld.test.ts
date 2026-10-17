@@ -12,7 +12,9 @@ import {
 
 describe("jsonLdScript", () => {
   it("escapa < para não fechar a tag script", () => {
-    expect(jsonLdScript({ a: "</script>" })).toBe('{"a":"\u003c/script>"}');
+    const out = jsonLdScript({ a: "</script>" });
+    expect(out).toBe('{"a":"\\u003c/script>"}');
+    expect(out).not.toContain("</script>");
   });
 });
 
@@ -61,6 +63,10 @@ describe("builders", () => {
 
   it("service sem preço não tem offers", () => {
     expect(serviceJsonLd({ name: "S", description: "D", path: "/s", priceFrom: null })).not.toHaveProperty("offers");
+  });
+
+  it("service com priceFrom 0 não tem offers (0 = sem preço publicado)", () => {
+    expect(serviceJsonLd({ name: "S", description: "D", path: "/s", priceFrom: 0 })).not.toHaveProperty("offers");
   });
 
   it("article traz autor e datas", () => {
