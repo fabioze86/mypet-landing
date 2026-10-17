@@ -45,6 +45,8 @@ o SEO dá credibilidade e captura demanda de nicho; não enche a agenda sozinho.
 | Isolamento | Não depende de `@mypet/core` nem do Supabase `hub_catalogo` (outra empresa). |
 | E-mail | SMTP do site atual. |
 | Demo do agente | Fase 2. |
+| Layout | Estrutura do site da Cloudflare (pt-br): barra utilitária, mega menu (Soluções, Recursos, Empresa), hero com título grande e ilustração, faixa de números, cartões com borda fina e cantos pouco arredondados, CTA final em 3 cartões, rodapé escuro em colunas. Sem copiar textos, imagens ou marca. |
+| Paleta | Azul-petróleo, só via tokens: texto `#0B1220`, secundário `#334155`, apoio `#64748B`, borda `#E2E8F0`, fundo de seção `#F5F7FA`, destaque `#0E7490`, hover `#155E75`, destaque suave `#CFFAFE`, rodapé `#0B1220`. |
 
 ## 1. Posicionamento
 
