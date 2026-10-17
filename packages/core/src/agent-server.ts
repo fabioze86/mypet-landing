@@ -147,7 +147,7 @@ export function createAgentHandler(config: AgentConfig) {
       return errorResponse(502, "AI_PROVIDER_ERROR", UNAVAILABLE_MESSAGE);
     }
 
-    const stream = await openStreamWithFallback(
+    const { stream } = await openStreamWithFallback(
       chain.map((candidate) => ({
         provider: candidate.provider,
         open: () =>
