@@ -254,6 +254,44 @@ describe("saveTurn", () => {
     expect(replyOptions).toEqual({ onConflict: "conversation_id,message_id" });
   });
 
+  it("métricas vão só na linha do assistente", async () => {
+    const { client, calls } = fakeSupabase({ agent_messages: [{}, {}], agent_conversations: [{}] });
+    await saveTurn(client, {
+      conversationId: "conv-1",
+      mode: "cliente",
+      messages: [user, reply],
+      metrics: {
+        provider: "openai",
+        model: "gpt-x",
+        latencyMs: 1200,
+        firstTokenMs: 300,
+        inputTokens: 500,
+        outputTokens: 80,
+        steps: 2,
+      },
+    });
+    const [userRows, replyRows] = calls
+      .filter((c) => c.method === "upsert")
+      .map((c) => c.args[0] as Record<string, unknown>[]);
+    expect(userRows[0]).not.toHaveProperty("provider");
+    expect(replyRows[0]).toMatchObject({
+      provider: "openai",
+      model: "gpt-x",
+      latency_ms: 1200,
+      first_token_ms: 300,
+      input_tokens: 500,
+      output_tokens: 80,
+      steps: 2,
+    });
+  });
+
+  it("sem métricas, a linha do assistente não ganha colunas novas", async () => {
+    const { client, calls } = fakeSupabase({ agent_messages: [{}, {}], agent_conversations: [{}] });
+    await saveTurn(client, { conversationId: "conv-1", mode: "cliente", messages: [user, reply] });
+    const replyRows = calls.filter((c) => c.method === "upsert")[1].args[0] as Record<string, unknown>[];
+    expect(replyRows[0]).not.toHaveProperty("provider");
+  });
+
   it("sem mensagens para gravar, não chama o Supabase", async () => {
     const { client, calls } = fakeSupabase({});
     await saveTurn(client, { conversationId: "conv-1", mode: "visitante", messages: [] });

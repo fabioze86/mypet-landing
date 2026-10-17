@@ -129,9 +129,31 @@ export async function loadHistory(
   }
 }
 
+export type TurnMetrics = {
+  provider: string;
+  model: string | null;
+  latencyMs: number;
+  firstTokenMs: number | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  steps: number | null;
+};
+
+function metricColumns(metrics: TurnMetrics) {
+  return {
+    provider: metrics.provider,
+    model: metrics.model,
+    latency_ms: metrics.latencyMs,
+    first_token_ms: metrics.firstTokenMs,
+    input_tokens: metrics.inputTokens,
+    output_tokens: metrics.outputTokens,
+    steps: metrics.steps,
+  };
+}
+
 export async function saveTurn(
   supabase: SupabaseClient,
-  input: { conversationId: string; mode: AgentMode; messages: UIMessage[] },
+  input: { conversationId: string; mode: AgentMode; messages: UIMessage[]; metrics?: TurnMetrics },
 ): Promise<void> {
   const base = Date.now();
   // Horários explícitos e crescentes: no mesmo insert o default now() empataria
@@ -146,6 +168,8 @@ export async function saveTurn(
       parts: message.parts,
       mode: input.mode,
       created_at: new Date(base + index).toISOString(),
+      // Métricas da resposta: só na linha do assistente.
+      ...(message.role === "assistant" && input.metrics ? metricColumns(input.metrics) : {}),
     }));
 
   if (rows.length === 0) return;
