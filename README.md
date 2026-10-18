@@ -105,6 +105,7 @@ Cada app roda numa porta fixa:
 | madpet | 4102 |
 | admin | 4103 |
 | hub | 4104 |
+| zemann | 4106 |
 
 Se quiser subir só um app específico, use o comando individual correspondente:
 
@@ -114,6 +115,7 @@ pnpm dev:distribuidora
 pnpm dev:madpet
 pnpm dev:admin
 pnpm dev:hub
+pnpm dev:zemann
 ```
 
 ## Scripts
@@ -126,6 +128,7 @@ pnpm dev:hub
 | `pnpm dev:madpet` | Inicia só o app madpet (porta 4102) |
 | `pnpm dev:admin` | Inicia só o app admin (porta 4103) |
 | `pnpm dev:hub` | Inicia só o hub (porta 4104) |
+| `pnpm dev:zemann` | Inicia só o site Zemann (porta 4106) |
 | `pnpm build` | Gera o build de produção de todos os apps |
 | `pnpm lint` | Executa a análise estática |
 
