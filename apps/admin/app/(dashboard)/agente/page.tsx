@@ -105,6 +105,7 @@ async function AgenteContent({ searchParams }: { searchParams: Promise<SearchPar
   const startRows = (starts.data ?? []) as TurnStart[];
   const startIds = [...new Set(startRows.map((row) => row.conversation_id).filter((id): id is string => !!id))];
   let awaiting = new Set<string>();
+  let awaitingError: { message: string } | null = null;
   if (startIds.length > 0) {
     const [users, terminals] = await Promise.all([
       supabase
@@ -120,6 +121,7 @@ async function AgenteContent({ searchParams }: { searchParams: Promise<SearchPar
         .in("kind", [...TERMINAL_EVENT_KINDS])
         .gte("created_at", awaitingSince),
     ]);
+    awaitingError = users.error ?? terminals.error;
     awaiting = awaitingConversations(
       startRows,
       (users.data ?? []) as TurnUserMessage[],
@@ -135,7 +137,7 @@ async function AgenteContent({ searchParams }: { searchParams: Promise<SearchPar
   const outputTokens = (indicators?.usage ?? []).reduce((sum, u) => sum + Number(u.output_tokens), 0);
   const badges = new Map(rows.map((row) => [row.id, liveBadge(row.updated_at, awaiting.has(row.id), now)]));
   const hasLive = (liveCount.count ?? 0) > 0 || awaiting.size > 0;
-  const error = list.error ?? indicatorsResult.error;
+  const error = list.error ?? indicatorsResult.error ?? liveCount.error ?? starts.error ?? awaitingError;
   const tokens = new Intl.NumberFormat("pt-BR");
 
   return (

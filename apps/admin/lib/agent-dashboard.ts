@@ -1,6 +1,6 @@
-// Lógica do painel de conversas do agente /agente (/agente no admin): filtros,
-// selo ao vivo, linha do tempo e rótulos. Sem I/O: as páginas buscam os dados
-// e passam para cá.
+// Lógica do painel de conversas do agente do site (rota /agente do admin):
+// filtros, selo ao vivo, linha do tempo e rótulos. Sem I/O: as páginas buscam
+// os dados e passam para cá.
 
 export const AGENT_CHANNEL = "mypetbrasil";
 export const LIVE_WINDOW_MS = 5 * 60_000;
