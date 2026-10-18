@@ -14,11 +14,13 @@ export const metadata = pageMetadata(PAGES.home);
 const AUDIENCES = [
   {
     page: PAGES.marcas,
+    cta: "publico_marcas",
     title: "Marcas e indústrias",
     text: "Vai entrar na Amazon ou já está lá e não deslancha? Escolhemos o modelo certo (vendor ou seller), cadastramos o catálogo em escala e organizamos a operação com margem.",
   },
   {
     page: PAGES.sellers,
+    cta: "publico_sellers",
     title: "Sellers estabelecidos",
     text: "Vendas pararam de crescer? Atacamos Buy Box, anúncios com pendência, Amazon Ads e a margem real de cada SKU.",
   },
@@ -52,7 +54,7 @@ export default function HomePage() {
         <h2 className="text-2xl font-bold text-ink md:text-3xl">Para quem é</h2>
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           {AUDIENCES.map((item) => (
-            <Link key={item.page.path} href={item.page.path} data-cta={`publico_${item.page.nav}`} className="rounded-lg border border-line p-6 transition-colors hover:border-accent">
+            <Link key={item.page.path} href={item.page.path} data-cta={item.cta} className="rounded-lg border border-line p-6 transition-colors hover:border-accent">
               <h3 className="text-xl font-semibold text-ink">{item.title}</h3>
               <p className="mt-2 leading-relaxed text-ink-soft">{item.text}</p>
               <span className="mt-4 inline-block font-semibold text-accent">Saiba mais →</span>

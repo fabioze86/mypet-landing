@@ -16,4 +16,10 @@ describe("blocos da home", () => {
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual(["/diagnostico-conta-amazon", "/guias", "/contato"]);
   });
+
+  it("CTA final expõe chaves de analytics snake_case em cada link", () => {
+    render(<CtaTrio />);
+    const ctas = screen.getAllByRole("link").map((a) => a.getAttribute("data-cta"));
+    expect(ctas).toEqual(["trio_diagnostico", "trio_guias", "trio_contato"]);
+  });
 });
