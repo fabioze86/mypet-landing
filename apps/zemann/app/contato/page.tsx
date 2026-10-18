@@ -9,7 +9,7 @@ export const metadata = pageMetadata(page);
 
 export default function ContatoPage() {
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-3xl px-4 pt-10">
       <Breadcrumbs items={[{ name: "Início", path: "/" }, { name: page.title, path: page.path }]} />
       <h1 className="mt-6 text-4xl font-extrabold text-ink">Fale com a Zemann</h1>
       <p className="mt-4 text-lg leading-relaxed text-ink-soft">

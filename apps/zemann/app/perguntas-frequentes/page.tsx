@@ -10,7 +10,7 @@ export const metadata = pageMetadata(page);
 
 export default function FaqPage() {
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-3xl px-4 pt-10">
       <Breadcrumbs items={[{ name: "Início", path: "/" }, { name: page.title, path: page.path }]} />
       <h1 className="mt-6 text-4xl font-extrabold text-ink">{page.title}</h1>
       <p className="mt-4 text-lg text-ink-soft">O que costumam nos perguntar antes de começar.</p>

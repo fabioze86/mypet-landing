@@ -37,7 +37,7 @@ const FAQ = [
 
 export default function SellersPage() {
   return (
-    <main className="mx-auto max-w-6xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-6xl px-4 pt-10">
       <JsonLd data={serviceJsonLd({ name: page.title, description: page.description, path: page.path })} />
       <Breadcrumbs items={[{ name: "Início", path: "/" }, { name: page.title, path: page.path }]} />
 

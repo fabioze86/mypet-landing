@@ -12,7 +12,7 @@ export const metadata = pageMetadata(page);
 
 export default function SobrePage() {
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-3xl px-4 pt-10">
       <JsonLd data={personJsonLd()} />
       <Breadcrumbs items={[{ name: "Início", path: "/" }, { name: "Sobre", path: page.path }]} />
       <h1 className="mt-6 text-4xl font-extrabold text-ink">Sobre a Zemann</h1>

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { siteConfig } from "@/site.config";
 import { organizationJsonLd, websiteJsonLd } from "@/lib/jsonld";
 import { JsonLd } from "./_components/json-ld";
+import { SkipLink } from "./_components/skip-link";
 import { SiteHeader } from "./_components/site-header";
 import { SiteFooter } from "./_components/site-footer";
 import { GoogleAnalytics } from "./_components/google-analytics";
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="pt-BR" className={`${inter.variable} antialiased`}>
       <body className="flex min-h-screen flex-col font-sans">
         <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
+        <SkipLink />
         <SiteHeader />
         <div className="flex-1">{children}</div>
         <SiteFooter />

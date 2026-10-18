@@ -4,15 +4,18 @@ import nodemailer from "nodemailer";
 import { createSubmitContact, type ContactState, type OutgoingMail } from "@/lib/contact";
 
 async function sendWithSmtp(mail: OutgoingMail): Promise<void> {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, CONTACT_TO } = process.env;
+  const { SMTP_HOST, SMTP_USER, SMTP_PASS, CONTACT_TO } = process.env;
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !CONTACT_TO) {
     throw new Error("SMTP não configurado (SMTP_HOST, SMTP_USER, SMTP_PASS, CONTACT_TO)");
   }
-  const port = Number(SMTP_PORT ?? 465);
+  const port = Number(process.env.SMTP_PORT) || 465;
   const transport = nodemailer.createTransport({
     host: SMTP_HOST,
     port,
     secure: port === 465,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
   await transport.sendMail({

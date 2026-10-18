@@ -11,7 +11,7 @@ export const metadata = pageMetadata(page);
 export default function GuiasPage() {
   const guides = listGuides();
   return (
-    <main className="mx-auto max-w-4xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-4xl px-4 pt-10">
       <Breadcrumbs items={[{ name: "Início", path: "/" }, { name: "Guias", path: page.path }]} />
       <h1 className="mt-6 text-4xl font-extrabold text-ink">{page.title}</h1>
       <p className="mt-4 text-lg text-ink-soft">Escritos por quem opera uma marca na Amazon todos os dias.</p>

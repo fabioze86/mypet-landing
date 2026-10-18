@@ -53,7 +53,7 @@ const FAQ = [
 export default function DiagnosticoPage() {
   const price = formatPriceFrom(siteConfig.diagnostic.priceFrom);
   return (
-    <main className="mx-auto max-w-6xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-6xl px-4 pt-10">
       <JsonLd
         data={serviceJsonLd({
           name: page.title,

@@ -29,6 +29,17 @@ describe("validateContact", () => {
     if (result.ok) expect(result.data).toMatchObject({ form: "diagnostico", perfil: "marca", empresa: "Marca X" });
   });
 
+  it("limita nome e empresa a 120 caracteres", () => {
+    const long = "a".repeat(121);
+    const result = validateContact(form({ ...valid, nome: long, empresa: long }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.nome).toBe("Use no máximo 120 caracteres.");
+      expect(result.errors.empresa).toBe("Use no máximo 120 caracteres.");
+    }
+    expect(validateContact(form({ ...valid, nome: "a".repeat(120), empresa: "a".repeat(120) })).ok).toBe(true);
+  });
+
   it("exige o desafio", () => {
     const result = validateContact(form({ ...valid, desafio: "" }));
     expect(result.ok).toBe(false);

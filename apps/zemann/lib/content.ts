@@ -125,20 +125,35 @@ export function parseCaseMeta(slug: string, data: Record<string, unknown>): Case
   };
 }
 
-export function readRawContent(dir: string): { slug: string; body: string; data: Record<string, unknown> }[] {
+export type RawContent = { slug: string; body: string; data: Record<string, unknown>; raw: string };
+
+export function readRawContent(dir: string): RawContent[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
     .filter((name) => name.endsWith(".mdx"))
     .map((name) => {
-      const parsed = matter(readFileSync(join(dir, name), "utf8"));
-      return { slug: name.replace(/\.mdx$/, ""), body: parsed.content, data: parsed.data };
+      const raw = readFileSync(join(dir, name), "utf8");
+      const parsed = matter(raw);
+      return { slug: name.replace(/\.mdx$/, ""), body: parsed.content, data: parsed.data, raw };
     });
 }
 
 type ListOptions = { dir?: string; includeDrafts?: boolean };
 
 function showDrafts(opts?: ListOptions): boolean {
-  return opts?.includeDrafts ?? process.env.ZEMANN_SHOW_DRAFTS === "1";
+  // Rascunhos nunca vão ao ar em produção, mesmo com a variável ligada por engano.
+  return (
+    opts?.includeDrafts ?? (process.env.ZEMANN_SHOW_DRAFTS === "1" && process.env.VERCEL_ENV !== "production")
+  );
+}
+
+const REVIEW_MARK = "REVISÃO";
+
+// Item publicável (não rascunho) não pode carregar a marca de revisão pendente.
+function assertNoReviewMark(file: RawContent, meta: GuideMeta): void {
+  if (!meta.draft && file.raw.includes(REVIEW_MARK)) {
+    throw new ContentError(file.slug, "conteúdo", `contém a marca ${REVIEW_MARK} e não pode ser publicado`);
+  }
 }
 
 function byNewest<T extends GuideMeta>(a: T, b: T): number {
@@ -147,15 +162,23 @@ function byNewest<T extends GuideMeta>(a: T, b: T): number {
 
 export function listGuides(opts?: ListOptions): GuideMeta[] {
   return readRawContent(opts?.dir ?? GUIDES_DIR)
-    .map((file) => parseGuideMeta(file.slug, file.data))
-    .filter((guide) => showDrafts(opts) || !guide.draft)
+    .map((file) => ({ file, meta: parseGuideMeta(file.slug, file.data) }))
+    .filter(({ meta }) => showDrafts(opts) || !meta.draft)
+    .map(({ file, meta }) => {
+      assertNoReviewMark(file, meta);
+      return meta;
+    })
     .sort(byNewest);
 }
 
 export function listCases(opts?: ListOptions): CaseMeta[] {
   return readRawContent(opts?.dir ?? CASES_DIR)
-    .map((file) => parseCaseMeta(file.slug, file.data))
-    .filter((item) => item.authorized && (showDrafts(opts) || !item.draft))
+    .map((file) => ({ file, meta: parseCaseMeta(file.slug, file.data) }))
+    .filter(({ meta }) => meta.authorized && (showDrafts(opts) || !meta.draft))
+    .map(({ file, meta }) => {
+      assertNoReviewMark(file, meta);
+      return meta;
+    })
     .sort(byNewest);
 }
 

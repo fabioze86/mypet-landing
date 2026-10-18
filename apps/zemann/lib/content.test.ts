@@ -1,17 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  CASES_DIR,
   ContentError,
-  GUIDES_DIR,
   getGuide,
   listCases,
   listGuides,
   parseCaseMeta,
   parseGuideMeta,
-  readRawContent,
 } from "./content";
 
 const base = {
@@ -119,21 +116,68 @@ describe("listagens", () => {
     writeFileSync(join(dir, "quebrado.mdx"), mdx({ ...base, author: "outro" }));
     expect(() => listGuides({ dir, includeDrafts: false })).toThrow(/quebrado/);
   });
+
+  describe("rascunhos e ambiente", () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it("ZEMANN_SHOW_DRAFTS não vale em produção", () => {
+      writeFileSync(join(dir, "rascunho.mdx"), mdx({ ...base, draft: true }));
+      vi.stubEnv("ZEMANN_SHOW_DRAFTS", "1");
+      vi.stubEnv("VERCEL_ENV", "production");
+      expect(listGuides({ dir })).toHaveLength(0);
+    });
+
+    it("ZEMANN_SHOW_DRAFTS libera rascunhos fora de produção", () => {
+      writeFileSync(join(dir, "rascunho.mdx"), mdx({ ...base, draft: true }));
+      vi.stubEnv("ZEMANN_SHOW_DRAFTS", "1");
+      vi.stubEnv("VERCEL_ENV", "preview");
+      expect(listGuides({ dir })).toHaveLength(1);
+    });
+  });
+
+  describe("marca REVISÃO", () => {
+    const caseBase = { ...base, client: "C", problem: "P", solution: "S", impact: "I" };
+
+    it("derruba guia publicado com REVISÃO no corpo", () => {
+      writeFileSync(join(dir, "g.mdx"), mdx(base, "Texto REVISÃO pendente."));
+      expect(() => listGuides({ dir, includeDrafts: false })).toThrow(/g.*REVISÃO/);
+    });
+
+    it("derruba guia publicado com REVISÃO no frontmatter", () => {
+      writeFileSync(join(dir, "g.mdx"), mdx({ ...base, answer: "REVISÃO: confirmar" }));
+      expect(() => listGuides({ dir, includeDrafts: false })).toThrow(ContentError);
+    });
+
+    it("permite rascunho com REVISÃO, também na prévia", () => {
+      writeFileSync(join(dir, "r.mdx"), mdx({ ...base, draft: true }, "REVISÃO"));
+      expect(listGuides({ dir, includeDrafts: false })).toHaveLength(0);
+      expect(listGuides({ dir, includeDrafts: true })).toHaveLength(1);
+    });
+
+    it("derruba guia publicado com REVISÃO mesmo na prévia", () => {
+      writeFileSync(join(dir, "g.mdx"), mdx(base, "REVISÃO"));
+      expect(() => listGuides({ dir, includeDrafts: true })).toThrow(/REVISÃO/);
+    });
+
+    it("derruba case autorizado e publicado com REVISÃO", () => {
+      writeFileSync(join(dir, "c.mdx"), mdx({ ...caseBase, authorized: true }, "REVISÃO"));
+      expect(() => listCases({ dir, includeDrafts: false })).toThrow(/c.*REVISÃO/);
+    });
+
+    it("permite case não autorizado ou rascunho com REVISÃO", () => {
+      writeFileSync(join(dir, "n.mdx"), mdx({ ...caseBase, authorized: false }, "REVISÃO"));
+      writeFileSync(join(dir, "d.mdx"), mdx({ ...caseBase, authorized: true, draft: true }, "REVISÃO"));
+      expect(listCases({ dir, includeDrafts: false })).toHaveLength(0);
+      expect(listCases({ dir, includeDrafts: true }).map((c) => c.slug)).toEqual(["d"]);
+    });
+  });
 });
 
 describe("conteúdo real do repositório", () => {
-  it("todos os guias e cases têm frontmatter válido", () => {
+  it("todos os guias e cases têm frontmatter válido e nada publicado tem REVISÃO", () => {
     expect(() => listGuides({ includeDrafts: true })).not.toThrow();
     expect(() => listCases({ includeDrafts: true })).not.toThrow();
-  });
-
-  it("nada publicado contém a marca REVISÃO", () => {
-    const published = [
-      ...readRawContent(GUIDES_DIR).filter((f) => f.data.draft !== true),
-      ...readRawContent(CASES_DIR).filter((f) => f.data.draft !== true && f.data.authorized === true),
-    ];
-    for (const file of published) {
-      expect(`${JSON.stringify(file.data)}\n${file.body}`, file.slug).not.toContain("REVISÃO");
-    }
   });
 });

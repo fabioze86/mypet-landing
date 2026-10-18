@@ -45,8 +45,10 @@ export function validateContact(
 
   const errors: Errors = {};
   if (!values.nome) errors.nome = "Informe seu nome.";
+  else if (values.nome.length > 120) errors.nome = "Use no máximo 120 caracteres.";
   if (!values.email || !EMAIL.test(values.email)) errors.email = "Informe um e-mail válido.";
   if (!values.empresa) errors.empresa = "Informe a empresa ou marca.";
+  else if (values.empresa.length > 120) errors.empresa = "Use no máximo 120 caracteres.";
   if (values.perfil !== "marca" && values.perfil !== "seller") errors.perfil = "Escolha o seu perfil.";
   if (!values.desafio) errors.desafio = "Conte em poucas palavras o seu desafio.";
   else if (values.desafio.length > 2000) errors.desafio = "Use no máximo 2.000 caracteres.";

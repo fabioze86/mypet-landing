@@ -10,7 +10,7 @@ export const metadata = pageMetadata(page);
 export default function CasesPage() {
   const cases = listCases();
   return (
-    <main className="mx-auto max-w-5xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-5xl px-4 pt-10">
       <Breadcrumbs items={[{ name: "Início", path: "/" }, { name: "Cases", path: page.path }]} />
       <h1 className="mt-6 text-4xl font-extrabold text-ink">{page.title}</h1>
       <p className="mt-4 max-w-3xl text-lg text-ink-soft">

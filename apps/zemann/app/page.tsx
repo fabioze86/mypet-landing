@@ -28,7 +28,7 @@ const AUDIENCES = [
 
 export default function HomePage() {
   return (
-    <main>
+    <main id="conteudo">
       {/* Hero no estilo Cloudflare: título grande à esquerda, ilustração à direita. */}
       <section className="mx-auto grid max-w-7xl items-center gap-12 px-4 pt-16 pb-12 md:pt-24 lg:grid-cols-[1.2fr_1fr]">
         <div>

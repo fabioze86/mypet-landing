@@ -39,7 +39,7 @@ export default async function GuidePage({ params }: Props) {
   const cta = CTA_BY_TARGET[guide.cta];
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-3xl px-4 pt-10">
       <JsonLd
         data={articleJsonLd({
           title: guide.title,

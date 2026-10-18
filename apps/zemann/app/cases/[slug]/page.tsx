@@ -44,7 +44,7 @@ export default async function CasePage({ params }: Props) {
   ];
 
   return (
-    <main className="mx-auto max-w-3xl px-4 pt-10">
+    <main id="conteudo" className="mx-auto max-w-3xl px-4 pt-10">
       <JsonLd
         data={articleJsonLd({
           title: item.title,
