@@ -29,7 +29,7 @@ const DELIVERABLES = [
 const SAMPLE: [string, string][] = [
   ["Anúncios no catálogo", "240"],
   ["Disponíveis para compra", "12"],
-  ["Só visíveis, sem oferta ativa", "210"],
+  ["Só visíveis, sem oferta ativa", "228"],
   ["Com pendência apontada pela Amazon", "160"],
   ["Imagem principal inacessível ou fora do padrão", "52"],
   ["SKUs com margem negativa após tarifas", "9"],
@@ -87,9 +87,11 @@ export default function DiagnosticoPage() {
           </ul>
 
           <h2 className="mt-12 text-2xl font-bold text-ink">Exemplo de resumo do relatório</h2>
-          <p className="mt-2 text-sm text-muted">Exemplo ilustrativo, com números fictícios, no formato do relatório real.</p>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
+              <caption className="pb-2 text-left text-sm text-muted">
+                Exemplo ilustrativo, com números fictícios, no formato do relatório real.
+              </caption>
               <thead>
                 <tr>
                   <th scope="col" className="border-b-2 border-line px-3 py-2 font-semibold">Indicador</th>

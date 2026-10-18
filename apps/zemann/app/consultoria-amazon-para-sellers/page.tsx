@@ -43,8 +43,8 @@ export default function SellersPage() {
 
       <h1 className="mt-6 max-w-4xl text-4xl font-extrabold leading-tight text-ink md:text-5xl">{page.title}</h1>
       <p className="mt-6 max-w-3xl text-lg leading-relaxed text-ink-soft">
-        Se as suas vendas na Amazon pararam de crescer, o problema quase sempre está em quatro lugares: Buy Box,
-        anúncios com pendência, Ads e margem. A Zemann encontra onde está o seu e corrige junto com você.
+        Se as suas vendas na Amazon pararam de crescer, o problema quase sempre está em cinco lugares: Buy Box,
+        anúncios com pendência, Ads, margem e logística. A Zemann encontra onde está o seu e corrige junto com você.
       </p>
       <CtaLink href={PAGES.diagnostico.path} cta="sellers_topo_diagnostico" className="mt-8">Agendar diagnóstico</CtaLink>
 
