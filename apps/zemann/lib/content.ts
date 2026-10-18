@@ -76,6 +76,10 @@ function faq(slug: string, data: Record<string, unknown>): FaqItem[] {
 }
 
 export function parseGuideMeta(slug: string, data: Record<string, unknown>): GuideMeta {
+  const title = text(slug, data, "title");
+  if (title.length > 55) {
+    throw new ContentError(slug, "title", `tem ${title.length} caracteres (máximo 55)`);
+  }
   const description = text(slug, data, "description");
   if (description.length > 160) {
     throw new ContentError(slug, "description", `tem ${description.length} caracteres (máximo 160)`);
@@ -95,7 +99,7 @@ export function parseGuideMeta(slug: string, data: Record<string, unknown>): Gui
   }
   return {
     slug,
-    title: text(slug, data, "title"),
+    title,
     description,
     answer: text(slug, data, "answer"),
     author: "fabio",

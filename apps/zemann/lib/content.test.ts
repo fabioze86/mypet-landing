@@ -50,6 +50,14 @@ describe("parseGuideMeta", () => {
     expect(() => parseGuideMeta("x", { ...base, description: "a".repeat(161) })).toThrow(ContentError);
   });
 
+  it("recusa título acima de 55 caracteres", () => {
+    expect(() => parseGuideMeta("x", { ...base, title: "a".repeat(56) })).toThrow(/title.*máximo 55/);
+  });
+
+  it("aceita título de exatamente 55 caracteres", () => {
+    expect(parseGuideMeta("x", { ...base, title: "a".repeat(55) }).title).toHaveLength(55);
+  });
+
   it("recusa atualização anterior à publicação", () => {
     expect(() => parseGuideMeta("x", { ...base, updatedAt: "2026-09-01" })).toThrow(/updatedAt/);
   });
