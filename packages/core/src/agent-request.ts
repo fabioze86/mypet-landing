@@ -1,10 +1,11 @@
 import type { UIMessage } from "ai";
 import type { AgentCartItem } from "./agent-prompt";
+import { normalizeAgentLead, type AgentLead } from "./agent-lead";
 
-// O navegador manda só a pergunta nova e o carrinho; o histórico vem do banco.
-// Nada aqui decide modo nem comprador.
+// O navegador manda só a pergunta nova, o carrinho e, no visitante, o lead do
+// roteiro; o histórico vem do banco. Nada aqui decide modo nem comprador.
 
-export type ParsedAgentRequest = { id: string; message: UIMessage; cart: AgentCartItem[] };
+export type ParsedAgentRequest = { id: string; message: UIMessage; cart: AgentCartItem[]; lead?: AgentLead };
 
 type ParseResult = { ok: true; value: ParsedAgentRequest } | { ok: false; message: string };
 
@@ -38,7 +39,7 @@ function parseCartItem(raw: unknown): AgentCartItem | null {
 
 export function parseAgentRequest(body: unknown): ParseResult {
   if (!body || typeof body !== "object") return fail("Corpo da requisição inválido.");
-  const { id, message, cart } = body as Record<string, unknown>;
+  const { id, message, cart, lead: rawLead } = body as Record<string, unknown>;
 
   if (typeof id !== "string" || !UUID_PATTERN.test(id)) return fail("Conversa inválida.");
   if (!message || typeof message !== "object") return fail("Mensagem inválida.");
@@ -68,12 +69,16 @@ export function parseAgentRequest(body: unknown): ParseResult {
         .filter((item): item is AgentCartItem => item !== null)
     : [];
 
+  // Lead inválido não recusa a pergunta: só deixa de ser gravado.
+  const lead = normalizeAgentLead(rawLead);
+
   return {
     ok: true,
     value: {
       id,
       message: { id: messageId, role: "user", parts: [{ type: "text", text }] },
       cart: cartItems,
+      ...(lead ? { lead } : {}),
     },
   };
 }

@@ -70,4 +70,15 @@ describe("parseAgentRequest", () => {
     const semCarrinho = parseAgentRequest({ id, message });
     expect(semCarrinho.ok && semCarrinho.value.cart).toEqual([]);
   });
+  it("lead: válido é normalizado; ausente ou inválido é ignorado sem recusar", () => {
+    const valid = parseAgentRequest({ id, message, cart: [], lead: { nome: " Ana ", whatsapp: "não" } });
+    expect(valid.ok && valid.value.lead).toEqual({ nome: "Ana", whatsapp: "não" });
+
+    const absent = parseAgentRequest({ id, message, cart: [] });
+    expect(absent.ok && absent.value.lead).toBeUndefined();
+
+    const invalid = parseAgentRequest({ id, message, cart: [], lead: { nome: "", whatsapp: 5 } });
+    expect(invalid.ok).toBe(true);
+    expect(invalid.ok && invalid.value.lead).toBeUndefined();
+  });
 });
