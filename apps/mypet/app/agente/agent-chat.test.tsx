@@ -10,7 +10,10 @@ const chat = vi.hoisted(() => ({
   },
   sendText: vi.fn(() => true),
   clearNotice: vi.fn(),
-  lastArgs: null as null | { onAssistantMessage?: (message: AgentMessage) => void },
+  lastArgs: null as null | { onAssistantMessage?: (message: AgentMessage) => void; getLead?: () => unknown },
+  lead: { nome: "Ana", whatsapp: "não" } as { nome: string; whatsapp: string } | null,
+  leadReady: true,
+  saveLead: vi.fn(),
 }));
 
 const cartOps = vi.hoisted(() => ({
@@ -31,7 +34,8 @@ vi.mock("@mypet/core/agent-client", async (importOriginal) => {
       notice: "Começamos uma nova conversa. Envie sua pergunta de novo.",
       clearNotice: chat.clearNotice,
     }),
-    useAgentChat: (args: { onAssistantMessage?: (message: AgentMessage) => void }) => {
+    useAgentLead: () => ({ lead: chat.lead, ready: chat.leadReady, saveLead: chat.saveLead }),
+    useAgentChat: (args: { onAssistantMessage?: (message: AgentMessage) => void; getLead?: () => unknown }) => {
       chat.lastArgs = args;
       return { ...chat.state, sendText: chat.sendText };
     },
@@ -85,8 +89,8 @@ function renderChat(mode: "visitante" | "cliente", extra: Partial<Parameters<typ
     onLockedIntent: vi.fn(),
     ...extra,
   };
-  render(<AgentChat {...props} />);
-  return props;
+  const view = render(<AgentChat {...props} />);
+  return { ...props, rerender: () => view.rerender(<AgentChat {...props} />) };
 }
 
 beforeEach(() => {
@@ -94,6 +98,11 @@ beforeEach(() => {
   chat.sendText = vi.fn(() => true);
   chat.clearNotice.mockClear();
   chat.lastArgs = null;
+  chat.lead = { nome: "Ana", whatsapp: "não" };
+  chat.leadReady = true;
+  chat.saveLead = vi.fn((lead) => {
+    chat.lead = lead;
+  });
   cartOps.items = [];
   cartOps.addItem.mockClear();
   cartOps.updateQty.mockClear();
@@ -104,9 +113,80 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("AgentChat", () => {
+  it("visitante sem lead: roteiro de nome e WhatsApp antes das intenções", () => {
+    chat.lead = null;
+    const view = renderChat("visitante");
+    expect(screen.getByText("Antes de prosseguir, preciso de duas informações: 1 - Qual é o seu nome?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Frete e prazos de entrega/ })).toBeNull();
+
+    const input = screen.getByRole("textbox", { name: "Sua resposta" });
+    fireEvent.change(input, { target: { value: "  Ana  " } });
+    fireEvent.submit(input.closest("form")!);
+    expect(screen.getByText("Ana", { selector: ".ag-msg--user" })).toBeInTheDocument();
+    expect(screen.getByText("2 - Deseja informar um WhatsApp?")).toBeInTheDocument();
+    expect(chat.saveLead).not.toHaveBeenCalled();
+
+    fireEvent.change(input, { target: { value: "não" } });
+    fireEvent.submit(input.closest("form")!);
+    expect(chat.saveLead).toHaveBeenCalledWith({ nome: "Ana", whatsapp: "não" });
+    expect(chat.sendText).not.toHaveBeenCalled();
+
+    view.rerender();
+    expect(screen.getByRole("heading", { name: "Obrigado, Ana! Como posso te ajudar hoje?" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Frete e prazos de entrega/ })).toBeInTheDocument();
+  });
+
+  it("visitante sem lead: nome vazio não avança", () => {
+    chat.lead = null;
+    renderChat("visitante");
+    const input = screen.getByRole("textbox", { name: "Sua resposta" });
+    fireEvent.change(input, { target: { value: "   " } });
+    fireEvent.submit(input.closest("form")!);
+    expect(screen.queryByText("2 - Deseja informar um WhatsApp?")).toBeNull();
+  });
+
+  it("visitante: pergunta da URL só sai depois do roteiro", () => {
+    chat.lead = null;
+    const view = renderChat("visitante", { initialQuestion: "Tem shampoo?" });
+    expect(chat.sendText).not.toHaveBeenCalled();
+    const input = screen.getByRole("textbox", { name: "Sua resposta" });
+    fireEvent.change(input, { target: { value: "Ana" } });
+    fireEvent.submit(input.closest("form")!);
+    fireEvent.change(input, { target: { value: "não" } });
+    fireEvent.submit(input.closest("form")!);
+    view.rerender();
+    expect(chat.sendText).toHaveBeenCalledWith("Tem shampoo?");
+  });
+
+  it("visitante: lead ainda carregando não mostra intenções nem roteiro", () => {
+    chat.lead = null;
+    chat.leadReady = false;
+    renderChat("visitante");
+    expect(screen.queryByText(/Antes de prosseguir/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Frete e prazos de entrega/ })).toBeNull();
+  });
+
+  it("visitante: getLead manda o lead", () => {
+    renderChat("visitante");
+    expect(chat.lastArgs?.getLead?.()).toEqual({ nome: "Ana", whatsapp: "não" });
+  });
+
+  it("cliente: nunca vê o roteiro e é saudado pelo nome de exibição", () => {
+    chat.lead = null;
+    renderChat("cliente", { displayName: "Bruno" });
+    expect(screen.queryByText(/Antes de prosseguir/)).toBeNull();
+    expect(screen.getByRole("heading", { name: "Olá, Bruno! Como posso te ajudar hoje?" })).toBeInTheDocument();
+    expect(chat.lastArgs?.getLead?.()).toBeNull();
+  });
+
+  it("cliente sem nome de exibição: saudação padrão", () => {
+    renderChat("cliente");
+    expect(screen.getByRole("heading", { name: "Como posso te ajudar hoje?" })).toBeInTheDocument();
+  });
+
   it("visitante: boas-vindas com intenções livres e com cadeado", () => {
     const props = renderChat("visitante");
-    expect(screen.getByRole("heading", { name: "Como posso te ajudar hoje?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Olá, Ana! Como posso te ajudar hoje?" })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Frete e prazos de entrega/ }));
     expect(chat.sendText).toHaveBeenCalledWith("Como funciona o frete e qual o prazo de entrega?");
