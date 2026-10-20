@@ -3,13 +3,17 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { formatBRL } from "@mypet/core/catalog-utils";
 import { useCart } from "@mypet/core/components/cart-provider";
+import { AGENT_STORAGE_KEY } from "@mypet/core/agent-client";
 import { clientConfig } from "@/client.config";
 import { AgentChat, type AgentPageMode } from "./agent-chat";
 import { AccessPanel } from "./access-panel";
 import { CartPanel } from "./cart-panel";
+import { goTo } from "./navigate";
 import { useSheetDialog } from "./use-sheet-dialog";
 
 const { name: SITE_NAME, logo } = clientConfig;
+
+const LOGOUT_ERROR = "Não foi possível sair agora. Tente de novo.";
 
 // SSR-safe: false até montar no navegador
 function useIsMobile() {
@@ -48,11 +52,47 @@ function CartBar({
   );
 }
 
-export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; initialQuestion: string | null }) {
+export function AgentShell({
+  mode,
+  initialQuestion,
+  displayName,
+}: {
+  mode: AgentPageMode;
+  initialQuestion: string | null;
+  displayName: string | null;
+}) {
   const [question, setQuestion] = useState(initialQuestion);
   const [reason, setReason] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const { clear: clearCart } = useCart();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  // Só limpa carrinho e conversa depois que o cookie foi apagado: se a rota
+  // falhar, o cliente continua logado com o pedido intacto.
+  const handleLogout = useCallback(async () => {
+    setLogoutError(null);
+    setLoggingOut(true);
+    try {
+      const res = await fetch("/api/sair", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+    } catch {
+      setLoggingOut(false);
+      setLogoutError(LOGOUT_ERROR);
+      return;
+    }
+    clearCart();
+    try {
+      window.sessionStorage.removeItem(AGENT_STORAGE_KEY);
+    } catch {
+      // storage bloqueado: nada guardado para apagar
+    }
+    goTo("/");
+  }, [clearCart]);
   const isVisitor = mode === "visitante";
   const isMobile = useIsMobile();
   // no celular o painel da direita (acesso para o visitante, "Seu pedido" para o cliente) vira diálogo
@@ -109,18 +149,28 @@ export function AgentShell({ mode, initialQuestion }: { mode: AgentPageMode; ini
               </a>
             ) : (
               <>
+                <span className="ag-hello">{displayName ? `Olá, ${displayName}` : "Olá!"}</span>
                 <a href="/pedido-rapido">Tabela de preços</a>
                 <a href="/pedidos">Meus pedidos</a>
+                <button type="button" className="ag-logout" onClick={handleLogout} disabled={loggingOut}>
+                  Sair
+                </button>
               </>
             )}
           </nav>
         </div>
+        {logoutError && (
+          <p className="ag-logout-error" role="alert">
+            {logoutError}
+          </p>
+        )}
       </header>
 
       <main className="ag-main ag-main--split">
         <div className="ag-chat-wrap" inert={sheetModal}>
           <AgentChat
             mode={mode}
+            displayName={displayName}
             initialQuestion={question}
             onInitialQuestionUsed={handleQuestionUsed}
             onLockedIntent={handleLocked}

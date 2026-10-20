@@ -10,6 +10,7 @@
     "./assistant-client": "./src/assistant-client.ts",
     "./assistant-server": "./src/assistant-server.ts",
     "./access-session": "./src/access-session.ts",
+    "./request-guards": "./src/request-guards.ts",
     "./auth-server": "./src/auth-server.ts",
     "./balcao": "./src/balcao.ts",
     "./balcao-calc": "./src/balcao-calc.ts",

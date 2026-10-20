@@ -33,5 +33,7 @@ export default function AgentePage({ searchParams }: { searchParams: AgentePageS
 export async function AgentePageBody({ searchParams }: { searchParams?: AgentePageSearchParams } = {}) {
   const buyer = await requireBuyer();
   const initialQuestion = initialQuestionFrom((await searchParams)?.pergunta);
-  return <AgentShell mode={buyer ? "cliente" : "visitante"} initialQuestion={initialQuestion} />;
+  // nome de exibição do cliente: nome do cadastro, senão a empresa
+  const displayName = buyer ? buyer.nome?.trim() || buyer.empresa?.trim() || null : null;
+  return <AgentShell mode={buyer ? "cliente" : "visitante"} initialQuestion={initialQuestion} displayName={displayName} />;
 }

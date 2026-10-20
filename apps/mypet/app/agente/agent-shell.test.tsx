@@ -41,10 +41,12 @@ const DEFAULT_ITEMS: ShellCartItem[] = [
   { id: "p1", name: "Shampoo", sku: "S1", brand: null, img: "/x.jpg", qty: 2, unitPrice: 10 },
   { id: "p2", name: "Condicionador", sku: "S2", brand: null, img: "/y.jpg", qty: 1, unitPrice: 5.5 },
 ];
-const shellCart = vi.hoisted(() => ({ items: [] as ShellCartItem[] }));
+const shellCart = vi.hoisted(() => ({ items: [] as ShellCartItem[], clear: vi.fn() }));
 vi.mock("@mypet/core/components/cart-provider", () => ({
-  useCart: () => ({ cart: { items: shellCart.items } }),
+  useCart: () => ({ cart: { items: shellCart.items }, clear: shellCart.clear }),
 }));
+const nav = vi.hoisted(() => ({ goTo: vi.fn() }));
+vi.mock("./navigate", () => ({ goTo: nav.goTo }));
 vi.mock("../_components/pre-access/access-form", () => ({
   AccessForm: ({ redirectTo }: { redirectTo?: string }) => <form aria-label={`cadastro ${redirectTo}`} />,
 }));
@@ -74,6 +76,8 @@ function mockViewport(mobile: boolean) {
 beforeEach(() => {
   mockViewport(false);
   shellCart.items = DEFAULT_ITEMS;
+  shellCart.clear.mockClear();
+  nav.goTo.mockClear();
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -82,14 +86,14 @@ afterEach(() => {
 
 describe("AgentShell", () => {
   it("visitante: painel de acesso com cadastro que volta para /agente", () => {
-    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
     expect(screen.getByRole("heading", { name: "Acesso completo ao agente" })).toBeInTheDocument();
     expect(screen.getByRole("form", { name: "cadastro /agente" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Liberar acesso completo" })).toBeInTheDocument();
   });
 
   it("computador: cadeado mostra o motivo, sem diálogo, e leva o foco ao título", () => {
-    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
     fireEvent.click(screen.getByRole("button", { name: "cadeado" }));
     expect(screen.getByRole("status")).toHaveTextContent("Cadastre-se para ver os preços da tabela.");
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -99,7 +103,7 @@ describe("AgentShell", () => {
 
   it("celular: a barra abre o diálogo, Esc fecha e devolve o foco à barra", () => {
     mockViewport(true);
-    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
     fireEvent.click(screen.getByRole("button", { name: "Liberar acesso completo" }));
     const dialog = screen.getByRole("dialog", { name: "Acesso completo ao agente" });
     expect(dialog).toHaveAttribute("aria-modal", "true");
@@ -116,7 +120,7 @@ describe("AgentShell", () => {
 
   it("celular: cadeado abre o diálogo com o motivo e o botão Fechar fecha", () => {
     mockViewport(true);
-    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
     fireEvent.click(screen.getByRole("button", { name: "cadeado" }));
     expect(screen.getByRole("dialog", { name: "Acesso completo ao agente" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Cadastre-se para ver os preços da tabela.");
@@ -126,7 +130,7 @@ describe("AgentShell", () => {
 
   it("celular: com o painel aberto, cabeçalho, chat e rodapé ficam inert", () => {
     mockViewport(true);
-    const { container } = render(<AgentShell mode="visitante" initialQuestion={null} />);
+    const { container } = render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
     const regions = () => [
       container.querySelector("header.pa-header"),
       container.querySelector(".ag-chat-wrap"),
@@ -141,7 +145,7 @@ describe("AgentShell", () => {
 
   it("painel aberto no celular fecha ao virar tela de computador", () => {
     mockViewport(true);
-    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
     fireEvent.click(screen.getByRole("button", { name: "Liberar acesso completo" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 
@@ -160,14 +164,14 @@ describe("AgentShell", () => {
   });
 
   it("cliente: sem painel de acesso, com links da tabela e dos pedidos", () => {
-    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
     expect(screen.queryByRole("heading", { name: "Acesso completo ao agente" })).toBeNull();
     expect(screen.getByRole("link", { name: "Tabela de preços" })).toHaveAttribute("href", "/pedido-rapido");
     expect(screen.getByRole("link", { name: "Meus pedidos" })).toHaveAttribute("href", "/pedidos");
   });
 
   it("cliente (computador): carrinho ao lado com o id da conversa, sem painel de acesso", () => {
-    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
     expect(screen.getByText(/carrinho conv-1/)).toBeInTheDocument();
     expect(screen.queryByText("Acesso completo ao agente")).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -175,7 +179,7 @@ describe("AgentShell", () => {
 
   it("cliente (celular): a barra abre o diálogo Seu pedido, Esc fecha e devolve o foco à barra", () => {
     mockViewport(true);
-    const { container } = render(<AgentShell mode="cliente" initialQuestion={null} />);
+    const { container } = render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
     const bar = screen.getByRole("button", { name: /Ver seu pedido · 3 itens · R\$\s?25,50/ });
     expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.click(bar);
@@ -197,7 +201,7 @@ describe("AgentShell", () => {
 
   it("cliente (celular): o botão Fechar fecha o diálogo Seu pedido", () => {
     mockViewport(true);
-    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
     fireEvent.click(screen.getByRole("button", { name: /Ver seu pedido/ }));
     fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -206,7 +210,7 @@ describe("AgentShell", () => {
   it("cliente (celular): barra indica itens sem preço no total", () => {
     mockViewport(true);
     shellCart.items = [...DEFAULT_ITEMS, { id: "p3", name: "Escova", sku: "S3", brand: null, img: "/z.jpg", qty: 1 }];
-    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
     expect(
       screen.getByRole("button", { name: /^Ver seu pedido · 4 itens · R\$\s?25,50 \+ itens sem preço$/ }),
     ).toBeInTheDocument();
@@ -214,13 +218,13 @@ describe("AgentShell", () => {
 
   it("cliente (celular): barra sem itens sem preço não mostra o aviso", () => {
     mockViewport(true);
-    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
     expect(screen.getByRole("button", { name: /Ver seu pedido/ }).textContent).not.toContain("sem preço");
   });
 
   it("cliente: intenção com cadeado não abre painel nem move o foco", () => {
     mockViewport(true);
-    render(<AgentShell mode="cliente" initialQuestion={null} />);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
     const lock = screen.getByRole("button", { name: "cadeado" });
     lock.focus();
     fireEvent.click(lock);
@@ -229,7 +233,53 @@ describe("AgentShell", () => {
   });
 
   it("rodapé informa que as conversas são guardadas", () => {
-    render(<AgentShell mode="visitante" initialQuestion={null} />);
+    render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
     expect(screen.getByText(/conversas com o agente são guardadas/)).toBeInTheDocument();
+  });
+
+  it("cliente: cabeçalho com Olá e o nome, e botão Sair", () => {
+    mockViewport(false);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName="Ana" />);
+    expect(screen.getByText("Olá, Ana")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sair" })).toBeInTheDocument();
+  });
+
+  it("cliente sem nome: Olá!", () => {
+    mockViewport(false);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName={null} />);
+    expect(screen.getByText("Olá!")).toBeInTheDocument();
+  });
+
+  it("visitante: sem Sair", () => {
+    mockViewport(false);
+    render(<AgentShell mode="visitante" initialQuestion={null} displayName={null} />);
+    expect(screen.queryByRole("button", { name: "Sair" })).toBeNull();
+  });
+
+  it("Sair: chama /api/sair, limpa carrinho e conversa e vai para a home", async () => {
+    mockViewport(false);
+    window.sessionStorage.setItem("mypet-agente-conversa", "{}");
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName="Ana" />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Sair" }));
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/sair", expect.objectContaining({ method: "POST" }));
+    expect(shellCart.clear).toHaveBeenCalled();
+    expect(window.sessionStorage.getItem("mypet-agente-conversa")).toBeNull();
+    expect(nav.goTo).toHaveBeenCalledWith("/");
+  });
+
+  it("Sair com falha: mostra erro e não limpa nada", async () => {
+    mockViewport(false);
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
+    render(<AgentShell mode="cliente" initialQuestion={null} displayName="Ana" />);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Sair" }));
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível sair agora. Tente de novo.");
+    expect(shellCart.clear).not.toHaveBeenCalled();
+    expect(nav.goTo).not.toHaveBeenCalled();
   });
 });

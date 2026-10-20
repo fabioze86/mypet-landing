@@ -10,6 +10,21 @@ export const ACCESS_COOKIE_OPTS = {
   maxAge: 2_592_000, // segundos
 } as const;
 
+// Set-Cookie do logout: mesmo nome e atributos, valor vazio e Max-Age=0.
+export function expiredAccessCookie(): string {
+  const { path, sameSite, httpOnly, secure } = ACCESS_COOKIE_OPTS;
+  return [
+    `${ACCESS_COOKIE}=`,
+    `Path=${path}`,
+    "Max-Age=0",
+    `SameSite=${sameSite === "lax" ? "Lax" : sameSite}`,
+    httpOnly ? "HttpOnly" : "",
+    secure ? "Secure" : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
+}
+
 type Payload = { b: string; exp: number };
 
 function secret(): string {

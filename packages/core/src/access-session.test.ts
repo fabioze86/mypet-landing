@@ -4,6 +4,7 @@ import {
   verifyAccessToken,
   ACCESS_COOKIE,
   ACCESS_COOKIE_OPTS,
+  expiredAccessCookie,
 } from "./access-session";
 
 beforeEach(() => {
@@ -55,5 +56,11 @@ describe("access-session", () => {
   it("lança erro claro quando falta o segredo", () => {
     delete process.env.ACCESS_SESSION_SECRET;
     expect(() => signAccessToken("buyer-1")).toThrow(/ACCESS_SESSION_SECRET/);
+  });
+});
+
+describe("expiredAccessCookie", () => {
+  it("expira o cookie de acesso com os mesmos atributos", () => {
+    expect(expiredAccessCookie()).toBe("mypet_acesso=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly; Secure");
   });
 });
