@@ -86,7 +86,7 @@ async function ConversaContent({ params }: { params: Promise<{ id: string }> }) 
   if (!summaryData) notFound();
   const summary = summaryData as Summary;
 
-  const [messagesResult, eventsResult, ordersResult] = await Promise.all([
+  const [messagesResult, eventsResult, ordersResult, leadResult] = await Promise.all([
     supabase.from("agent_messages").select(MESSAGE_COLUMNS).eq("conversation_id", id).order("created_at").limit(500),
     supabase.from("agent_events").select(EVENT_COLUMNS).eq("conversation_id", id).order("created_at").limit(500),
     supabase
@@ -95,11 +95,14 @@ async function ConversaContent({ params }: { params: Promise<{ id: string }> }) 
       .eq("agent_conversation_id", id)
       .order("created_at", { ascending: false })
       .limit(1),
+    supabase.from("agent_conversations").select("lead_nome, lead_whatsapp").eq("id", id).maybeSingle(),
   ]);
 
   const messages = (messagesResult.data ?? []) as unknown as StoredMessage[];
   const events = (eventsResult.data ?? []) as unknown as StoredEvent[];
   const order = ((ordersResult.data ?? []) as unknown as OrderRow[])[0] ?? null;
+  // Lead do roteiro do visitante; erro aqui não esconde a conversa.
+  const lead = (leadResult.data ?? null) as { lead_nome: string | null; lead_whatsapp: string | null } | null;
   const now = new Date();
   const awaiting = awaitingConversations(
     events
@@ -135,6 +138,12 @@ async function ConversaContent({ params }: { params: Promise<{ id: string }> }) 
           Início {formatDateTime(summary.created_at)} · começou como {summary.started_as}
           {summary.became_client && " · virou cliente"}
         </p>
+        {lead?.lead_nome && (
+          <p className="mt-1 text-sm text-slate-600">
+            Nome: {lead.lead_nome}
+            {lead.lead_whatsapp && ` · WhatsApp informado: ${lead.lead_whatsapp}`}
+          </p>
+        )}
         {order && (
           <p className="mt-1 text-sm text-slate-600">
             Pedido {order.number != null ? `#${order.number}` : "sem número"} · {order.status}
