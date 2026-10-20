@@ -3,11 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { createUIMessageStreamResponse, type UIMessageChunk } from "ai";
 import {
+  AGENT_LEAD_STORAGE_KEY,
   AGENT_STORAGE_KEY,
   cartChangesFromMessage,
   newConversation,
   useAgentChat,
   useAgentConversation,
+  useAgentLead,
   type AgentCartItem,
 } from "./agent-client";
 
@@ -66,6 +68,7 @@ let fetchMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   window.sessionStorage.clear();
+  window.localStorage.clear();
   fetchMock = vi.fn(async () => streamResponse());
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -91,6 +94,21 @@ describe("useAgentChat", () => {
     expect(body.message.role).toBe("user");
     expect(body.message.parts).toEqual([{ type: "text", text: "Oi" }]);
     expect(body.messages).toBeUndefined();
+    expect(body.lead).toBeUndefined();
+    await waitFor(() => expect(result.current.busy).toBe(false));
+  });
+
+  it("manda o lead junto quando getLead devolve um", async () => {
+    const lead = { nome: "Ana", whatsapp: "não" };
+    const { result } = renderHook(() =>
+      useAgentChat({ conversation, getCart: () => cart, getLead: () => lead, onConversationReset: vi.fn() }),
+    );
+    act(() => {
+      result.current.sendText("Oi");
+    });
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string);
+    expect(body.lead).toEqual(lead);
     await waitFor(() => expect(result.current.busy).toBe(false));
   });
 
@@ -280,5 +298,26 @@ describe("newConversation", () => {
     } finally {
       Object.defineProperty(crypto, "randomUUID", { value: original, configurable: true, writable: true });
     }
+  });
+});
+
+describe("useAgentLead", () => {
+  it("lê o lead guardado depois de montar", async () => {
+    window.localStorage.setItem(AGENT_LEAD_STORAGE_KEY, JSON.stringify({ nome: "Ana", whatsapp: "não" }));
+    const { result } = renderHook(() => useAgentLead());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.lead).toEqual({ nome: "Ana", whatsapp: "não" });
+  });
+
+  it("sem lead guardado: pronto e nulo; saveLead grava e atualiza", async () => {
+    const { result } = renderHook(() => useAgentLead());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.lead).toBeNull();
+    act(() => result.current.saveLead({ nome: "Bia", whatsapp: "11999990000" }));
+    expect(result.current.lead).toEqual({ nome: "Bia", whatsapp: "11999990000" });
+    expect(JSON.parse(window.localStorage.getItem(AGENT_LEAD_STORAGE_KEY)!)).toEqual({
+      nome: "Bia",
+      whatsapp: "11999990000",
+    });
   });
 });

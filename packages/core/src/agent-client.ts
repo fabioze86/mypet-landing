@@ -6,18 +6,23 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import type { AgentProduct } from "./agent-catalog-tool";
 import type { CartChange } from "./agent-customer-tools";
 import type { AgentCartItem } from "./agent-prompt";
+import { normalizeAgentLead, type AgentLead } from "./agent-lead";
 
 // Lado do navegador do agente /agente. A conversa fica no sessionStorage para
 // sobreviver ao recarregamento depois do cadastro feito no meio da conversa.
-// Ao servidor vão só { id, message, cart }: o histórico ele lê do banco.
+// Ao servidor vão só { id, message, cart } (e o lead do visitante): o histórico ele lê do banco.
 
 export type AgentMessage = UIMessage;
 export type { AgentProduct, AgentCartItem, CartChange };
+export type { AgentLead };
+export { normalizeAgentLead, LEAD_NAME_MAX, LEAD_WHATSAPP_MAX } from "./agent-lead";
 export type StoredConversation = { id: string; messages: AgentMessage[] };
 export type AgentError = { code: string | null; message: string };
 
 export const AGENT_API = "/api/agente";
 export const AGENT_STORAGE_KEY = "mypet-agente-conversa";
+// O lead fica no localStorage: vale para as próximas conversas e visitas.
+export const AGENT_LEAD_STORAGE_KEY = "mypet_agente_lead";
 const MAX_STORED_MESSAGES = 40;
 const MAX_CARD_PRODUCTS = 5;
 const GENERIC_ERROR = "Não foi possível responder agora. Tente novamente em instantes.";
@@ -91,6 +96,33 @@ function safeSessionStorage(): Storage | null {
     return typeof window === "undefined" ? null : window.sessionStorage;
   } catch {
     return null;
+  }
+}
+
+function safeLocalStorage(): Storage | null {
+  try {
+    return typeof window === "undefined" ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function loadStoredLead(storage: Storage | null): AgentLead | null {
+  if (!storage) return null;
+  try {
+    const raw = storage.getItem(AGENT_LEAD_STORAGE_KEY);
+    return raw ? normalizeAgentLead(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredLead(storage: Storage | null, lead: AgentLead): void {
+  if (!storage) return;
+  try {
+    storage.setItem(AGENT_LEAD_STORAGE_KEY, JSON.stringify(lead));
+  } catch {
+    // storage cheio ou bloqueado: o lead vale só nesta página
   }
 }
 
@@ -185,19 +217,42 @@ export function useAgentConversation() {
   return { conversation, reset, notice, clearNotice };
 }
 
+// Lê o lead só depois de montar, como a conversa. Até `ready`, a tela ainda não
+// sabe se precisa do roteiro.
+export function useAgentLead() {
+  const [lead, setLead] = useState<AgentLead | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setLead(loadStoredLead(safeLocalStorage()));
+    setReady(true);
+  }, []);
+
+  const saveLead = useCallback((next: AgentLead) => {
+    saveStoredLead(safeLocalStorage(), next);
+    setLead(next);
+  }, []);
+
+  return { lead, ready, saveLead };
+}
+
 export function useAgentChat({
   conversation,
   getCart,
+  getLead,
   onConversationReset,
   onAssistantMessage,
 }: {
   conversation: StoredConversation;
   getCart?: () => AgentCartItem[];
+  getLead?: () => AgentLead | null;
   onConversationReset: (notice: string) => void;
   onAssistantMessage?: (message: AgentMessage) => void;
 }) {
   const getCartRef = useRef(getCart);
   getCartRef.current = getCart;
+  const getLeadRef = useRef(getLead);
+  getLeadRef.current = getLead;
   const onAssistantMessageRef = useRef(onAssistantMessage);
   onAssistantMessageRef.current = onAssistantMessage;
 
@@ -205,9 +260,17 @@ export function useAgentChat({
     () =>
       new DefaultChatTransport<AgentMessage>({
         api: AGENT_API,
-        prepareSendMessagesRequest: ({ id, messages }) => ({
-          body: { id, message: messages[messages.length - 1], cart: getCartRef.current?.() ?? [] },
-        }),
+        prepareSendMessagesRequest: ({ id, messages }) => {
+          const lead = getLeadRef.current?.() ?? null;
+          return {
+            body: {
+              id,
+              message: messages[messages.length - 1],
+              cart: getCartRef.current?.() ?? [],
+              ...(lead ? { lead } : {}),
+            },
+          };
+        },
       }),
     [],
   );

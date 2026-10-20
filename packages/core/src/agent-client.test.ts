@@ -1,13 +1,16 @@
 import { describe, it, expect } from "vitest";
 import {
+  AGENT_LEAD_STORAGE_KEY,
   AGENT_STORAGE_KEY,
   cartChangesFromMessage,
   loadStoredConversation,
+  loadStoredLead,
   messageText,
   newConversation,
   parseAgentError,
   productsFromMessage,
   saveStoredConversation,
+  saveStoredLead,
   type AgentMessage,
 } from "./agent-client";
 
@@ -206,5 +209,33 @@ describe("mensagens", () => {
       ],
     } as unknown as AgentMessage;
     expect(productsFromMessage(message).map((p) => p.id)).toEqual(["p1"]);
+  });
+});
+
+describe("lead guardado", () => {
+  it("grava e lê de volta", () => {
+    const storage = memoryStorage();
+    saveStoredLead(storage, { nome: "Ana", whatsapp: "não" });
+    expect(JSON.parse(storage.getItem(AGENT_LEAD_STORAGE_KEY)!)).toEqual({ nome: "Ana", whatsapp: "não" });
+    expect(loadStoredLead(storage)).toEqual({ nome: "Ana", whatsapp: "não" });
+  });
+
+  it("valor inválido, JSON quebrado ou storage ausente vira null", () => {
+    expect(loadStoredLead(memoryStorage({ [AGENT_LEAD_STORAGE_KEY]: '{"nome":""}' }))).toBeNull();
+    expect(loadStoredLead(memoryStorage({ [AGENT_LEAD_STORAGE_KEY]: "{" }))).toBeNull();
+    expect(loadStoredLead(null)).toBeNull();
+  });
+
+  it("storage que lança não quebra", () => {
+    const broken = {
+      getItem: () => {
+        throw new Error("bloqueado");
+      },
+      setItem: () => {
+        throw new Error("cheio");
+      },
+    } as unknown as Storage;
+    expect(loadStoredLead(broken)).toBeNull();
+    expect(() => saveStoredLead(broken, { nome: "Ana", whatsapp: "não" })).not.toThrow();
   });
 });
