@@ -20,6 +20,7 @@ vi.mock("./agent-conversations", async (importOriginal) => ({
   ensureConversation: vi.fn(async () => "ok"),
   loadHistory: vi.fn(async () => []),
   saveTurn: vi.fn(async () => {}),
+  saveConversationLead: vi.fn(async () => {}),
 }));
 // Eventos: summarizeError real, gravação registrada.
 vi.mock("./agent-events", async (importOriginal) => {
@@ -33,7 +34,7 @@ import { getAssistantModelChain } from "./ai-provider";
 import { checkAiQuota } from "./ai-usage-limits";
 import { recordAgentEvent, shouldRecordQuotaBlock } from "./agent-events";
 import { getCatalogLineItems } from "./catalog-line-items";
-import { ensureConversation, loadHistory, saveTurn } from "./agent-conversations";
+import { ensureConversation, loadHistory, saveConversationLead, saveTurn } from "./agent-conversations";
 import { createAgentHandler, failedTurnEvent, shouldSaveTurn, type AgentBuyer } from "./agent-server";
 
 const usage = {
@@ -381,6 +382,36 @@ describe("POST /api/agente", () => {
       await (await handler()(makeRequest({ ...validBody, cart }))).text();
       expect(JSON.stringify(model.doStreamCalls[0].prompt)).not.toContain("Shampoo Neutro 5L");
     });
+  });
+
+  it("visitante com lead: grava na conversa e o nome chega ao modelo", async () => {
+    const model = textModel("Oi, Ana.");
+    useModels(model);
+    const lead = { nome: "Ana", whatsapp: "não" };
+    await (await handler()(makeRequest({ ...validBody, lead }))).text();
+    expect(saveConversationLead).toHaveBeenCalledWith(expect.anything(), conversationId, lead);
+    expect(JSON.stringify(model.doStreamCalls[0].prompt)).toContain("Nome do visitante: Ana.");
+  });
+
+  it("cliente: ignora o lead", async () => {
+    const model = textModel("Oi.");
+    useModels(model);
+    await (await handler({ id: "b1", empresa: "Pet Shop X" })(makeRequest({ ...validBody, lead: { nome: "Ana", whatsapp: "não" } }))).text();
+    expect(saveConversationLead).not.toHaveBeenCalled();
+    expect(JSON.stringify(model.doStreamCalls[0].prompt)).not.toContain("Nome do visitante");
+  });
+
+  it("visitante sem lead: não grava lead", async () => {
+    useModels(textModel("Oi."));
+    await (await handler()(makeRequest(validBody))).text();
+    expect(saveConversationLead).not.toHaveBeenCalled();
+  });
+
+  it("conversa indisponível no banco: não tenta gravar o lead", async () => {
+    (ensureConversation as Mock).mockResolvedValueOnce("unavailable");
+    useModels(textModel("Oi."));
+    await (await handler()(makeRequest({ ...validBody, lead: { nome: "Ana", whatsapp: "não" } }))).text();
+    expect(saveConversationLead).not.toHaveBeenCalled();
   });
 });
 

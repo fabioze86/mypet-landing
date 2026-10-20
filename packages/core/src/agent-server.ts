@@ -20,6 +20,7 @@ import {
   ensureConversation,
   loadHistory,
   messageText,
+  saveConversationLead,
   saveTurn,
   type ConversationAccess,
 } from "./agent-conversations";
@@ -130,7 +131,7 @@ export function createAgentHandler(config: AgentConfig) {
 
     const parsed = parseAgentRequest(await req.json().catch(() => null));
     if (!parsed.ok) return errorResponse(400, "INVALID_INPUT", parsed.message);
-    const { id, message, cart } = parsed.value;
+    const { id, message, cart, lead: requestLead } = parsed.value;
 
     const buyer = await safeResolveBuyer(config, req);
     const mode: AgentMode = buyer ? "cliente" : "visitante";
@@ -177,6 +178,9 @@ export function createAgentHandler(config: AgentConfig) {
       return errorResponse(403, "CONVERSATION_FORBIDDEN", "Esta conversa não está disponível. Comece uma nova.");
     }
     const store = access === "ok" ? supabase : null;
+    // Lead do roteiro só vale para visitante; cliente já tem cadastro.
+    const lead = mode === "visitante" ? (requestLead ?? null) : null;
+    if (store && lead) await saveConversationLead(store, id, lead);
 
     const catalogTool = buildCatalogTool({ channel: config.channel, showPrices: mode === "cliente" });
     // Visitante não recebe as ferramentas de pedido; o comprador delas é o do cookie.
@@ -206,6 +210,7 @@ export function createAgentHandler(config: AgentConfig) {
         cart: mode === "cliente" ? cart : [],
         faq: config.faq,
         artigos,
+        leadNome: lead?.nome ?? null,
       });
       modelMessages = await convertToModelMessages(messages, { tools, ignoreIncompleteToolCalls: true });
       chain = getAssistantModelChain();
