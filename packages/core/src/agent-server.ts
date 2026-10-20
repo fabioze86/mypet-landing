@@ -180,7 +180,8 @@ export function createAgentHandler(config: AgentConfig) {
     const store = access === "ok" ? supabase : null;
     // Lead do roteiro só vale para visitante; cliente já tem cadastro.
     const lead = mode === "visitante" ? (requestLead ?? null) : null;
-    if (store && lead) await saveConversationLead(store, id, lead);
+    // Sem await: a gravação do lead não atrasa o início da resposta; é aguardada junto das demais.
+    const leadSave = store && lead ? saveConversationLead(store, id, lead) : null;
 
     const catalogTool = buildCatalogTool({ channel: config.channel, showPrices: mode === "cliente" });
     // Visitante não recebe as ferramentas de pedido; o comprador delas é o do cookie.
@@ -193,6 +194,7 @@ export function createAgentHandler(config: AgentConfig) {
     // Cada envio do navegador usa um id novo; id repetido (reenvio ou id de uma
     // resposta) deixaria o histórico inconsistente.
     if (history.some((item) => item.id === message.id)) {
+      await leadSave;
       await logEvent({ kind: "duplicate_message", detail: { message_id: message.id } });
       return errorResponse(409, "MESSAGE_DUPLICATE", "Esta mensagem já foi enviada. Comece uma nova conversa.");
     }
@@ -216,6 +218,7 @@ export function createAgentHandler(config: AgentConfig) {
       chain = getAssistantModelChain();
     } catch (error) {
       console.error("[agent] falha ao preparar a chamada ao modelo:", error);
+      await leadSave;
       await logEvent({
         kind: "provider_error",
         detail: { failures: [{ provider: "config", error: summarizeError(error) }] },
@@ -227,6 +230,7 @@ export function createAgentHandler(config: AgentConfig) {
     // envio. As gravações pendentes são aguardadas no fim (onEnd ou 502), para
     // a função não terminar com o insert no meio.
     const pending: Promise<void>[] = [logEvent({ kind: "turn_started", detail: { message_id: message.id } })];
+    if (leadSave) pending.push(leadSave);
 
     const results: UsageSource[] = [];
     const opened = await openStreamWithFallback(

@@ -259,6 +259,7 @@ describe("AgentShell", () => {
   it("Sair: chama /api/sair, limpa carrinho e conversa e vai para a home", async () => {
     mockViewport(false);
     window.sessionStorage.setItem("mypet-agente-conversa", "{}");
+    window.localStorage.setItem("mypet_agente_lead", "{}");
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     render(<AgentShell mode="cliente" initialQuestion={null} displayName="Ana" />);
@@ -268,11 +269,13 @@ describe("AgentShell", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/sair", expect.objectContaining({ method: "POST" }));
     expect(shellCart.clear).toHaveBeenCalled();
     expect(window.sessionStorage.getItem("mypet-agente-conversa")).toBeNull();
+    expect(window.localStorage.getItem("mypet_agente_lead")).toBeNull();
     expect(nav.goTo).toHaveBeenCalledWith("/");
   });
 
   it("Sair com falha: mostra erro e não limpa nada", async () => {
     mockViewport(false);
+    window.localStorage.setItem("mypet_agente_lead", "{}");
     vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
     render(<AgentShell mode="cliente" initialQuestion={null} displayName="Ana" />);
     await act(async () => {
@@ -280,6 +283,7 @@ describe("AgentShell", () => {
     });
     expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível sair agora. Tente de novo.");
     expect(shellCart.clear).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem("mypet_agente_lead")).toBe("{}");
     expect(nav.goTo).not.toHaveBeenCalled();
   });
 });

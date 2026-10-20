@@ -21,6 +21,8 @@ Vale só no modo `visitante`. Cliente logado (cookie `mypet_acesso`) nunca vê o
    (normais e com cadeado) aparecem.
 
 Regras:
+- Conversa restaurada sem lead (mensagens na sessão, mas sem perfil salvo): o roteiro roda
+  mesmo assim, e as perguntas aparecem depois das mensagens existentes, com o log rolado até elas.
 - Nome: obrigatório; trim; 1 a 80 caracteres. Vazio não avança (o botão de enviar já
   fica desabilitado com campo vazio).
 - WhatsApp: qualquer texto não vazio; trim; até 40 caracteres. Grava a resposta como foi

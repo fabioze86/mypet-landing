@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { formatBRL } from "@mypet/core/catalog-utils";
 import { useCart } from "@mypet/core/components/cart-provider";
-import { AGENT_STORAGE_KEY } from "@mypet/core/agent-client";
+import { AGENT_LEAD_STORAGE_KEY, AGENT_STORAGE_KEY } from "@mypet/core/agent-client";
 import { clientConfig } from "@/client.config";
 import { AgentChat, type AgentPageMode } from "./agent-chat";
 import { AccessPanel } from "./access-panel";
@@ -88,6 +88,12 @@ export function AgentShell({
     clearCart();
     try {
       window.sessionStorage.removeItem(AGENT_STORAGE_KEY);
+    } catch {
+      // storage bloqueado: nada guardado para apagar
+    }
+    try {
+      // o lead é dado pessoal: sair apaga o nome e o WhatsApp deste navegador
+      window.localStorage.removeItem(AGENT_LEAD_STORAGE_KEY);
     } catch {
       // storage bloqueado: nada guardado para apagar
     }

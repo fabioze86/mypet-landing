@@ -203,7 +203,8 @@ function AgentChatSession({
   useEffect(() => {
     const log = logRef.current;
     if (log) log.scrollTop = log.scrollHeight;
-  }, [messages, busy]);
+    // o roteiro do visitante também cresce o log: mantém a pergunta atual à vista
+  }, [messages, busy, nomeAnswer, completedLead, needsLead]);
 
   const intents = mode === "cliente" ? CLIENT_INTENTS : VISITOR_INTENTS;
   const greetingName = isVisitor ? (completedLead ?? lead)?.nome : displayName;
@@ -213,31 +214,34 @@ function AgentChatSession({
   const showWelcome = messages.length === 0 && !leadPending;
   const waiting = busy && messages[messages.length - 1]?.role === "user";
 
+  const scriptNode =
+    needsLead || completedLead ? (
+      <>
+        <p className="ag-msg">{LEAD_ASK_NAME}</p>
+        {nomeAnswer !== null && (
+          <>
+            <p className="ag-msg ag-msg--user">{nomeAnswer}</p>
+            <p className="ag-msg">{LEAD_ASK_WHATSAPP}</p>
+          </>
+        )}
+        {completedLead && <p className="ag-msg ag-msg--user">{completedLead.whatsapp}</p>}
+      </>
+    ) : null;
+
   return (
     <section className="ag-chat" aria-labelledby="ag-chat-title">
       <ChatHead />
       <div
         ref={logRef}
         className="ag-log"
-        {...(messages.length > 0 ? { role: "log", "aria-live": "polite", "aria-relevant": "additions" } : {})}
+        {...(messages.length > 0 || needsLead || completedLead ? { role: "log", "aria-live": "polite", "aria-relevant": "additions" } : {})}
       >
         {notice && (
           <p className="ag-notice" role="status">
             {notice}
           </p>
         )}
-        {(needsLead || completedLead) && (
-          <>
-            <p className="ag-msg">{LEAD_ASK_NAME}</p>
-            {nomeAnswer !== null && (
-              <>
-                <p className="ag-msg ag-msg--user">{nomeAnswer}</p>
-                <p className="ag-msg">{LEAD_ASK_WHATSAPP}</p>
-              </>
-            )}
-            {completedLead && <p className="ag-msg ag-msg--user">{completedLead.whatsapp}</p>}
-          </>
-        )}
+        {messages.length === 0 && scriptNode}
         {showWelcome ? (
           <div className="ag-welcome">
             <h2>{greeting}</h2>
@@ -290,6 +294,7 @@ function AgentChatSession({
             />
           ))
         )}
+        {messages.length > 0 && scriptNode}
         {waiting && <p className="ag-msg ag-msg--muted">Pensando…</p>}
       </div>
 
@@ -317,7 +322,7 @@ function AgentChatSession({
                 : "Seu WhatsApp ou \"não\""
               : "Pergunte qualquer coisa sobre a My Pet Brasil…"
           }
-          aria-label={needsLead ? "Sua resposta" : "Sua pergunta"}
+          aria-label={needsLead ? (nomeAnswer === null ? "Qual é o seu nome?" : "Deseja informar um WhatsApp?") : "Sua pergunta"}
           maxLength={needsLead ? (nomeAnswer === null ? LEAD_NAME_MAX : LEAD_WHATSAPP_MAX) : 500}
         />
         <button type="submit" aria-label="Enviar" disabled={busy || !input.trim() || (isVisitor && !leadReady)}>

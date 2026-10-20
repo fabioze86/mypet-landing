@@ -119,9 +119,11 @@ describe("AgentChat", () => {
     expect(screen.getByText("Antes de prosseguir, preciso de duas informações: 1 - Qual é o seu nome?")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Frete e prazos de entrega/ })).toBeNull();
 
-    const input = screen.getByRole("textbox", { name: "Sua resposta" });
+    expect(screen.getByRole("log")).toBeInTheDocument();
+    const input = screen.getByRole("textbox", { name: "Qual é o seu nome?" });
     fireEvent.change(input, { target: { value: "  Ana  " } });
     fireEvent.submit(input.closest("form")!);
+    expect(screen.getByRole("textbox", { name: "Deseja informar um WhatsApp?" })).toBe(input);
     expect(screen.getByText("Ana", { selector: ".ag-msg--user" })).toBeInTheDocument();
     expect(screen.getByText("2 - Deseja informar um WhatsApp?")).toBeInTheDocument();
     expect(chat.saveLead).not.toHaveBeenCalled();
@@ -136,10 +138,30 @@ describe("AgentChat", () => {
     expect(screen.getByRole("button", { name: /Frete e prazos de entrega/ })).toBeInTheDocument();
   });
 
+  it("visitante com conversa restaurada e sem lead: roteiro vem depois das mensagens", () => {
+    chat.lead = null;
+    chat.state.messages = [
+      { id: "a1", role: "assistant", parts: [{ type: "text", text: "Resposta antiga" }] } as unknown as AgentMessage,
+    ];
+    renderChat("visitante");
+    const antiga = screen.getByText("Resposta antiga");
+    const pergunta = screen.getByText(/Qual é o seu nome\?/);
+    expect(antiga.compareDocumentPosition(pergunta) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const input = screen.getByRole("textbox", { name: "Qual é o seu nome?" });
+    fireEvent.change(input, { target: { value: "Ana" } });
+    fireEvent.submit(input.closest("form")!);
+    expect(chat.sendText).not.toHaveBeenCalled();
+    expect(screen.getByText("2 - Deseja informar um WhatsApp?")).toBeInTheDocument();
+    fireEvent.change(input, { target: { value: "não" } });
+    fireEvent.submit(input.closest("form")!);
+    expect(chat.saveLead).toHaveBeenCalledWith({ nome: "Ana", whatsapp: "não" });
+    expect(chat.sendText).not.toHaveBeenCalled();
+  });
+
   it("visitante sem lead: nome vazio não avança", () => {
     chat.lead = null;
     renderChat("visitante");
-    const input = screen.getByRole("textbox", { name: "Sua resposta" });
+    const input = screen.getByRole("textbox", { name: "Qual é o seu nome?" });
     fireEvent.change(input, { target: { value: "   " } });
     fireEvent.submit(input.closest("form")!);
     expect(screen.queryByText("2 - Deseja informar um WhatsApp?")).toBeNull();
@@ -149,7 +171,7 @@ describe("AgentChat", () => {
     chat.lead = null;
     const view = renderChat("visitante", { initialQuestion: "Tem shampoo?" });
     expect(chat.sendText).not.toHaveBeenCalled();
-    const input = screen.getByRole("textbox", { name: "Sua resposta" });
+    const input = screen.getByRole("textbox", { name: "Qual é o seu nome?" });
     fireEvent.change(input, { target: { value: "Ana" } });
     fireEvent.submit(input.closest("form")!);
     fireEvent.change(input, { target: { value: "não" } });
