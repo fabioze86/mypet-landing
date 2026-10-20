@@ -50,7 +50,7 @@ export function buildCatalogTool({ channel, showPrices }: { channel: string; sho
     description:
       "Busca produtos da tabela por tipo ou nome de produto. Use para qualquer pergunta sobre produtos, marcas ou disponibilidade.",
     inputSchema: z.object({
-      query: z.string().min(1).describe("Tipo ou nome do produto, ex.: 'shampoo neutro', 'ração filhote'"),
+      query: z.string().min(1).describe("Tipo ou nome do produto, ex.: 'shampoo neutro', 'kit banho'"),
       marca: z.string().optional().describe("Marca do produto, se a pessoa citou uma"),
     }),
     execute: async ({ query, marca }) => {

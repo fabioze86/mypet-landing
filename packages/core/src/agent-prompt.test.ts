@@ -129,4 +129,23 @@ describe("buildAgentInstructions", () => {
     const vazio = buildAgentInstructions({ ...base, mode: "cliente" });
     expect(vazio).toContain("O pedido atual está vazio.");
   });
+
+  it("visitante: nome do lead numa linha só, quando houver", () => {
+    const comNome = buildAgentInstructions({ ...base, mode: "visitante", leadNome: "Ana\nSouza" });
+    expect(comNome).toContain("Você atende visitantes que ainda não fizeram cadastro. Nome do visitante: Ana Souza.");
+    expect(visitante).not.toContain("Nome do visitante");
+  });
+
+  it("cliente: ignora o nome do lead", () => {
+    const prompt = buildAgentInstructions({ ...base, mode: "cliente", leadNome: "Ana" });
+    expect(prompt).not.toContain("Nome do visitante");
+  });
+
+  it("não trabalha com ração e usa kits nos exemplos, nos dois modos", () => {
+    for (const prompt of [visitante, cliente]) {
+      expect(prompt).toContain("A My Pet Brasil não trabalha com ração.");
+      expect(prompt).toContain("use kits, shampoo, camas ou brinquedos");
+      expect(prompt).toContain("Se pedirem ração, diga que a My Pet Brasil não trabalha com ração.");
+    }
+  });
 });

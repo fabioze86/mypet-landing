@@ -61,6 +61,13 @@ describe("buscar_produtos", () => {
     expect(out.produtos.every((p: { unitPrice: unknown; priceLabel: unknown }) => p.unitPrice === null && p.priceLabel === null)).toBe(true);
   });
 
+  it("exemplos da busca não citam ração", () => {
+    const catalogTool = buildCatalogTool({ channel: "mypetbrasil", showPrices: false });
+    const shape = (catalogTool.inputSchema as unknown as { shape: { query: { description?: string } } }).shape;
+    expect(shape.query.description).toContain("kit banho");
+    expect(shape.query.description).not.toMatch(/ração/i);
+  });
+
   it("cliente: saída com preço e dados para o cartão", async () => {
     const out = await run(true, { query: "shampoo neutro" });
     expect(out.produtos[0]).toEqual({

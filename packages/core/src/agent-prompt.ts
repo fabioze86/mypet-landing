@@ -29,12 +29,12 @@ function formatCart(cart: AgentCartItem[]): string {
   return cart.map((item) => `- ${item.qty} x ${item.name} (id ${item.id})`).join("\n");
 }
 
-const MAX_EMPRESA_CHARS = 120;
+const MAX_LINE_CHARS = 120;
 
-// O nome da empresa vem do cadastro: uma linha só e curto, para não virar
-// bloco de instruções no prompt.
-function formatEmpresa(empresa: string | null): string | null {
-  const flat = empresa?.replace(/\s+/g, " ").trim().slice(0, MAX_EMPRESA_CHARS).trim();
+// Nome da empresa (cadastro) e nome do visitante (roteiro): uma linha só e
+// curto, para não virar bloco de instruções no prompt.
+function formatShortLine(value: string | null): string | null {
+  const flat = value?.replace(/\s+/g, " ").trim().slice(0, MAX_LINE_CHARS).trim();
   return flat || null;
 }
 
@@ -48,6 +48,7 @@ export function buildAgentInstructions({
   cart,
   faq,
   artigos,
+  leadNome = null,
 }: {
   siteName: string;
   mode: AgentMode;
@@ -55,12 +56,14 @@ export function buildAgentInstructions({
   cart: AgentCartItem[];
   faq: readonly AgentFaqItem[];
   artigos: ArtigoAjuda[];
+  leadNome?: string | null;
 }): string {
   const isCliente = mode === "cliente";
-  const empresaLinha = formatEmpresa(empresa);
+  const empresaLinha = formatShortLine(empresa);
+  const leadLinha = formatShortLine(leadNome);
   const audience = isCliente
     ? `Você atende um cliente cadastrado${empresaLinha ? `: ${empresaLinha}` : ""}.`
-    : "Você atende visitantes que ainda não fizeram cadastro.";
+    : `Você atende visitantes que ainda não fizeram cadastro.${leadLinha ? ` Nome do visitante: ${leadLinha}.` : ""}`;
   const fallback = isCliente
     ? "indique /central-de-ajuda"
     : "indique /central-de-ajuda e convide o visitante a se cadastrar";
@@ -81,7 +84,7 @@ Regras obrigatórias:
 4. Responda sempre em português, em texto simples (sem markdown), de 1 a 4 frases, direto ao ponto.
 5. Não use as palavras "atacado" nem "cotação", e não chame a ${siteName} de "loja".
 6. Se a pergunta não tiver relação com a ${siteName}, cadastro, pedidos, pagamento, entrega ou produtos pet, diga educadamente que só ajuda com dúvidas sobre a ${siteName}.
-7. Para qualquer pergunta sobre produtos, marcas ou disponibilidade, use a ferramenta "buscar_produtos" antes de responder. Busque pelo tipo ou nome do produto (ex.: "shampoo neutro"), não pela frase inteira. Nunca cite um produto que não tenha vindo dessa ferramenta nesta conversa. Não escreva preços no texto: os produtos encontrados aparecem em cartões logo abaixo da sua resposta. Nunca liste os produtos no texto nem use markdown, imagens ou links: os produtos aparecem em cartões logo abaixo da sua resposta. Diga em uma frase o que encontrou (ex.: "Encontrei 6 opções de shampoo neutro.") e pergunte o que o cliente quer fazer. Se a busca não trouxer nada, diga que não encontrou e sugira outro termo. Se uma ferramenta der erro, diga que não conseguiu consultar agora e peça para tentar de novo em instantes; nunca conclua que não há pedidos, produtos ou reposição por causa de um erro.
+7. Para qualquer pergunta sobre produtos, marcas ou disponibilidade, use a ferramenta "buscar_produtos" antes de responder. Busque pelo tipo ou nome do produto (ex.: "shampoo neutro"), não pela frase inteira. A ${siteName} não trabalha com ração. Ao dar exemplos de produtos, use kits, shampoo, camas ou brinquedos. Se pedirem ração, diga que a ${siteName} não trabalha com ração. Nunca cite um produto que não tenha vindo dessa ferramenta nesta conversa. Não escreva preços no texto: os produtos encontrados aparecem em cartões logo abaixo da sua resposta. Nunca liste os produtos no texto nem use markdown, imagens ou links: os produtos aparecem em cartões logo abaixo da sua resposta. Diga em uma frase o que encontrou (ex.: "Encontrei 6 opções de shampoo neutro.") e pergunte o que o cliente quer fazer. Se a busca não trouxer nada, diga que não encontrou e sugira outro termo. Se uma ferramenta der erro, diga que não conseguiu consultar agora e peça para tentar de novo em instantes; nunca conclua que não há pedidos, produtos ou reposição por causa de um erro.
 
 BASE DE CONHECIMENTO:
 ${formatKnowledge(faq, artigos)}
