@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import type { UIMessage } from "ai";
 import { fakeSupabase, type FakeCall } from "./test-utils/fake-supabase";
-import { ensureConversation, loadHistory, messageText, saveTurn } from "./agent-conversations";
+import { ensureConversation, loadHistory, messageText, saveConversationLead, saveTurn } from "./agent-conversations";
 
 // Chamadas registradas depois da primeira chamada de `method` (ex.: o .eq que escopa um update).
 function callsAfter(calls: FakeCall[], method: string) {
@@ -171,6 +171,23 @@ describe("ensureConversation", () => {
   it("outro erro no insert vira unavailable", async () => {
     const { client } = fakeSupabase({ agent_conversations: [{ data: null }, { error: { message: "down" } }] });
     expect(await ensureConversation(client, { ...base, buyerId: null })).toBe("unavailable");
+  });
+});
+
+describe("saveConversationLead", () => {
+  it("grava nome e WhatsApp só se a conversa ainda não tiver lead", async () => {
+    const { client, calls } = fakeSupabase({ agent_conversations: [{}] });
+    await saveConversationLead(client, "conv-1", { nome: "Ana", whatsapp: "não" });
+    expect(calls).toEqual([
+      { table: "agent_conversations", method: "update", args: [{ lead_nome: "Ana", lead_whatsapp: "não" }] },
+      { table: "agent_conversations", method: "eq", args: ["id", "conv-1"] },
+      { table: "agent_conversations", method: "is", args: ["lead_nome", null] },
+    ]);
+  });
+
+  it("erro do banco não lança", async () => {
+    const { client } = fakeSupabase({ agent_conversations: [{ error: { message: "down" } }] });
+    await expect(saveConversationLead(client, "conv-1", { nome: "Ana", whatsapp: "não" })).resolves.toBeUndefined();
   });
 });
 

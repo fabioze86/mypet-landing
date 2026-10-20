@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { UIMessage } from "ai";
 import type { AgentMode } from "./agent-prompt";
+import type { AgentLead } from "./agent-lead";
 
 // Conversas do agente no Supabase (service role). Falhas do banco nunca
 // derrubam a resposta: o agente segue sem histórico e sem gravar.
@@ -102,6 +103,25 @@ export async function ensureConversation(
   } catch (error) {
     console.error("[agent-conversations] falha ao abrir conversa:", error);
     return "unavailable";
+  }
+}
+
+// Lead do roteiro do visitante. Só preenche conversa ainda sem lead: o primeiro
+// que o visitante informou fica.
+export async function saveConversationLead(
+  supabase: SupabaseClient,
+  conversationId: string,
+  lead: AgentLead,
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("agent_conversations")
+      .update({ lead_nome: lead.nome, lead_whatsapp: lead.whatsapp })
+      .eq("id", conversationId)
+      .is("lead_nome", null);
+    if (error) throw new Error(error.message);
+  } catch (error) {
+    console.error("[agent-conversations] falha ao gravar o lead:", error);
   }
 }
 
