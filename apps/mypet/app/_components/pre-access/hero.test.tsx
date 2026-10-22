@@ -13,7 +13,7 @@ describe("Hero", () => {
   it("tem um CTA para a página de cadastro", () => {
     render(<Hero />);
     const link = screen.getByRole("link", { name: "Abrir tabela de preços" });
-    expect(link).toHaveAttribute("href", "/cadastro");
+    expect(link).toHaveAttribute("href", "/cadastro?next=%2Fpedido-rapido");
   });
 
   it("tem um CTA para o agente", () => {

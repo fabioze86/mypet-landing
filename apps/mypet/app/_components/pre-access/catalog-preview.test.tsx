@@ -20,6 +20,6 @@ describe("CatalogPreview", () => {
     const { container } = render(<CatalogPreview categories={cats} thumbs={{}} />);
     const links = Array.from(container.querySelectorAll("a"));
     expect(links.length).toBeGreaterThan(0);
-    expect(links.every((a) => a.getAttribute("href") === "/cadastro")).toBe(true);
+    expect(links.every((a) => a.getAttribute("href") === "/cadastro?next=%2Fpedido-rapido")).toBe(true);
   });
 });

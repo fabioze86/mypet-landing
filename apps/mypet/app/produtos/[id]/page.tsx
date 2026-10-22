@@ -5,7 +5,7 @@ import { getCategoryPath } from "@mypet/core/catalog-utils";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SiteNav } from "@mypet/core/components/site-nav";
+import { HubHeaderSlot } from "../../_components/hub/hub-header";
 import { ProductVariantPanel } from "@mypet/core/components/product-variant-panel";
 import { productGroupJsonLd, productJsonLd, breadcrumbJsonLd, canonicalUrl, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
@@ -42,7 +42,6 @@ export default async function ProductPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const categories = await getCategories();
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
       <style>{`
@@ -165,7 +164,7 @@ export default async function ProductPage({
 
       <LeadGateProvider>
         {/* NAV */}
-        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" faqHref="/perguntas-frequentes" />
+        <HubHeaderSlot />
 
         {/* CONTAINER */}
         <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>

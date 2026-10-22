@@ -81,7 +81,7 @@ describe("LandingPage", () => {
 
   it("usa o mesmo alvo de CTA de conversão no header, hero e faixa final", async () => {
     const { container } = render(await LandingPage());
-    const cadastroLinks = Array.from(container.querySelectorAll('a[href="/cadastro"]'));
+    const cadastroLinks = Array.from(container.querySelectorAll('a[href="/cadastro?next=%2Fpedido-rapido"]'));
     expect(cadastroLinks.length).toBeGreaterThanOrEqual(2);
   });
 

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getCategories } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { CategoryListing } from "@mypet/core/components/category-listing";
-import { SiteNav } from "@mypet/core/components/site-nav";
+import { HubHeaderSlot } from "../../_components/hub/hub-header";
 import type { Palette } from "@mypet/core/theme";
 import { clientConfig } from "@/client.config";
 import { canonicalUrl } from "@mypet/core/seo";
@@ -37,8 +37,6 @@ export default async function CategoriaPage({
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const categories = await getCategories();
-
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
       <style>{`
@@ -162,7 +160,7 @@ export default async function CategoriaPage({
       `}</style>
 
       <LeadGateProvider>
-        <SiteNav categories={categories} showMegaMenu={false} pedidoRapidoHref="/pedido-rapido" faqHref="/perguntas-frequentes" />
+        <HubHeaderSlot />
 
         <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
           <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando categoria…</p>}>

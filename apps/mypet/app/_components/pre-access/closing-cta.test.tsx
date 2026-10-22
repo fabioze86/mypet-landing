@@ -7,6 +7,6 @@ describe("ClosingCta", () => {
     render(<ClosingCta />);
     const region = screen.getByRole("region", { name: /monte seu próximo pedido pela tabela/i });
     const link = within(region).getByRole("link", { name: "Liberar tabela de preços" });
-    expect(link).toHaveAttribute("href", "/cadastro");
+    expect(link).toHaveAttribute("href", "/cadastro?next=%2Fpedido-rapido");
   });
 });

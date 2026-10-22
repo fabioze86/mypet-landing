@@ -1,3 +1,4 @@
+import { cadastroHref } from "../hub/doors";
 import Image from "next/image";
 
 export function Hero() {
@@ -30,7 +31,7 @@ export function Hero() {
             para liberar a tabela.
           </p>
           <div className="pa-hero-actions">
-            <a href="/cadastro" className="pa-btn pa-btn-primary">Abrir tabela de preços</a>
+            <a href={cadastroHref("/pedido-rapido")} className="pa-btn pa-btn-primary">Abrir tabela de preços</a>
             <a href="/agente" className="pa-btn pa-btn-ghost pa-btn-on-dark">Perguntar ao agente</a>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { cadastroHref } from "../hub/doors";
 // Server component. Recebe categorias + mapa opcional de imagens (id -> url).
 // Só nome e foto. NENHUM preço, NENHUM SKU, NENHUM ProductCard nesta página.
 
@@ -32,7 +33,7 @@ export function CatalogPreview({
             const src = thumbs[category.id];
             return (
               <li key={category.id}>
-                <a className="pa-cat-tile" href="/cadastro">
+                <a className="pa-cat-tile" href={cadastroHref("/pedido-rapido")}>
                   <span className="pa-cat-media">
                     {src ? (
                       <img src={src} alt="" loading="lazy" decoding="async" />

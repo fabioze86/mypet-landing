@@ -7,8 +7,8 @@ import { requireBuyer } from "@/lib/require-buyer";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
 import { clientConfig } from "@/client.config";
 import { BUYER_STYLES } from "../_components/buyer-area/styles";
-import { HubHeaderSlot } from "../_components/hub/hub-header";
-import { cadastroHref } from "../_components/hub/doors";
+import { HubNav } from "../_components/hub/hub-nav";
+import { cadastroHref, viewerFromBuyer } from "../_components/hub/doors";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -34,6 +34,8 @@ export async function PedidosContent() {
   const orders = await getOrdersByBuyer(getHubServiceClient(), buyer.id);
 
   return (
+    <>
+    <HubNav viewer={viewerFromBuyer(buyer)} />
     <main className="ba-main ba-main--narrow">
       <h1 className="ba-h1" style={{ marginBottom: 20 }}>Meus pedidos</h1>
 
@@ -102,6 +104,7 @@ export async function PedidosContent() {
         </div>
       )}
     </main>
+    </>
   );
 }
 
@@ -111,7 +114,6 @@ export default function PedidosPage() {
       <style>{BUYER_STYLES}</style>
 
       <LeadGateProvider>
-        <HubHeaderSlot />
         <Suspense fallback={null}>
           <PedidosContent />
         </Suspense>
