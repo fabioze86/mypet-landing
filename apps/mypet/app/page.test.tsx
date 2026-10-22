@@ -12,9 +12,17 @@ vi.mock("./_data/category-thumbs", () => ({
   getCategoryThumbs: async () => ({}),
 }));
 
+vi.mock("./_components/hub/hub-header", () => ({ HubHeaderSlot: () => <header data-testid="hub-header" /> }));
+
 import LandingPage from "./page";
 
 describe("LandingPage", () => {
+  it("usa o cabeçalho e o rodapé do hub", async () => {
+    render(await LandingPage());
+    expect(screen.getByTestId("hub-header")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Central de ajuda" })).toHaveAttribute("href", "/central-de-ajuda");
+  });
+
   it("renderiza condições, como funciona, FAQ, mesmos preços e CTA final", async () => {
     render(await LandingPage());
     expect(screen.getByText("Pedido mínimo")).toBeInTheDocument();

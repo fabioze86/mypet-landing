@@ -254,6 +254,9 @@ export const LANDING_STYLES = `
   .pa-help-search input { flex: 1; padding: 12px 14px; border: 1.5px solid var(--pa-line); border-radius: var(--pa-r-input); font-size: 15px; font-family: inherit; }
   .pa-help-search button { padding: 12px 20px; border: 0; border-radius: var(--pa-r-input); background: var(--pa-green); color: #fff; font-family: var(--pa-geist); font-weight: 600; cursor: pointer; }
   .pa-help-search button:hover { background: var(--pa-green-dark); }
+  .pa-help-quick { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 14px; }
+  .pa-help-quick a { color: var(--pa-muted); text-decoration: none; font-weight: 500; font-size: 14px; }
+  .pa-help-quick a:hover, .pa-help-quick a[aria-current="page"] { color: var(--pa-navy); font-weight: 600; }
 
   /* hub: o que o cadastro libera */
   .hub-unlocks { margin-top: 24px; }

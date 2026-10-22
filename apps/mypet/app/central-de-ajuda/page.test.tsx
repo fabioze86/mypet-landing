@@ -9,9 +9,19 @@ vi.mock("@mypet/core/help-center", () => ({
   getCategoriaIdsComArtigosPublicados: async () => ["c1"],
 }));
 
+vi.mock("../_components/hub/hub-header", () => ({
+  HubHeaderSlot: ({ current }: { current?: string }) => <header data-testid="hub-header" data-current={current} />,
+}));
+
 import CentralDeAjudaPage from "./page";
 
 describe("CentralDeAjudaPage", () => {
+  it("usa o cabeçalho do hub com Dúvidas marcada e tem busca na página", async () => {
+    render(await CentralDeAjudaPage());
+    expect(screen.getByTestId("hub-header")).toHaveAttribute("data-current", "duvidas");
+    expect(screen.getByRole("searchbox")).toHaveAttribute("name", "q");
+  });
+
   it("lista as categorias com artigo publicado como link", async () => {
     render(await CentralDeAjudaPage());
     expect(screen.getByText("Pedido mínimo e descontos")).toBeInTheDocument();

@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 import { getArtigoAjudaPublicadoBySlug, getArtigosAjudaPublicadosPorCategoria } from "@mypet/core/help-center";
 import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
+import { HubHeaderSlot } from "../../../_components/hub/hub-header";
+import { HubFooter } from "../../../_components/hub/hub-footer";
 import { LANDING_STYLES } from "../../../_components/pre-access/styles";
 import { renderizarMarkdown } from "../../markdown";
 
-const { name: SITE_NAME, logo } = clientConfig;
+const { name: SITE_NAME } = clientConfig;
 
 export async function generateMetadata({
   params,
@@ -33,17 +35,7 @@ export default function ArtigoAjudaPage({
     <>
       <style>{LANDING_STYLES}</style>
 
-      <header className="pa-header">
-        <div className="pa-wrap pa-header-row">
-          <a href="/" className="pa-brand" style={{ textDecoration: "none" }}>
-            <span aria-hidden>{logo.emoji}</span>
-            <span>{SITE_NAME}</span>
-          </a>
-          <nav className="pa-nav" aria-label="Seções da página">
-            <a href="/central-de-ajuda/busca" className="pa-nav-cta">Buscar</a>
-          </nav>
-        </div>
-      </header>
+      <HubHeaderSlot current="duvidas" />
 
       <main>
         <Suspense fallback={<p className="pa-help-empty">Carregando artigo…</p>}>
@@ -51,15 +43,7 @@ export default function ArtigoAjudaPage({
         </Suspense>
       </main>
 
-      <footer className="pa-footer">
-        <div className="pa-wrap pa-footer-row">
-          <div className="pa-footer-brand">
-            <span aria-hidden>{logo.emoji}</span>
-            <span>{SITE_NAME}</span>
-          </div>
-          <small>© {SITE_NAME}.</small>
-        </div>
-      </footer>
+      <HubFooter />
     </>
   );
 }

@@ -10,10 +10,11 @@ import { CommercialConditions } from "./_components/pre-access/commercial-condit
 import { HowItWorks } from "./_components/pre-access/how-it-works";
 import { CatalogPreview } from "./_components/pre-access/catalog-preview";
 import { ClosingCta } from "./_components/pre-access/closing-cta";
+import { HubHeaderSlot } from "./_components/hub/hub-header";
+import { HubFooter } from "./_components/hub/hub-footer";
 import { LANDING_STYLES } from "./_components/pre-access/styles";
-import { OFFICIAL_SITE_URL } from "./pre-access-content";
 
-const { name: SITE_NAME, tagline: TAGLINE, logo } = clientConfig;
+const { name: SITE_NAME } = clientConfig;
 
 export function generateMetadata(): Metadata {
   return {
@@ -33,24 +34,7 @@ export default async function LandingPage() {
     <>
       <style>{LANDING_STYLES}</style>
 
-      <header className="pa-header">
-        <div className="pa-wrap pa-header-row">
-          <div className="pa-brand">
-            <span aria-hidden>{logo.emoji}</span>
-            <span>{SITE_NAME}</span>
-          </div>
-          <nav className="pa-nav" aria-label="Seções da página">
-            <a href="#como-funciona">Como funciona</a>
-            <a href="#faq">Dúvidas</a>
-            <a href="/perguntas-frequentes">Todas as dúvidas</a>
-            <a href="#condicoes">Condições</a>
-            <a href="#categorias">Categorias</a>
-            <a href={OFFICIAL_SITE_URL} target="_blank" rel="noopener noreferrer">mypetbrasil.com</a>
-            <a href="/agente">Agente My Pet</a>
-            <a href="/cadastro" className="pa-nav-cta">Abrir tabela</a>
-          </nav>
-        </div>
-      </header>
+      <HubHeaderSlot />
 
       <main>
         <Hero />
@@ -62,26 +46,7 @@ export default async function LandingPage() {
         <ClosingCta />
       </main>
 
-      <footer className="pa-footer">
-        <div className="pa-wrap pa-footer-row">
-          <div className="pa-footer-brand">
-            <span aria-hidden>{logo.emoji}</span>
-            <span>{SITE_NAME} - {TAGLINE}</span>
-          </div>
-          <small>
-            © {SITE_NAME}. Dados de CNPJ e WhatsApp usados apenas para liberar a tabela de preços.
-            {" "}Desenvolvido por{" "}
-            <a
-              href="https://www.zemann.com.br"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "inherit", textDecoration: "underline" }}
-            >
-              Zemann.ai
-            </a>
-          </small>
-        </div>
-      </footer>
+      <HubFooter />
     </>
   );
 }

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { buscarArtigosAjudaPublicados } from "@mypet/core/help-center";
 import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
+import { HubHeaderSlot } from "../../_components/hub/hub-header";
+import { HubFooter } from "../../_components/hub/hub-footer";
 import { LANDING_STYLES } from "../../_components/pre-access/styles";
 
-const { name: SITE_NAME, logo } = clientConfig;
+const { name: SITE_NAME } = clientConfig;
 
 export function generateMetadata(): Metadata {
   return {
@@ -24,14 +26,7 @@ export default function BuscaAjudaPage({
     <>
       <style>{LANDING_STYLES}</style>
 
-      <header className="pa-header">
-        <div className="pa-wrap pa-header-row">
-          <a href="/" className="pa-brand" style={{ textDecoration: "none" }}>
-            <span aria-hidden>{logo.emoji}</span>
-            <span>{SITE_NAME}</span>
-          </a>
-        </div>
-      </header>
+      <HubHeaderSlot current="duvidas" />
 
       <main>
         <Suspense fallback={<p className="pa-help-empty">Carregando busca…</p>}>
@@ -39,15 +34,7 @@ export default function BuscaAjudaPage({
         </Suspense>
       </main>
 
-      <footer className="pa-footer">
-        <div className="pa-wrap pa-footer-row">
-          <div className="pa-footer-brand">
-            <span aria-hidden>{logo.emoji}</span>
-            <span>{SITE_NAME}</span>
-          </div>
-          <small>© {SITE_NAME}.</small>
-        </div>
-      </footer>
+      <HubFooter />
     </>
   );
 }
