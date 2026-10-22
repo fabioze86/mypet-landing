@@ -76,7 +76,7 @@ function assistantWithProducts(priced: boolean): AgentMessage {
         input: { query: "shampoo" },
         output: { total: 1, produtos: [priced ? product : { ...product, unitPrice: null, priceLabel: null }] },
       },
-      { type: "text", text: "Encontrei estas opções. Veja também /central-de-ajuda/a/frete." },
+      { type: "text", text: "Encontrei estas opções. Veja também /central-de-ajuda/a/frete e /catalogo." },
     ],
   } as unknown as AgentMessage;
 }
@@ -407,6 +407,7 @@ describe("AgentChat", () => {
       "href",
       "/central-de-ajuda/a/frete",
     );
+    expect(screen.getByRole("link", { name: "/catalogo" })).toHaveAttribute("href", "/catalogo");
   });
 
   it("cliente: produtos com preço e link para a tabela", () => {

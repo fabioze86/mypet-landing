@@ -64,7 +64,7 @@ const DEFAULT_GREETING = "Como posso te ajudar hoje?";
 
 // Caminhos internos citados pelo agente viram links.
 const LINK_PATTERN =
-  /(?<![\w/.])(\/(?:central-de-ajuda(?:\/[a-z0-9-]+)*|cadastro|perguntas-frequentes|pedido-rapido|pedidos))(?![\w-])/g;
+  /(?<![\w/.])(\/(?:central-de-ajuda(?:\/[a-z0-9-]+)*|cadastro|catalogo|perguntas-frequentes|pedido-rapido|pedidos))(?![\w-])/g;
 
 function renderWithLinks(text: string) {
   return text.split(LINK_PATTERN).map((part, i) =>
