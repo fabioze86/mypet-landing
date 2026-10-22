@@ -44,27 +44,6 @@ export const commercialConditions = [
   },
 ] as const;
 
-export const quickAccessSteps = [
-  {
-    id: "cnpj-email",
-    icon: "IdentificationCard",
-    title: "Informe seu CNPJ",
-    body: "Cadastro rápido para liberar a tabela.",
-  },
-  {
-    id: "consulta",
-    icon: "MagnifyingGlass",
-    title: "Consulte os preços",
-    body: "Pesquise pelo nome, SKU, categoria ou marca.",
-  },
-  {
-    id: "pedido",
-    icon: "ShoppingCart",
-    title: "Envie seu pedido pelo WhatsApp",
-    body: "Informe as quantidades e mande o pedido pronto para o nosso time.",
-  },
-] as const;
-
 // "Mesma My Pet, mesmos preços": responde a dúvida "compro por qual site?".
 export const whyBuyPoints = [
   {
@@ -117,35 +96,6 @@ export const steps = [
     icon: "ShoppingCart",
     title: "Envie pelo WhatsApp",
     body: "Seu pedido chega pronto no WhatsApp da My Pet. Nosso time confirma estoque, frete e pagamento e fecha com você.",
-  },
-] as const;
-
-// TODO: substituir por depoimentos reais de lojistas (texto + nome + cidade +
-// loja). Os três abaixo são fictícios e existem só para o layout não quebrar.
-export const testimonials = [
-  {
-    id: "t1",
-    quote:
-      "Comecei comprando pouco para testar o mix. Hoje faço pedido toda semana e a margem do balcão melhorou.",
-    name: "Renata Alcântara",
-    city: "Sorocaba, SP",
-    store: "Pet Vida",
-  },
-  {
-    id: "t2",
-    quote:
-      "O que pesou foi ver pedido mínimo e prazo antes de entrar. Cadastrei o CNPJ e já estava comprando no mesmo dia.",
-    name: "Marcos Beltrão",
-    city: "Contagem, MG",
-    store: "Mundo Animal Contagem",
-  },
-  {
-    id: "t3",
-    quote:
-      "Recebo dentro do prazo combinado e o frete fecha certo pelo CEP. Parou de ser aposta.",
-    name: "Juliana Prates",
-    city: "Londrina, PR",
-    store: "Casa do Bicho",
   },
 ] as const;
 
