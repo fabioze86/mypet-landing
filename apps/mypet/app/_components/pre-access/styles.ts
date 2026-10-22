@@ -185,6 +185,9 @@ export const LANDING_STYLES = `
   .pa-footer-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
   .pa-footer-brand { display: flex; align-items: center; gap: 8px; font-family: var(--pa-geist); font-weight: 600; font-size: 14px; color: #fff; }
   .pa-footer small { color: rgba(255,255,255,0.55); font-size: 12px; max-width: 54ch; }
+  .pa-footer-links { display: flex; gap: 18px; }
+  .pa-footer-links a { color: rgba(255,255,255,0.82); font-size: 13px; text-decoration: none; }
+  .pa-footer-links a:hover { color: #fff; text-decoration: underline; }
 
   @media (prefers-reduced-motion: no-preference) {
     .pa-btn:active, .pa-btn-hero-ghost:active { transform: translateY(1px); }
