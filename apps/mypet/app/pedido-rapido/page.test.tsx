@@ -23,9 +23,9 @@ beforeEach(() => {
 });
 
 describe("PedidoRapidoPage", () => {
-  it("redireciona para /entrar quando não há comprador", async () => {
+  it("redireciona para o cadastro com volta para a tabela quando não há comprador", async () => {
     requireBuyer.mockResolvedValue(null);
     await expect(PedidoRapidoPageBody()).rejects.toThrow("REDIRECT");
-    expect(redirect).toHaveBeenCalledWith("/entrar");
+    expect(redirect).toHaveBeenCalledWith("/cadastro?next=%2Fpedido-rapido");
   });
 });

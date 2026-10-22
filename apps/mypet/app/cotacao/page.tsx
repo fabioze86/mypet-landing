@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCategories } from "@mypet/core/catalog";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
-import { SiteNav } from "@mypet/core/components/site-nav";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
 import { BUYER_STYLES } from "../_components/buyer-area/styles";
+import { HubNav } from "../_components/hub/hub-nav";
+import { cadastroHref, viewerFromBuyer } from "../_components/hub/doors";
 import { CotacaoContent } from "./cotacao-content";
 
 const { palette: PALETTE } = clientConfig;
@@ -22,24 +22,14 @@ export default function CotacaoPage() {
 // exported for tests
 export async function CotacaoPageBody() {
   const buyer = await requireBuyer();
-  if (!buyer) redirect("/");
-
-  const categories = await getCategories();
+  if (!buyer) redirect(cadastroHref("/cotacao"));
 
   return (
     <div className="ba-page">
       <style>{BUYER_STYLES}</style>
 
       <LeadGateProvider>
-        <SiteNav
-          categories={categories}
-          showMegaMenu={false}
-          homeHref="/agente"
-          agenteHref="/agente"
-          pedidoRapidoHref="/pedido-rapido"
-          pedidosHref="/pedidos"
-          faqHref="/perguntas-frequentes"
-        />
+        <HubNav viewer={viewerFromBuyer(buyer)} />
 
         <main className="ba-main ba-main--narrow">
           <Link href="/pedido-rapido" className="ba-back">

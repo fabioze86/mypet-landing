@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { SiteNav } from "@mypet/core/components/site-nav";
 import { getCategories, getBrands } from "@mypet/core/catalog";
 import { getCatalogLineItems } from "@mypet/core/catalog-line-items";
 import { buildCategoryTree, flattenCategoryTree } from "@mypet/core/catalog-utils";
@@ -9,6 +8,8 @@ import type { Channel } from "@mypet/core/channels";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
 import { BUYER_STYLES } from "../_components/buyer-area/styles";
+import { HubNav } from "../_components/hub/hub-nav";
+import { cadastroHref, viewerFromBuyer } from "../_components/hub/doors";
 import { PedidoRapidoTable } from "./pedido-rapido-table";
 
 const { palette: PALETTE } = clientConfig;
@@ -29,7 +30,7 @@ export default function PedidoRapidoPage() {
 // exported for tests
 export async function PedidoRapidoPageBody() {
   const buyer = await requireBuyer();
-  if (!buyer) redirect("/entrar");
+  if (!buyer) redirect(cadastroHref("/pedido-rapido"));
 
   const channel = clientConfig.catalogChannel as Channel;
   const [categories, brands, firstPage] = await Promise.all([
@@ -42,15 +43,7 @@ export async function PedidoRapidoPageBody() {
   return (
     <div className="ba-page">
       <style>{BUYER_STYLES}</style>
-      <SiteNav
-        categories={categories}
-        showMegaMenu={false}
-        homeHref="/agente"
-        agenteHref="/agente"
-        pedidoRapidoHref="/pedido-rapido"
-        pedidosHref="/pedidos"
-        faqHref="/perguntas-frequentes"
-      />
+      <HubNav viewer={viewerFromBuyer(buyer)} current="tabela" />
       <main className="ba-main">
         <h1 className="ba-h1">Tabela de preços</h1>
         <p className="ba-lead">

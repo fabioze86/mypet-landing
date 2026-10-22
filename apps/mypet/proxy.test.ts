@@ -27,10 +27,10 @@ describe("proxy", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
-  it("redireciona o catálogo digital anônimo para /", async () => {
+  it("redireciona o catálogo digital anônimo para o cadastro com volta ao catálogo", async () => {
     for (const path of ["/catalogo", "/catalogo/index.html"]) {
       const res = await proxy(fakeRequest(`https://app.test${path}`));
-      expect(res.headers.get("location")).toBe("https://app.test/");
+      expect(res.headers.get("location")).toBe("https://app.test/cadastro?next=%2Fcatalogo");
     }
   });
 

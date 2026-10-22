@@ -3,12 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getHubServiceClient } from "@mypet/core/supabase";
 import { getOrdersByBuyer } from "@mypet/core/orders-server";
-import { getCategories } from "@mypet/core/catalog";
 import { requireBuyer } from "@/lib/require-buyer";
 import { LeadGateProvider } from "@mypet/core/components/lead-gate";
-import { SiteNav } from "@mypet/core/components/site-nav";
 import { clientConfig } from "@/client.config";
 import { BUYER_STYLES } from "../_components/buyer-area/styles";
+import { HubHeaderSlot } from "../_components/hub/hub-header";
+import { cadastroHref } from "../_components/hub/doors";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -29,7 +29,7 @@ const STATUS_COLOR: Record<string, { bg: string; fg: string }> = {
 // exported for tests
 export async function PedidosContent() {
   const buyer = await requireBuyer();
-  if (!buyer) redirect("/");
+  if (!buyer) redirect(cadastroHref("/pedidos"));
 
   const orders = await getOrdersByBuyer(getHubServiceClient(), buyer.id);
 
@@ -105,23 +105,13 @@ export async function PedidosContent() {
   );
 }
 
-export default async function PedidosPage() {
-  const categories = await getCategories();
-
+export default function PedidosPage() {
   return (
     <div className="ba-page">
       <style>{BUYER_STYLES}</style>
 
       <LeadGateProvider>
-        <SiteNav
-          categories={categories}
-          showMegaMenu={false}
-          homeHref="/agente"
-          agenteHref="/agente"
-          pedidoRapidoHref="/pedido-rapido"
-          pedidosHref="/pedidos"
-          faqHref="/perguntas-frequentes"
-        />
+        <HubHeaderSlot />
         <Suspense fallback={null}>
           <PedidosContent />
         </Suspense>
