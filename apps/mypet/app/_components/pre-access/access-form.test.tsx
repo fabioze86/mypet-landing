@@ -98,4 +98,33 @@ describe("AccessForm", () => {
     expect(whatsapp).toHaveAttribute("aria-describedby", "pa-whatsapp-help pa-whatsapp-error");
     expect(assign).not.toHaveBeenCalled();
   });
+
+  it("com nextFromUrl, vai para o next da URL quando ele é do hub", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+    Object.defineProperty(window, "location", { value: { assign, search: "?next=%2Fcatalogo" }, writable: true });
+    const user = userEvent.setup();
+    render(<AccessForm nextFromUrl />);
+
+    await user.type(screen.getByLabelText("CNPJ"), "12.345.678/0001-95");
+    await user.type(screen.getByLabelText("WhatsApp"), "(11) 99999-0000");
+    await user.click(screen.getByRole("button", { name: "Consultar preços" }));
+
+    expect(assign).toHaveBeenCalledWith("/catalogo");
+  });
+
+  it("com nextFromUrl, ignora next externo e usa o redirectTo", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+    Object.defineProperty(window, "location", {
+      value: { assign, search: "?next=https%3A%2F%2Fevil.com" },
+      writable: true,
+    });
+    const user = userEvent.setup();
+    render(<AccessForm nextFromUrl />);
+
+    await user.type(screen.getByLabelText("CNPJ"), "12.345.678/0001-95");
+    await user.type(screen.getByLabelText("WhatsApp"), "(11) 99999-0000");
+    await user.click(screen.getByRole("button", { name: "Consultar preços" }));
+
+    expect(assign).toHaveBeenCalledWith("/agente");
+  });
 });

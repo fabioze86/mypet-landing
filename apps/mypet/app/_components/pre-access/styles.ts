@@ -254,4 +254,12 @@ export const LANDING_STYLES = `
   .pa-help-search input { flex: 1; padding: 12px 14px; border: 1.5px solid var(--pa-line); border-radius: var(--pa-r-input); font-size: 15px; font-family: inherit; }
   .pa-help-search button { padding: 12px 20px; border: 0; border-radius: var(--pa-r-input); background: var(--pa-green); color: #fff; font-family: var(--pa-geist); font-weight: 600; cursor: pointer; }
   .pa-help-search button:hover { background: var(--pa-green-dark); }
+
+  /* hub: o que o cadastro libera */
+  .hub-unlocks { margin-top: 24px; }
+  .hub-unlocks h2 { font-family: var(--pa-geist); font-weight: 600; font-size: 15px; color: var(--pa-navy); margin: 0 0 10px; }
+  .hub-unlocks ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .hub-unlocks li { padding-left: 26px; position: relative; font-size: 14px; color: var(--pa-muted); line-height: 1.5; }
+  .hub-unlocks li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--pa-green); font-weight: 700; }
+  .hub-unlocks strong { display: block; color: var(--pa-navy); font-weight: 600; }
 `;

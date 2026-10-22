@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { safeNext } from "../hub/doors";
 
 const GENERIC_ERROR = "Não foi possível liberar seu acesso agora. Tente novamente em instantes.";
 type Field = "cnpj" | "whatsapp" | "email";
@@ -9,7 +10,8 @@ type FieldErrors = Partial<Record<Field, string>>;
 export function AccessForm({
   submitLabel = "Consultar preços",
   redirectTo = "/agente",
-}: { submitLabel?: string; redirectTo?: string } = {}) {
+  nextFromUrl = false,
+}: { submitLabel?: string; redirectTo?: string; nextFromUrl?: boolean } = {}) {
   const [cnpj, setCnpj] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
@@ -38,7 +40,11 @@ export function AccessForm({
         body: JSON.stringify({ cnpj, whatsapp, email }),
       });
       if (response.ok) {
-        window.location.assign(redirectTo);
+        // no /cadastro o destino vem do ?next= (a porta do hub que o visitante escolheu)
+        const target = nextFromUrl
+          ? safeNext(new URLSearchParams(window.location.search).get("next"), redirectTo)
+          : redirectTo;
+        window.location.assign(target);
         return;
       }
       const data = await response.json().catch(() => null);
