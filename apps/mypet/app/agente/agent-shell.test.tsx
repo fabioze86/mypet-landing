@@ -45,6 +45,7 @@ const shellCart = vi.hoisted(() => ({ items: [] as ShellCartItem[], clear: vi.fn
 vi.mock("@mypet/core/components/cart-provider", () => ({
   useCart: () => ({ cart: { items: shellCart.items }, clear: shellCart.clear }),
 }));
+// mocks mantidos porque HubNav/useLogout importam estes módulos (sem asserções aqui)
 const nav = vi.hoisted(() => ({ goTo: vi.fn() }));
 vi.mock("./navigate", () => ({ goTo: nav.goTo }));
 vi.mock("../_components/pre-access/access-form", () => ({
@@ -76,8 +77,6 @@ function mockViewport(mobile: boolean) {
 beforeEach(() => {
   mockViewport(false);
   shellCart.items = DEFAULT_ITEMS;
-  shellCart.clear.mockClear();
-  nav.goTo.mockClear();
 });
 afterEach(() => {
   vi.unstubAllGlobals();

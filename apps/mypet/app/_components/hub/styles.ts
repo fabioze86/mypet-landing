@@ -2,6 +2,8 @@
 // landing (pa-*) quanto nas do cliente (ba-*). No celular as portas descem
 // para uma segunda linha com rolagem lateral, para nunca sumirem.
 export const HUB_STYLES = `
+  /* altura do cabeçalho (65px = 64 + borda); o agente usa para dimensionar o chat */
+  :root { --hub-h: 65px; }
   .hub-header {
     --hub-navy: #1A3472; --hub-green: #00A651; --hub-green-dark: #068A47;
     --hub-muted: #5A6580; --hub-line: #DDE2EC; --hub-soft: #EDF0F8;
@@ -31,7 +33,10 @@ export const HUB_STYLES = `
   .hub-logout:hover { color: var(--hub-navy); border-color: var(--hub-navy); }
   .hub-logout:disabled { opacity: .6; cursor: default; }
   .hub-logout-error { position: absolute; right: 24px; top: 100%; margin: 4px 0 0; padding: 6px 12px; background: #FFF4E5; color: #B35C00; border-radius: 8px; font-size: 13px; }
+  .hub-door:focus-visible, .hub-actions a:focus-visible, .hub-logout:focus-visible { outline: 2px solid var(--hub-navy); outline-offset: 2px; }
   @media (max-width: 900px) {
+    /* duas linhas: 8 + 37 (marca/ações) + 8 (gap) + 45 (portas 37 + 8) + 1 (borda) */
+    :root { --hub-h: 99px; }
     .hub-row { grid-template-columns: 1fr auto; grid-template-areas: "brand actions" "doors doors"; padding: 8px 16px 0; min-height: 0; }
     .hub-doors { justify-content: flex-start; overflow-x: auto; margin: 0 -16px; padding: 0 16px 8px; scrollbar-width: none; }
     .hub-doors::-webkit-scrollbar { display: none; }
@@ -41,5 +46,8 @@ export const HUB_STYLES = `
   @media (max-width: 420px) {
     .hub-brand-name { display: none; }
     .hub-actions { gap: 10px; }
+  }
+  @media (max-width: 360px) {
+    .hub-orders { display: none; }
   }
 `;

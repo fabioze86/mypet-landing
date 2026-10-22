@@ -21,17 +21,6 @@ export const LANDING_STYLES = `
   .pa-h2 { font-family: var(--pa-geist); font-weight: 700; letter-spacing: -0.02em; color: var(--pa-navy); font-size: clamp(26px, 3.4vw, 36px); line-height: 1.15; margin: 0 0 12px; }
   .pa-sec-lead { color: var(--pa-muted); font-size: 16px; line-height: 1.6; max-width: 60ch; margin: 0; }
 
-  /* header */
-  .pa-header { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.92); backdrop-filter: saturate(180%) blur(8px); border-bottom: 1px solid var(--pa-line); }
-  .pa-header-row { display: flex; align-items: center; justify-content: space-between; height: 68px; }
-  .pa-brand { display: flex; align-items: center; gap: 8px; font-family: var(--pa-geist); font-weight: 700; color: var(--pa-navy); font-size: 17px; }
-  .pa-brand span:first-child { font-size: 20px; }
-  .pa-nav { display: flex; align-items: center; gap: 22px; }
-  .pa-nav a { color: var(--pa-muted); text-decoration: none; font-weight: 500; font-size: 14px; }
-  .pa-nav a:hover { color: var(--pa-navy); }
-  .pa-nav a.pa-nav-cta { color: #fff; background: var(--pa-green); padding: 8px 16px; border-radius: var(--pa-r-pill); font-weight: 600; }
-  .pa-nav a.pa-nav-cta:hover { background: var(--pa-green-dark); color: #fff; }
-
   /* buttons */
   .pa-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--pa-r-pill); font-family: var(--pa-geist); font-weight: 600; font-size: 15px; padding: 12px 24px; cursor: pointer; text-decoration: none; border: 1.5px solid transparent; transition: background .18s ease, border-color .18s ease, color .18s ease, transform .12s ease; }
   .pa-btn-primary { background: var(--pa-green); color: #fff; }
@@ -121,7 +110,6 @@ export const LANDING_STYLES = `
   .pa-step-icon { display: inline-flex; color: var(--pa-green-dark); margin: 14px 0 8px; }
   .pa-step h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 15px; margin: 0 0 6px; }
   .pa-step p { color: var(--pa-muted); font-size: 13px; line-height: 1.55; margin: 0; }
-  .pa-steps-cta { margin-top: 36px; }
   @media (max-width: 900px) {
     .pa-steps { grid-template-columns: 1fr; gap: 22px; }
     .pa-steps::before { top: 0; bottom: 0; left: 18px; right: auto; width: 2px; height: auto; }
@@ -176,7 +164,7 @@ export const LANDING_STYLES = `
   .pa-footer-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
   .pa-footer-brand { display: flex; align-items: center; gap: 8px; font-family: var(--pa-geist); font-weight: 600; font-size: 14px; color: #fff; }
   .pa-footer small { color: rgba(255,255,255,0.55); font-size: 12px; max-width: 54ch; }
-  .pa-footer-links { display: flex; gap: 18px; }
+  .pa-footer-links { display: flex; flex-wrap: wrap; gap: 18px; }
   .pa-footer-links a { color: rgba(255,255,255,0.82); font-size: 13px; text-decoration: none; }
   .pa-footer-links a:hover { color: #fff; text-decoration: underline; }
 
@@ -195,10 +183,6 @@ export const LANDING_STYLES = `
     .pa-inst-grid { grid-template-columns: 1fr; }
     .pa-steps { grid-template-columns: 1fr; }
   }
-  @media (max-width: 560px) {
-    .pa-nav { gap: 12px; }
-    .pa-nav a:not(.pa-nav-cta) { display: none; }
-  }
 
   /* central de ajuda */
   .pa-help-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 28px; }
@@ -206,7 +190,6 @@ export const LANDING_STYLES = `
   .pa-help-icon { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: var(--pa-r-pill); background: var(--pa-green-soft); color: var(--pa-green-dark); }
   .pa-help-card h3 { font-family: var(--pa-geist); font-weight: 600; color: var(--pa-navy); font-size: 16px; margin: 0; }
   .pa-help-card p { color: var(--pa-muted); font-size: 13px; line-height: 1.5; margin: 0; }
-  .pa-nav a[aria-current="page"] { color: var(--pa-navy); font-weight: 600; }
 
   .pa-help-list { margin-top: 24px; border-top: 1px solid var(--pa-line); }
   .pa-help-list a { display: block; padding: 18px 4px; border-bottom: 1px solid var(--pa-line); text-decoration: none; }

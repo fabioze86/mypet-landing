@@ -59,7 +59,7 @@ function ClienteActions({ displayName }: { displayName: string | null }) {
   return (
     <div className="hub-actions">
       <span className="hub-hello">{displayName ? `Olá, ${displayName}` : "Olá!"}</span>
-      <a href="/pedidos">Meus pedidos</a>
+      <a href="/pedidos" className="hub-orders">Meus pedidos</a>
       <a href="/cotacao">Seu pedido{count > 0 ? ` (${count})` : ""}</a>
       <button type="button" className="hub-logout" onClick={logout} disabled={loggingOut}>
         Sair

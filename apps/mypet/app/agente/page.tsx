@@ -4,6 +4,7 @@ import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
 import { LANDING_STYLES } from "../_components/pre-access/styles";
+import { viewerFromBuyer } from "../_components/hub/doors";
 import { AGENT_STYLES } from "./styles";
 import { AgentShell } from "./agent-shell";
 import { initialQuestionFrom } from "./agent-params";
@@ -34,6 +35,7 @@ export async function AgentePageBody({ searchParams }: { searchParams?: AgentePa
   const buyer = await requireBuyer();
   const initialQuestion = initialQuestionFrom((await searchParams)?.pergunta);
   // nome de exibição do cliente: nome do cadastro, senão a empresa
-  const displayName = buyer ? buyer.nome?.trim() || buyer.empresa?.trim() || null : null;
+  const viewer = viewerFromBuyer(buyer);
+  const displayName = viewer.kind === "cliente" ? viewer.displayName : null;
   return <AgentShell mode={buyer ? "cliente" : "visitante"} initialQuestion={initialQuestion} displayName={displayName} />;
 }
