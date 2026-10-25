@@ -8,6 +8,10 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/cotacao", "/api/"],
     },
-    sitemap: `https://${clientConfig.domain}/sitemap.xml`,
+    sitemap: [
+      `https://${clientConfig.domain}/sitemap.xml`,
+      // Sitemap do blog Astro, servido pelo proxy de /blog (ver next.config.ts).
+      `https://${clientConfig.domain}/sitemap-index.xml`,
+    ],
   };
 }

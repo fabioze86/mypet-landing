@@ -7,7 +7,7 @@ import { SITES } from "@mypet/core/features";
 export const clientConfig: ClientConfig = {
   name: "AZ Pet Shop",
   tagline: "Loja online",
-  domain: "loja.azpetshop.com.br",
+  domain: "www.azpetshop.com.br",
   catalogChannel: "azpetshop",
   palette: {
     pink: "#FF3D7F",

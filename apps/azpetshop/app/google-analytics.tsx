@@ -1,8 +1,8 @@
 import Script from "next/script";
 
-// Mesma propriedade GA4 do blog (www.azpetshop.com.br). Como blog e loja são
-// subdomínios de azpetshop.com.br, o cookie do GA é compartilhado e a jornada
-// blog → loja fica numa sessão só, sem configurar domínio cruzado.
+// Mesma propriedade GA4 do blog. Loja e blog ficam no mesmo host
+// (www.azpetshop.com.br, com /blog repassado ao Worker do Astro), então o cookie
+// do GA é o mesmo e a jornada blog → loja fica numa sessão só.
 const GA_ID = "G-7JR087027T";
 
 // Só em produção: `next dev` e previews da Vercel não entram nos relatórios.
