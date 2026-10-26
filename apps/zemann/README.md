@@ -1,6 +1,9 @@
-# Zemann — site da consultoria de Amazon
+# Zemann — site da agência de crescimento para e-commerce
 
-App Next.js estático (porta 4106). Spec: `docs/superpowers/specs/2026-10-17-zemann-site-amazon-design.md`.
+App Next.js (porta 4106). Amazon é o carro-chefe; os outros 7 serviços vêm do catálogo `lib/services.ts`
+(uma página por serviço, modelo único em `app/_components/service-page.tsx`).
+Specs: `docs/superpowers/specs/2026-10-17-zemann-site-amazon-design.md` e
+`docs/superpowers/specs/2026-10-25-zemann-agencia-servicos-design.md`.
 
 ## Rodar
 

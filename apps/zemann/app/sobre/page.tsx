@@ -17,8 +17,17 @@ export default function SobrePage() {
       <Breadcrumbs items={[{ name: "Início", path: "/" }, { name: "Sobre", path: page.path }]} />
       <h1 className="mt-6 text-4xl font-extrabold text-ink">Sobre a Zemann</h1>
       <p className="mt-6 text-lg leading-relaxed text-ink-soft">
-        A Zemann é a consultoria de Amazon de {siteConfig.founder.name}. Nasceu dentro de uma operação real: a
-        My Pet Brasil, marca própria do mercado pet que vende na Amazon como vendor e atende lojistas no B2B.
+        A Zemann é uma agência de crescimento para marcas e e-commerces, fundada por {siteConfig.founder.name}.
+        Nasceu dentro de uma operação real: a My Pet Brasil, marca própria do mercado pet que vende na Amazon como
+        vendor e atende lojistas no B2B. A Amazon segue como o nosso carro-chefe, e hoje o nosso time também cuida de
+        SEO, tráfego pago, CRO, e-mail marketing, UX, social media e assessoria.
+      </p>
+
+      <h2 className="mt-12 text-2xl font-bold text-ink">Nosso time</h2>
+      <p className="mt-4 leading-relaxed text-ink-soft">
+        Trabalhamos como uma extensão do time do cliente: cada frente tem responsáveis, plano e indicadores
+        combinados, e as contas e os dados continuam sendo da sua empresa. Muito do que recomendamos foi testado
+        primeiro na nossa própria operação.
       </p>
 
       <h2 className="mt-12 text-2xl font-bold text-ink">{siteConfig.founder.name}</h2>
@@ -47,11 +56,11 @@ export default function SobrePage() {
       </p>
 
       <CtaBlock
-        title="Quer a mesma abordagem na sua conta?"
-        text="Comece pelo diagnóstico e veja os números da sua operação."
-        href={PAGES.diagnostico.path}
-        cta="sobre_diagnostico"
-        label="Agendar diagnóstico"
+        title="Quer o nosso time na sua operação?"
+        text="Conte o seu desafio e indicamos por onde começar."
+        href={PAGES.contato.path}
+        cta="sobre_contato"
+        label="Fale com um especialista"
       />
     </main>
   );
