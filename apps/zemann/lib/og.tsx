@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-export function renderOg(title: string, kicker = "Consultoria de Amazon"): ImageResponse {
+export function renderOg(title: string, kicker = "Agência de crescimento para e-commerce"): ImageResponse {
   return new ImageResponse(
     (
       <div

@@ -309,7 +309,7 @@ export const SERVICES: Record<AgencyServiceKey, ServiceInfo> = {
     faq: [
       { q: "Qual a diferença entre assessoria e gestão completa?", a: "Na assessoria, o seu time executa e nós orientamos e acompanhamos. Na gestão, o nosso time executa os canais contratados." },
       { q: "Com que frequência são as reuniões?", a: "A frequência é combinada no início, conforme o ritmo do seu time e o momento da empresa." },
-      { q: "Posso começar pela assessoria e depois contratar execução?", a: "Sim. Muitas empresas começam pelo plano e depois passam canais específicos para o nosso time." },
+      { q: "Posso começar pela assessoria e depois contratar execução?", a: "Sim. Você pode começar pelo plano e depois passar canais específicos para o nosso time." },
     ],
   },
 };

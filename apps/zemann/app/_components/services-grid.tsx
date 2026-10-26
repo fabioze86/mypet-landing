@@ -3,7 +3,7 @@ import { SERVICE_LIST } from "@/lib/services";
 
 export function ServicesGrid() {
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {SERVICE_LIST.map((service) => {
         const featured = service.key === "amazon";
         return (
@@ -12,7 +12,7 @@ export function ServicesGrid() {
             href={service.path}
             data-cta={`home_servico_${service.key.replace(/-/g, "_")}`}
             className={`group flex flex-col rounded-lg border p-6 transition hover:shadow-md ${
-              featured ? "border-accent bg-accent-soft sm:col-span-2 lg:row-span-2" : "border-line hover:border-accent"
+              featured ? "border-accent bg-accent-soft lg:col-span-2" : "border-line hover:border-accent"
             }`}
           >
             {featured ? (

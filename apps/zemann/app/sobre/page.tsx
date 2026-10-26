@@ -26,7 +26,7 @@ export default function SobrePage() {
       <h2 className="mt-12 text-2xl font-bold text-ink">Nosso time</h2>
       <p className="mt-4 leading-relaxed text-ink-soft">
         Trabalhamos como uma extensão do time do cliente: cada frente tem responsáveis, plano e indicadores
-        combinados, e as contas e os dados continuam sendo da sua empresa. Muito do que recomendamos foi testado
+        combinados, e as contas e os dados continuam sendo da sua empresa. Na Amazon, o que recomendamos foi testado
         primeiro na nossa própria operação.
       </p>
 

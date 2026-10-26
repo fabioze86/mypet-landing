@@ -106,7 +106,7 @@ export function HeaderMenus() {
           aria-label="Principal (celular)"
           hidden={!mobileOpen}
           onClick={closeOnLink(() => setMobileOpen(false))}
-          className="absolute right-0 mt-2 w-72 rounded-lg border border-line bg-white p-3 shadow-xl"
+          className="absolute right-0 mt-2 w-72 max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain rounded-lg border border-line bg-white p-3 shadow-xl"
         >
           {MENU_GROUPS.map((group) => (
             <div key={group.label} className="py-2">

@@ -6,5 +6,5 @@ export const contentType = "image/png";
 export const alt = PAGES.sellers.title;
 
 export default function Image() {
-  return renderOg(PAGES.sellers.title);
+  return renderOg(PAGES.sellers.title, "Consultoria de Amazon");
 }
