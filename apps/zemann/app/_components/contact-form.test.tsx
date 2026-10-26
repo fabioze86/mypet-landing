@@ -83,4 +83,37 @@ describe("ContactForm", () => {
     expect(alerta).toHaveTextContent("Não foi possível enviar agora.");
     await waitFor(() => expect(alerta).toHaveFocus());
   });
+
+  it("contato mostra o campo opcional com os 8 serviços e Ainda não sei", () => {
+    render(<ContactForm form="contato" submitLabel="Enviar" withService />);
+    const select = screen.getByRole("combobox", { name: /Serviço de interesse/ });
+    expect(select).not.toBeRequired();
+    expect(select).toHaveValue("");
+    const options = Array.from((select as HTMLSelectElement).options).map((o) => o.textContent);
+    expect(options).toEqual(["Ainda não sei", "Amazon", "SEO", "Tráfego pago", "CRO", "E-mail marketing", "UX", "Social media", "Assessoria"]);
+  });
+
+  it("pré-seleciona o serviço vindo da URL", () => {
+    render(<ContactForm form="contato" submitLabel="Enviar" withService defaultService="cro" />);
+    expect(screen.getByRole("combobox", { name: /Serviço de interesse/ })).toHaveValue("cro");
+  });
+
+  it("diagnóstico não mostra o campo de serviço", () => {
+    renderForm();
+    expect(screen.queryByRole("combobox", { name: /Serviço de interesse/ })).toBeNull();
+  });
+
+  it("depois de um erro, mantém a escolha do visitante e não volta ao serviço da URL", async () => {
+    render(<ContactForm form="contato" submitLabel="Enviar" withService defaultService="seo" />);
+    submitContact.mockResolvedValueOnce({
+      status: "error",
+      message: "Confira os campos destacados.",
+      errors: { desafio: "Conte em poucas palavras o seu desafio." },
+      values: { servico: "" },
+      attempt: 1,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Enviar" }));
+    await screen.findByText("Conte em poucas palavras o seu desafio.");
+    expect(screen.getByRole("combobox", { name: /Serviço de interesse/ })).toHaveValue("");
+  });
 });

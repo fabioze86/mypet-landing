@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { submitContact } from "@/app/actions";
+import { SERVICE_LIST, type ServiceKey } from "@/lib/services";
 import { INITIAL_CONTACT_STATE, type ContactField, type ContactFormKind } from "@/lib/contact";
 
 const INPUT = "mt-1 w-full rounded-lg border border-line px-3 py-2 text-ink focus:border-accent focus:outline-none";
@@ -20,7 +21,17 @@ function FieldError({ message, id }: { message?: string; id: string }) {
   return <p id={id} className="mt-1 text-sm text-danger">{message}</p>;
 }
 
-export function ContactForm({ form, submitLabel }: { form: ContactFormKind; submitLabel: string }) {
+export function ContactForm({
+  form,
+  submitLabel,
+  withService = false,
+  defaultService,
+}: {
+  form: ContactFormKind;
+  submitLabel: string;
+  withService?: boolean;
+  defaultService?: ServiceKey;
+}) {
   const [state, formAction, pending] = useActionState(submitContact, INITIAL_CONTACT_STATE);
 
   useEffect(() => {
@@ -85,16 +96,37 @@ export function ContactForm({ form, submitLabel }: { form: ContactFormKind; subm
         <select id="perfil" name="perfil" required defaultValue={v("perfil")} aria-invalid={Boolean(err("perfil"))} aria-describedby={described("perfil")} className={INPUT}>
           <option value="" disabled>Escolha uma opção</option>
           <option value="marca">Marca ou indústria</option>
-          <option value="seller">Seller (revenda ou loja)</option>
+          <option value="seller">Loja, revenda ou seller</option>
         </select>
         <FieldError id="perfil-erro" message={err("perfil")} />
       </div>
 
       <div>
-        <Label htmlFor="loja">Link da sua loja ou de um produto na Amazon (opcional)</Label>
+        <Label htmlFor="loja">Link da sua loja ou de um produto (opcional)</Label>
         <input id="loja" name="loja" type="url" defaultValue={v("loja")} aria-invalid={Boolean(err("loja"))} aria-describedby={described("loja")} className={INPUT} />
         <FieldError id="loja-erro" message={err("loja")} />
       </div>
+
+      {withService ? (
+        <div>
+          <Label htmlFor="servico">Serviço de interesse (opcional)</Label>
+          {/* Depois de um envio, vale o que o visitante escolheu; no primeiro acesso, o serviço da URL. */}
+          <select
+            id="servico"
+            name="servico"
+            defaultValue={state.attempt > 0 ? v("servico") : (defaultService ?? "")}
+            aria-invalid={Boolean(err("servico"))}
+            aria-describedby={described("servico")}
+            className={INPUT}
+          >
+            <option value="">Ainda não sei</option>
+            {SERVICE_LIST.map((service) => (
+              <option key={service.key} value={service.key}>{service.name}</option>
+            ))}
+          </select>
+          <FieldError id="servico-erro" message={err("servico")} />
+        </div>
+      ) : null}
 
       <div>
         <Label htmlFor="desafio" required>Seu desafio</Label>

@@ -64,6 +64,23 @@ describe("validateContact", () => {
     const result = validateContact(form({ ...valid, form: "x" }));
     expect(result.ok && result.data.form).toBe("contato");
   });
+
+  it("aceita serviço do catálogo", () => {
+    const result = validateContact(form({ ...valid, form: "contato", servico: "seo" }));
+    expect(result.ok && result.data.servico).toBe("seo");
+  });
+
+  it("serviço vazio (Ainda não sei) é aceito como null", () => {
+    const result = validateContact(form({ ...valid, form: "contato", servico: "" }));
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.servico).toBeNull();
+  });
+
+  it("recusa chave de serviço fora do catálogo", () => {
+    const result = validateContact(form({ ...valid, form: "contato", servico: "influencers" }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.servico).toBe("Escolha um serviço da lista.");
+  });
 });
 
 describe("formatContactEmail", () => {
@@ -74,6 +91,28 @@ describe("formatContactEmail", () => {
     expect(mail.subject).toBe("[Site] Diagnóstico da conta — Marca X");
     expect(mail.replyTo).toBe("ana@marca.com.br");
     expect(mail.text).toContain("Desafio:");
+  });
+
+  it("põe o nome do serviço no assunto e no corpo do contato", () => {
+    const result = validateContact(form({ ...valid, form: "contato", servico: "trafego-pago" }));
+    if (!result.ok) throw new Error("inválido");
+    const mail = formatContactEmail(result.data);
+    expect(mail.subject).toBe("[Site] Contato — Tráfego pago — Marca X");
+    expect(mail.text).toContain("Serviço de interesse: Tráfego pago");
+  });
+
+  it("contato sem serviço mantém o assunto e registra Ainda não sei", () => {
+    const result = validateContact(form({ ...valid, form: "contato", servico: "" }));
+    if (!result.ok) throw new Error("inválido");
+    const mail = formatContactEmail(result.data);
+    expect(mail.subject).toBe("[Site] Contato — Marca X");
+    expect(mail.text).toContain("Serviço de interesse: Ainda não sei");
+  });
+
+  it("diagnóstico não ganha linha de serviço", () => {
+    const result = validateContact(form(valid));
+    if (!result.ok) throw new Error("inválido");
+    expect(formatContactEmail(result.data).text).not.toContain("Serviço de interesse");
   });
 });
 

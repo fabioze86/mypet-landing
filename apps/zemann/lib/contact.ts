@@ -1,6 +1,7 @@
 import { siteConfig } from "@/site.config";
+import { isServiceKey, serviceSummary, type ServiceKey } from "./services";
 
-export type ContactField = "nome" | "email" | "empresa" | "perfil" | "loja" | "desafio";
+export type ContactField = "nome" | "email" | "empresa" | "perfil" | "loja" | "servico" | "desafio";
 export type ContactFormKind = "diagnostico" | "contato";
 
 export type ContactInput = {
@@ -10,6 +11,7 @@ export type ContactInput = {
   empresa: string;
   perfil: "marca" | "seller";
   loja: string;
+  servico: ServiceKey | null;
   desafio: string;
 };
 
@@ -33,7 +35,7 @@ export const INITIAL_CONTACT_STATE: ContactState = {
   attempt: 0,
 };
 
-const FIELDS: ContactField[] = ["nome", "email", "empresa", "perfil", "loja", "desafio"];
+const FIELDS: ContactField[] = ["nome", "email", "empresa", "perfil", "loja", "servico", "desafio"];
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SUCCESS_MESSAGE = "Recebemos sua mensagem. Respondemos em até 1 dia útil.";
 
@@ -53,6 +55,8 @@ export function validateContact(
   if (!values.desafio) errors.desafio = "Conte em poucas palavras o seu desafio.";
   else if (values.desafio.length > 2000) errors.desafio = "Use no máximo 2.000 caracteres.";
   if ((values.loja ?? "").length > 500) errors.loja = "Link muito longo.";
+  // Opcional: vazio = "Ainda não sei"; preenchido, só vale chave do catálogo.
+  if (values.servico && !isServiceKey(values.servico)) errors.servico = "Escolha um serviço da lista.";
 
   if (Object.keys(errors).length > 0) return { ok: false, errors, values };
 
@@ -67,6 +71,7 @@ export function validateContact(
       empresa: values.empresa!,
       perfil: values.perfil as "marca" | "seller",
       loja: values.loja ?? "",
+      servico: values.servico ? (values.servico as ServiceKey) : null,
       desafio: values.desafio!,
     },
   };
@@ -76,16 +81,18 @@ export type OutgoingMail = { subject: string; text: string; replyTo: string };
 
 export function formatContactEmail(data: ContactInput): OutgoingMail {
   const label = data.form === "diagnostico" ? "Diagnóstico da conta" : "Contato";
+  const service = data.servico ? serviceSummary(data.servico).name : null;
   return {
-    subject: `[Site] ${label} — ${data.empresa}`,
+    subject: `[Site] ${label}${service ? ` — ${service}` : ""} — ${data.empresa}`,
     replyTo: data.email,
     text: [
       `Formulário: ${label}`,
       `Nome: ${data.nome}`,
       `E-mail: ${data.email}`,
       `Empresa: ${data.empresa}`,
-      `Perfil: ${data.perfil === "marca" ? "Marca/indústria" : "Seller"}`,
-      `Loja/produto na Amazon: ${data.loja || "não informado"}`,
+      `Perfil: ${data.perfil === "marca" ? "Marca/indústria" : "Loja, revenda ou seller"}`,
+      ...(data.form === "contato" ? [`Serviço de interesse: ${service ?? "Ainda não sei"}`] : []),
+      `Loja/produto: ${data.loja || "não informado"}`,
       "",
       "Desafio:",
       data.desafio,
