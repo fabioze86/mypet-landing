@@ -69,6 +69,26 @@ describe("builders", () => {
     expect(serviceJsonLd({ name: "S", description: "D", path: "/s", priceFrom: 0 })).not.toHaveProperty("offers");
   });
 
+  it("organization lista os 8 serviços em knowsAbout", () => {
+    const org = organizationJsonLd();
+    expect(org.knowsAbout).toEqual([
+      "Amazon",
+      "SEO",
+      "Tráfego pago",
+      "CRO",
+      "E-mail marketing",
+      "UX",
+      "Social media",
+      "Assessoria",
+    ]);
+    expect(org.description).toBe("Agência de crescimento para marcas e e-commerces");
+  });
+
+  it("service aceita serviceType e mantém Consultoria de Amazon como padrão", () => {
+    expect(serviceJsonLd({ name: "S", description: "D", path: "/s" }).serviceType).toBe("Consultoria de Amazon");
+    expect(serviceJsonLd({ name: "S", description: "D", path: "/s", serviceType: "SEO" }).serviceType).toBe("SEO");
+  });
+
   it("article traz autor e datas", () => {
     expect(
       articleJsonLd({ title: "T", description: "D", path: "/guias/t", publishedAt: "2026-10-01", updatedAt: "2026-10-02" }),

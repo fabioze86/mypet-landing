@@ -4,7 +4,7 @@ export const siteConfig = {
   name: "Zemann",
   domain: "www.zemann.com.br",
   url: "https://www.zemann.com.br",
-  tagline: "Consultoria de Amazon mão na massa para marcas e sellers",
+  tagline: "Agência de crescimento para marcas e e-commerces",
   email: "contato@zemann.com.br",
   legalName: "DPZ COMMERCE",
   cnpj: "67.145.989/0001-00",

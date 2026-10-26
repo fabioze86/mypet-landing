@@ -1,13 +1,14 @@
 import { siteConfig } from "@/site.config";
 import type { CaseMeta, GuideMeta } from "./content";
 import { PAGES } from "./pages";
+import { SERVICES } from "./services";
 
 export type IndexEntry = {
   path: string;
   title: string;
   description: string;
   lastModified?: string;
-  section: "Páginas" | "Guias" | "Cases";
+  section: "Páginas" | "Serviços" | "Guias" | "Cases";
 };
 
 export function buildSiteIndex(guides: GuideMeta[], cases: CaseMeta[]): IndexEntry[] {
@@ -17,6 +18,12 @@ export function buildSiteIndex(guides: GuideMeta[], cases: CaseMeta[]): IndexEnt
       title: page.title,
       description: page.description,
       section: "Páginas" as const,
+    })),
+    ...Object.values(SERVICES).map((service) => ({
+      path: service.path,
+      title: service.title,
+      description: service.description,
+      section: "Serviços" as const,
     })),
     ...guides.map((guide) => ({
       path: `/guias/${guide.slug}`,
@@ -36,13 +43,15 @@ export function buildSiteIndex(guides: GuideMeta[], cases: CaseMeta[]): IndexEnt
 }
 
 export function renderLlmsTxt(entries: IndexEntry[]): string {
-  const sections: IndexEntry["section"][] = ["Páginas", "Guias", "Cases"];
+  const sections: IndexEntry["section"][] = ["Páginas", "Serviços", "Guias", "Cases"];
   const lines = [
     `# ${siteConfig.name}`,
     "",
-    `> ${siteConfig.tagline}. Consultoria independente, sem vínculo com a Amazon, que opera uma marca própria na Amazon e usa tecnologia conectada à API oficial da Amazon (SP-API).`,
+    `> ${siteConfig.tagline}. Agência independente, sem vínculo com a Amazon, o Google ou a Meta, com um time que executa junto com o cliente.`,
     "",
-    "Atende marcas e indústrias (vendor e seller) e sellers estabelecidos no Brasil. Oferta em três etapas: diagnóstico da conta, implantação (30 a 90 dias) e gestão contínua.",
+    "A Amazon é o carro-chefe: atende marcas e indústrias (vendor e seller) e sellers estabelecidos no Brasil, com tecnologia conectada à API oficial da Amazon (SP-API) e oferta em três etapas: diagnóstico da conta, implantação (30 a 90 dias) e gestão contínua.",
+    "",
+    "Outros serviços: SEO, tráfego pago, CRO, e-mail marketing, UX, social media e assessoria de marketing digital.",
   ];
   for (const section of sections) {
     const items = entries.filter((entry) => entry.section === section);

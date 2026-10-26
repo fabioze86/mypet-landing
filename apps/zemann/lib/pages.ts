@@ -1,3 +1,5 @@
+import { SERVICES } from "./services";
+
 export type PageKey =
   | "home"
   | "marcas"
@@ -21,9 +23,9 @@ export type PageInfo = {
 export const PAGES: Record<PageKey, PageInfo> = {
   home: {
     path: "/",
-    title: "Zemann — Consultoria de Amazon para marcas e sellers",
+    title: "Zemann — Agência de crescimento para e-commerce",
     description:
-      "Consultoria de Amazon mão na massa: catálogo, anúncios, Buy Box, Ads e margem por SKU, com tecnologia própria conectada à API oficial da Amazon.",
+      "Agência de crescimento para marcas e e-commerces: Amazon, SEO, tráfego pago, CRO, e-mail, UX, social media e assessoria, com um time que executa junto.",
   },
   marcas: {
     path: "/consultoria-amazon-para-marcas",
@@ -64,20 +66,20 @@ export const PAGES: Record<PageKey, PageInfo> = {
     path: "/perguntas-frequentes",
     title: "Perguntas frequentes",
     description:
-      "Prazos, formato, acesso à conta, vendor ou seller e o que esperar da consultoria de Amazon da Zemann.",
+      "Como a Zemann trabalha, serviços, prazos, acesso às contas e o que esperar do módulo Amazon: as dúvidas mais comuns antes de começar.",
   },
   sobre: {
     path: "/sobre",
     title: "Sobre a Zemann e Fábio Zemann",
     description:
-      "A Zemann é a consultoria de Amazon de Fábio Zemann, que opera uma marca própria na Amazon e constrói ferramentas de dados e IA para o varejo.",
+      "A Zemann é uma agência de crescimento para marcas e e-commerces, fundada por Fábio Zemann, que opera uma marca própria na Amazon.",
     nav: "Sobre",
   },
   contato: {
     path: "/contato",
     title: "Contato",
     description:
-      "Fale com a Zemann sobre implantação ou gestão contínua da sua operação na Amazon. Resposta em até 1 dia útil.",
+      "Fale com o time da Zemann sobre Amazon, SEO, tráfego pago, CRO, e-mail, UX, social media ou assessoria. Resposta em até 1 dia útil.",
   },
 };
 
@@ -85,12 +87,16 @@ export type MenuGroup = { label: string; items: { page: PageInfo; hint: string }
 
 export const MENU_GROUPS: MenuGroup[] = [
   {
-    label: "Soluções",
+    label: "Amazon",
     items: [
       { page: PAGES.marcas, hint: "Entrar e crescer na Amazon como vendor ou seller" },
       { page: PAGES.sellers, hint: "Buy Box, pendências, Ads e margem por SKU" },
       { page: PAGES.diagnostico, hint: "Auditoria da conta com plano de ação" },
     ],
+  },
+  {
+    label: "Serviços",
+    items: Object.values(SERVICES).map((service) => ({ page: service, hint: service.summary })),
   },
   {
     label: "Recursos",
@@ -103,8 +109,8 @@ export const MENU_GROUPS: MenuGroup[] = [
   {
     label: "Empresa",
     items: [
-      { page: PAGES.sobre, hint: "Quem está por trás da Zemann" },
-      { page: PAGES.contato, hint: "Implantação e gestão contínua" },
+      { page: PAGES.sobre, hint: "A agência e o nosso time" },
+      { page: PAGES.contato, hint: "Fale com um especialista" },
     ],
   },
 ];

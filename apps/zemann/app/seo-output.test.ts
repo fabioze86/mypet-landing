@@ -4,6 +4,15 @@ import { GET } from "./llms.txt/route";
 
 const PUBLISHED_CASES = ["my-pet-na-amazon", "catalogo-hub", "hub-comercial", "agente-my-pet"];
 const HIDDEN = ["/cases/feiticos", "vendor-ou-seller-na-amazon", "buy-box-na-amazon"];
+const SERVICE_PATHS = [
+  "/seo-para-ecommerce",
+  "/trafego-pago-para-ecommerce",
+  "/cro-otimizacao-de-conversao",
+  "/email-marketing-para-ecommerce",
+  "/ux-para-ecommerce",
+  "/social-media-para-marcas",
+  "/assessoria-de-marketing-digital",
+];
 
 describe("sitemap e llms.txt com o conteúdo real", () => {
   beforeEach(() => {
@@ -23,5 +32,15 @@ describe("sitemap e llms.txt com o conteúdo real", () => {
     const body = await GET().text();
     for (const hidden of HIDDEN) expect(body, hidden).not.toContain(hidden);
     for (const slug of PUBLISHED_CASES) expect(body, slug).toContain(`/cases/${slug}`);
+  });
+
+  it("sitemap lista as 7 páginas de serviço", () => {
+    const urls = sitemap().map((e) => e.url);
+    for (const path of SERVICE_PATHS) expect(urls, path).toContain(`https://www.zemann.com.br${path}`);
+  });
+
+  it("llms.txt lista as 7 páginas de serviço", async () => {
+    const body = await GET().text();
+    for (const path of SERVICE_PATHS) expect(body, path).toContain(`https://www.zemann.com.br${path})`);
   });
 });

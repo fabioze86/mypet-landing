@@ -1,4 +1,5 @@
 import { siteConfig } from "@/site.config";
+import { SERVICE_LIST } from "./services";
 
 const CONTEXT = "https://schema.org";
 const ORG_ID = `${siteConfig.url}/#org`;
@@ -23,6 +24,7 @@ export function organizationJsonLd(): Record<string, unknown> {
     url: siteConfig.url,
     email: siteConfig.email,
     description: siteConfig.tagline,
+    knowsAbout: SERVICE_LIST.map((service) => service.name),
     founder: { "@id": PERSON_ID },
     ...(siteConfig.linkedinUrl ? { sameAs: [siteConfig.linkedinUrl] } : {}),
   };
@@ -58,6 +60,7 @@ export function serviceJsonLd(input: {
   description: string;
   path: string;
   priceFrom?: number | null;
+  serviceType?: string;
 }): Record<string, unknown> {
   return {
     "@context": CONTEXT,
@@ -65,7 +68,7 @@ export function serviceJsonLd(input: {
     name: input.name,
     description: input.description,
     url: absolute(input.path),
-    serviceType: "Consultoria de Amazon",
+    serviceType: input.serviceType ?? "Consultoria de Amazon",
     areaServed: "BR",
     provider: { "@id": ORG_ID, "@type": "Organization", name: siteConfig.name },
     ...(input.priceFrom

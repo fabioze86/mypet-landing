@@ -6,7 +6,7 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
   return (
     <footer className="mt-24 bg-footer text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-3 lg:grid-cols-5">
         <div>
           <p className="text-lg font-extrabold">Zemann</p>
           <p className="mt-2 text-sm text-white/70">{siteConfig.tagline}.</p>
