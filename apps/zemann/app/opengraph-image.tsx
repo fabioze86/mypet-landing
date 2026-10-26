@@ -1,9 +1,10 @@
 import { OG_SIZE, renderOg } from "@/lib/og";
+import { PAGES } from "@/lib/pages";
 
 export const size = OG_SIZE;
 export const contentType = "image/png";
-export const alt = "Zemann — Consultoria de Amazon para marcas e sellers";
+export const alt = PAGES.home.title;
 
 export default function Image() {
-  return renderOg("Venda mais na Amazon com quem opera uma marca lá todos os dias");
+  return renderOg("Mais vendas online, com um time que executa junto com o seu", "Agência de crescimento para e-commerce");
 }

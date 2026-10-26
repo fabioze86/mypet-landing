@@ -10,7 +10,7 @@ describe("blocos", () => {
     render(<ComparisonTable />);
     const table = screen.getByRole("table");
     expect(table).toBeInTheDocument();
-    for (const name of ["Zemann", "Agência", "Curso ou mentoria"]) {
+    for (const name of ["Zemann", "Outras agências", "Curso ou mentoria"]) {
       expect(screen.getByRole("columnheader", { name })).toBeInTheDocument();
     }
   });

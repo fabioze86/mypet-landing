@@ -11,12 +11,12 @@ export function ComparisonTable() {
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-sm">
-        <caption className="sr-only">Comparativo entre Zemann, agência e curso ou mentoria</caption>
+        <caption className="sr-only">Comparativo na Amazon entre Zemann, outras agências e curso ou mentoria</caption>
         <thead>
           <tr>
             <th scope="col" className="border-b-2 border-line px-3 py-3 font-semibold">Critério</th>
             <th scope="col" className="border-b-2 border-accent bg-accent-soft px-3 py-3 font-semibold">Zemann</th>
-            <th scope="col" className="border-b-2 border-line px-3 py-3 font-semibold">Agência</th>
+            <th scope="col" className="border-b-2 border-line px-3 py-3 font-semibold">Outras agências</th>
             <th scope="col" className="border-b-2 border-line px-3 py-3 font-semibold">Curso ou mentoria</th>
           </tr>
         </thead>
