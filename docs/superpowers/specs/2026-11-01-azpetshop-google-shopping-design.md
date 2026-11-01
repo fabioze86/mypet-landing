@@ -234,6 +234,17 @@ Fase 1 entregue e enviada para a `main` (`f4c7d99..853bc57`). Itens abaixo ficam
 - [ ] **Fase 3:** `productGroupJsonLd` (`hasVariant`) sem `offers`/`availability`; usar
   `hasSellablePrice` e `inStockFromQty` (de `@mypet/core/retail`) também no feed.
 
+### Fase 2 — dependências externas (registradas em 2026-11-01)
+- [ ] **Autorizar a migration** `20261101120000_retail_checkout` no `hub_catalogo` (Task 3 do plano da fase 2).
+- [ ] **Sandbox do Asaas** (chave de API + token do webhook apontando para `/api/webhooks/asaas`) e **sandbox do Melhor Envio** (token `shipping-calculate`).
+- [ ] **SMTP e e-mail da equipe** para os avisos de pedido pago.
+- [ ] **Listmonk** (decisão do usuário: e-mail "pedido enviado" sai por ele): template transacional com as chaves
+  `numero`, `nome`, `rastreio`, `transportadora`, `link_pedido`; usuário/token de API; env vars no admin
+  (`LISTMONK_URL`, `LISTMONK_API_USER`, `LISTMONK_API_TOKEN`, `LISTMONK_TEMPLATE_PEDIDO_ENVIADO`, `AZPETSHOP_SITE_URL`);
+  confirmar se a versão exige o cliente já cadastrado como subscriber para `/api/tx`.
+- [ ] **Aviso de pedido pago por WhatsApp para a equipe**: fora da fase 2 (não há API de WhatsApp); só e-mail.
+- [ ] **Parcelamento sem juros configurado no Asaas** (a política de pagamento promete).
+
 ### Menores (quando conveniente)
 - [ ] Ano do copyright fixo (`ANO_COPYRIGHT = 2026` em `app/site-footer.tsx`): atualizar a cada ano.
 - [ ] Rodapé não fica preso ao fim da tela em páginas curtas.
