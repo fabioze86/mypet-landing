@@ -6,6 +6,7 @@ import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
 import { EMPRESA } from "@/lib/empresa";
 import { GoogleAnalytics } from "./google-analytics";
+import { SiteFooter } from "./site-footer";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -69,7 +70,10 @@ export default function RootLayout({
           }}
         />
         <ClientConfigProvider config={clientConfig}>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider>
+            {children}
+            <SiteFooter />
+          </CartProvider>
         </ClientConfigProvider>
         <GoogleAnalytics />
       </body>

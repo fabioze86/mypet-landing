@@ -259,8 +259,6 @@ export default async function Home({
         }
         .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.10); }
 
-        footer.site-footer { background: ${PALETTE.navy}; border-radius: 28px 28px 0 0; }
-
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr; }
           .hero-art { height: 320px; margin-top: 10px; }
@@ -287,12 +285,6 @@ export default async function Home({
 
       <QuoteCta />
       <TrustRow />
-
-      <footer className="site-footer" style={{ padding: "28px 24px", marginTop: 10 }}>
-        <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>
-          © 2026 {clientConfig.name}. Todos os direitos reservados.
-        </span>
-      </footer>
     </div>
   );
 }
