@@ -205,3 +205,36 @@ conversão "Compra" no Google Ads importada do GA4.
 
 Checkout transparente, NF-e automática, etiqueta automática, cupons, avaliações
 (`aggregateRating`), contas de cliente, Content API do Google.
+
+## Pendências em aberto (registradas em 2026-11-01, após a fase 1)
+
+Fase 1 entregue e enviada para a `main` (`f4c7d99..853bc57`). Itens abaixo ficam para resolução futura.
+
+### Bloqueantes para produção (dono)
+- [ ] **Dados reais da empresa** em `apps/azpetshop/lib/empresa.ts` (hoje "Empresa Exemplo Ltda", CNPJ de teste)
+  e depois `DADOS_DE_EXEMPLO = false`. Enquanto for `true`, `next.config.ts` derruba o build com
+  `VERCEL_ENV=production`, de propósito.
+- [ ] **Confirmar a branch de produção da azpetshop na Vercel** e se o primeiro deploy após o push falhou pela trava.
+- [ ] **Revisão jurídica das 4 políticas** (`apps/azpetshop/lib/politicas.ts`). Promessas a confirmar ou ajustar:
+  reembolso incluindo o frete; 30 dias para defeito com devolução sem custo; estorno do Pix em 5 dias úteis;
+  código de postagem reversa; NF-e em todo pedido; cancelamento automático do Pix não pago; texto
+  "Asaas, instituição de pagamento autorizada pelo Banco Central"; parcelamento sem juros (até 6x, parcela mínima R$ 30).
+- [ ] **Afirmações restantes na home** (`apps/azpetshop/app/page.tsx`): "até 25% OFF" e "Ver ofertas da semana"
+  (maior risco no Merchant Center), "entregue rapidinho", "bipou, chegou!", "Petiscos naturais".
+- [ ] **Banner de consentimento de cookies** (GA4 ativo sem consentimento; risco LGPD).
+- [ ] **Conferência visual** em 375px e 1280px: home, card sem preço, card esgotado, PDP com parcelamento,
+  produto com variações, políticas, rodapé (possível emenda de cor entre o fundo do body e o rodapé).
+
+### Para as próximas fases
+- [ ] **Fase 2:** feature `checkout` (`whatsapp` | `online` | `ambos`) por site; azpetshop = `ambos`.
+  As promessas das políticas viram critério de aceite (parcelamento sem juros configurado no Asaas,
+  expiração automática do Pix, página do pedido com rastreio).
+- [ ] **Fase 2 (acessibilidade):** link do WhatsApp com `target=_blank` sem aviso para leitor de tela;
+  botão compacto do card mostra só 🛒.
+- [ ] **Fase 3:** `productGroupJsonLd` (`hasVariant`) sem `offers`/`availability`; usar
+  `hasSellablePrice` e `inStockFromQty` (de `@mypet/core/retail`) também no feed.
+
+### Menores (quando conveniente)
+- [ ] Ano do copyright fixo (`ANO_COPYRIGHT = 2026` em `app/site-footer.tsx`): atualizar a cada ano.
+- [ ] Rodapé não fica preso ao fim da tela em páginas curtas.
+- [ ] PDP: `inStock` calculado mesmo para produto com variações (sem efeito) e JSX sem reindentação.
