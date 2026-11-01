@@ -48,4 +48,66 @@ describe("CheckoutForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Ir para o pagamento" }));
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Informe um CPF válido."));
   });
+
+  it("destrava o botão de frete e mostra mensagem quando a cotação falha", async () => {
+    cotarFrete.mockRejectedValue(new Error("falha de rede"));
+    render(<CheckoutForm />);
+    fireEvent.change(screen.getByLabelText("CEP"), { target: { value: "01001000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Calcular frete" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível continuar. Tente novamente."));
+    expect(screen.getByRole("button", { name: "Calcular frete" })).toBeEnabled();
+  });
+
+  it("destrava o botão de pagamento quando a ação lança erro", async () => {
+    cotarFrete.mockResolvedValue({ ok: true, subtotal: 50, options: [{ serviceId: 1, name: "PAC", company: "Correios", price: 20, deliveryDays: 7 }] });
+    iniciarPagamento.mockRejectedValue(new Error("falha de rede"));
+    render(<CheckoutForm />);
+    fireEvent.change(screen.getByLabelText("CEP"), { target: { value: "01001000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Calcular frete" }));
+    await waitFor(() => screen.getByLabelText(/Correios PAC/));
+    fireEvent.click(screen.getByLabelText(/Correios PAC/));
+    fireEvent.change(screen.getByLabelText("Nome completo"), { target: { value: "Maria Souza" } });
+    fireEvent.change(screen.getByLabelText("CPF"), { target: { value: "529.982.247-25" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "m@x.com" } });
+    fireEvent.change(screen.getByLabelText("WhatsApp"), { target: { value: "11988887777" } });
+    fireEvent.change(screen.getByLabelText("Número"), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText("Cidade"), { target: { value: "São Paulo" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ir para o pagamento" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível continuar. Tente novamente."));
+    expect(screen.getByRole("button", { name: "Ir para o pagamento" })).toBeEnabled();
+  });
+
+  it("limpa o frete escolhido ao trocar o CEP depois de cotar", async () => {
+    cotarFrete.mockResolvedValue({ ok: true, subtotal: 50, options: [{ serviceId: 1, name: "PAC", company: "Correios", price: 20, deliveryDays: 7 }] });
+    render(<CheckoutForm />);
+    fireEvent.change(screen.getByLabelText("CEP"), { target: { value: "01001000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Calcular frete" }));
+    await waitFor(() => screen.getByLabelText(/Correios PAC/));
+    fireEvent.click(screen.getByLabelText(/Correios PAC/));
+    fireEvent.change(screen.getByLabelText("CEP"), { target: { value: "20040020" } });
+    expect(screen.queryByLabelText(/Correios PAC/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ir para o pagamento" })).toBeDisabled();
+  });
+
+  it("não sobrescreve o endereço que a pessoa já digitou ao consultar o CEP", async () => {
+    cotarFrete.mockResolvedValue({ ok: true, subtotal: 50, options: [] });
+    render(<CheckoutForm />);
+    fireEvent.change(screen.getByLabelText("Rua"), { target: { value: "Rua Digitada" } });
+    fireEvent.change(screen.getByLabelText("Cidade"), { target: { value: "Campinas" } });
+    fireEvent.change(screen.getByLabelText("CEP"), { target: { value: "01001000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Calcular frete" }));
+    await waitFor(() => expect(cotarFrete).toHaveBeenCalled());
+    expect((screen.getByLabelText("Rua") as HTMLInputElement).value).toBe("Rua Digitada");
+    expect((screen.getByLabelText("Cidade") as HTMLInputElement).value).toBe("Campinas");
+    expect((screen.getByLabelText("Bairro") as HTMLInputElement).value).toBe("Sé");
+  });
+
+  it("consulta o ViaCEP com timeout de 4 segundos", async () => {
+    cotarFrete.mockResolvedValue({ ok: true, subtotal: 50, options: [] });
+    render(<CheckoutForm />);
+    fireEvent.change(screen.getByLabelText("CEP"), { target: { value: "01001000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Calcular frete" }));
+    await waitFor(() => expect(cotarFrete).toHaveBeenCalled());
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("viacep.com.br/ws/01001000"), expect.objectContaining({ signal: expect.anything() }));
+  });
 });

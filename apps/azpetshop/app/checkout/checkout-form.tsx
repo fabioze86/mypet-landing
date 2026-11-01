@@ -31,32 +31,48 @@ export function CheckoutForm() {
     setBusy(true);
     setOptions([]);
     setServiceId(null);
+    setSubtotal(null);
     const cep = onlyDigits(address.cep);
     try {
-      const via = await fetch(`https://viacep.com.br/ws/${cep}/json/`).then((r) => r.json());
-      if (via && !via.erro) {
-        setAddress((a) => ({ ...a, logradouro: via.logradouro || a.logradouro, bairro: via.bairro || a.bairro, cidade: via.localidade || a.cidade, uf: via.uf || a.uf }));
+      try {
+        const via = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: AbortSignal.timeout(4000) }).then((r) => r.json());
+        if (via && !via.erro) {
+          setAddress((a) => ({ ...a, logradouro: a.logradouro || via.logradouro, bairro: a.bairro || via.bairro, cidade: a.cidade || via.localidade, uf: a.uf || via.uf }));
+        }
+      } catch {
+        // Sem ViaCEP o cliente preenche o endereço à mão.
       }
+      const r = await cotarFrete({ items, cep });
+      if (!r.ok) {
+        setError(r.error);
+        return;
+      }
+      setSubtotal(r.subtotal);
+      setOptions(r.options);
     } catch {
-      // Sem ViaCEP o cliente preenche o endereço à mão.
+      setError("Não foi possível continuar. Tente novamente.");
+    } finally {
+      setBusy(false);
     }
-    const r = await cotarFrete({ items, cep });
-    setBusy(false);
-    if (!r.ok) return setError(r.error);
-    setSubtotal(r.subtotal);
-    setOptions(r.options);
   }
 
   async function pagar(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setBusy(true);
-    const r = await iniciarPagamento({ items, customer, address, shippingServiceId: serviceId });
-    if (!r.ok) {
+    try {
+      const r = await iniciarPagamento({ items, customer, address, shippingServiceId: serviceId });
+      if (!r.ok) {
+        setBusy(false);
+        setError(r.error);
+        return;
+      }
+      // Sem setBusy(false) aqui: a página está saindo para o Asaas.
+      window.location.assign(r.paymentUrl);
+    } catch {
       setBusy(false);
-      return setError(r.error);
+      setError("Não foi possível continuar. Tente novamente.");
     }
-    window.location.assign(r.paymentUrl);
   }
 
   if (cart.items.length === 0) return <p>Seu carrinho está vazio.</p>;
@@ -74,7 +90,12 @@ export function CheckoutForm() {
       <fieldset style={{ border: "none", display: "grid", gap: 12 }}>
         <legend style={{ fontWeight: 900, fontSize: 18, color: P.navy, marginBottom: 8 }}>Entrega</legend>
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <label style={{ ...field, flex: 1 }}>CEP<input style={input} value={address.cep} onChange={(e) => setAddress({ ...address, cep: formatCep(e.target.value) || e.target.value })} inputMode="numeric" autoComplete="postal-code" required /></label>
+          <label style={{ ...field, flex: 1 }}>CEP<input style={input} value={address.cep} onChange={(e) => {
+            setAddress({ ...address, cep: formatCep(e.target.value) || e.target.value });
+            setOptions([]);
+            setServiceId(null);
+            setSubtotal(null);
+          }} inputMode="numeric" autoComplete="postal-code" required /></label>
           <button type="button" onClick={calcularFrete} disabled={busy} className="cta-primary">Calcular frete</button>
         </div>
         <label style={field}>Rua<input style={input} value={address.logradouro} onChange={(e) => setAddress({ ...address, logradouro: e.target.value })} required /></label>
