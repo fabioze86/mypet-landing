@@ -1,5 +1,6 @@
 import type { ProductVariant } from "./catalog-utils";
 import type { ClientConfig } from "./theme";
+import { hasSellablePrice } from "./retail";
 
 export type PdpProductForSeo = {
   id: string;
@@ -57,14 +58,14 @@ export function productJsonLd(
 ) {
   if (product.productRole === "parent") return null;
   const url = canonicalUrl(domain, `/produtos/${product.id}`);
-  const withOffers = opts?.offers && product.salePrice != null;
+  const withOffers = opts?.offers && hasSellablePrice(product.salePrice);
   const offers = withOffers
     ? {
         offers: {
           "@type": "Offer",
           url,
           priceCurrency: "BRL",
-          price: product.salePrice!.toFixed(2),
+          price: product.salePrice.toFixed(2),
           availability:
             (product.stockQty ?? 0) > 0
               ? "https://schema.org/InStock"

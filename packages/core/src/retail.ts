@@ -7,11 +7,17 @@ export type RetailConfig = {
   consultWhatsApp: string;
 };
 
+/** Regra única de "tem preço de venda": número finito maior que zero. */
+export function hasSellablePrice(price: number | null | undefined): price is number {
+  return typeof price === "number" && Number.isFinite(price) && price > 0;
+}
+
 export function installmentPlan(
   price: number,
   cfg: RetailConfig["installments"],
 ): { count: number; value: number } | null {
   if (!Number.isFinite(price) || price <= 0) return null;
+  if (cfg.max < 2 || !(cfg.minInstallment > 0)) return null;
   const count = Math.min(cfg.max, Math.floor(price / cfg.minInstallment));
   if (count < 2) return null;
   return { count, value: Math.round((price / count) * 100) / 100 };

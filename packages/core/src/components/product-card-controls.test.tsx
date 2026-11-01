@@ -113,4 +113,13 @@ describe("ProductCard — modo varejo (retail)", () => {
     expect(screen.queryByRole("button", { name: "Adicionar ao carrinho" })).toBeNull();
     expect(screen.getByRole("link", { name: "Consultar no WhatsApp" })).toBeInTheDocument();
   });
+
+  it("produto pai (com variantes) mostra Ver opções e nenhum controle de carrinho", () => {
+    render(createElement(ClientConfigProvider, { config: retailConfig },
+      createElement(CartProvider, null,
+        createElement(ProductCard, { product: { ...product, hasVariants: true, priceLabel: "A partir de R$ 10,00" } }))));
+    expect(screen.getByRole("link", { name: "Ver opções" })).toHaveAttribute("href", "/produtos/coleira-p");
+    expect(screen.getByText("A partir de R$ 10,00")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Adicionar ao carrinho" })).toBeNull();
+  });
 });

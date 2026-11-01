@@ -1,7 +1,7 @@
 "use client";
 
 import { useClientConfig } from "../theme";
-import { installmentLabel, type RetailConfig } from "../retail";
+import { hasSellablePrice, installmentLabel, type RetailConfig } from "../retail";
 import { buildProductInterestMessage, buildWhatsAppLink } from "../whatsapp";
 import { AddToCartControl } from "./add-to-cart-control";
 import type { CartItem } from "../cart";
@@ -26,7 +26,7 @@ export function RetailBuyAction({
   const { palette } = useClientConfig();
   const pdp = size === "pdp";
   const soldOut = inStock === false;
-  const hasPrice = salePrice !== null && salePrice > 0;
+  const hasPrice = hasSellablePrice(salePrice);
   const installments = hasPrice && !soldOut ? installmentLabel(salePrice, retail.installments) : null;
   const consultHref = buildWhatsAppLink(retail.consultWhatsApp, buildProductInterestMessage(product.name));
 

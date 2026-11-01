@@ -84,7 +84,16 @@ export function ProductCard({
         </div>
       </Link>
       <div style={{ padding: masonry ? "0 4px 4px" : "0 12px 12px" }}>
-        {retail && !product.hasVariants ? (
+        {retail && product.hasVariants ? (
+          <>
+            {product.priceLabel && (
+              <div style={{ marginBottom: 4, fontSize: 18, fontWeight: 900, color: palette.navy }}>
+                {product.priceLabel}
+              </div>
+            )}
+            <VerOpcoesLink id={product.id} color={palette.pink} />
+          </>
+        ) : retail ? (
           <RetailBuyAction
             retail={retail}
             size="card"
@@ -116,24 +125,7 @@ export function ProductCard({
               if (addControl !== "stepper") return <AddToCartControl product={cartProduct} compact />;
               if (product.hasVariants) {
                 return (
-                  <Link
-                    href={`/produtos/${product.id}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: 38,
-                      marginTop: 8,
-                      border: `1.5px solid ${palette.pink}`,
-                      borderRadius: 10,
-                      color: palette.pink,
-                      fontSize: 14,
-                      fontWeight: 800,
-                      textDecoration: "none",
-                    }}
-                  >
-                    Ver opções
-                  </Link>
+                  <VerOpcoesLink id={product.id} color={palette.pink} />
                 );
               }
               return <CartStepperControl product={cartProduct} />;
@@ -142,5 +134,28 @@ export function ProductCard({
         )}
       </div>
     </div>
+  );
+}
+
+function VerOpcoesLink({ id, color }: { id: string; color: string }) {
+  return (
+    <Link
+      href={`/produtos/${id}`}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: 38,
+        marginTop: 8,
+        border: `1.5px solid ${color}`,
+        borderRadius: 10,
+        color,
+        fontSize: 14,
+        fontWeight: 800,
+        textDecoration: "none",
+      }}
+    >
+      Ver opções
+    </Link>
   );
 }

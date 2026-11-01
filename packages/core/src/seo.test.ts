@@ -90,6 +90,10 @@ describe("productJsonLd offers", () => {
     ) as Record<string, any>;
     expect(r.offers.availability).toBe("https://schema.org/OutOfStock");
   });
+  it("preço zero não emite offers", () => {
+    const r = productJsonLd({ ...base, salePrice: 0, stockQty: 5 }, "d.com", { offers: true }) as Record<string, unknown>;
+    expect(r.offers).toBeUndefined();
+  });
   it("sem preço não emite offers mesmo com offers:true", () => {
     const r = productJsonLd({ ...base, stockQty: 5 }, "d.com", { offers: true }) as Record<string, unknown>;
     expect(r.offers).toBeUndefined();
