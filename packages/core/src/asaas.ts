@@ -46,6 +46,7 @@ export async function createAsaasCheckout(
       headers: { "Content-Type": "application/json", Accept: "application/json", access_token: cfg.apiKey },
       body: JSON.stringify(body),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     const data = (await res.json().catch(() => ({}))) as { id?: string; link?: string };
     if (!res.ok || !data.id || !data.link) {

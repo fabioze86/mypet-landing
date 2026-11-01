@@ -60,6 +60,12 @@ describe("priceCart", () => {
     });
   });
 
+  it("consulta só produtos ativos", async () => {
+    const { client, calls } = fakeSupabase({ products: [{ data: [productRow(ID_A, "Shampoo", 25, 5)] }] });
+    await priceCart(client, "azpetshop", [{ id: ID_A, qty: 1 }]);
+    expect(calls.some((c) => c.table === "products" && c.method === "eq" && c.args[0] === "status" && c.args[1] === "active")).toBe(true);
+  });
+
   it("bloqueia produto ausente, sem preço vendável ou sem estoque", async () => {
     for (const row of [productRow(ID_A, "X", null, 5), productRow(ID_A, "X", 0, 5), productRow(ID_A, "X", 25, 0), productRow(ID_A, "X", 25, null)]) {
       const { client } = fakeSupabase({ products: [{ data: [row] }] });
@@ -139,7 +145,7 @@ describe("startCheckout", () => {
     expect(calls.some((c) => c.table === "orders")).toBe(false);
   });
 
-  it("falha do Asaas deixa o pedido aguardando e devolve erro", async () => {
+  it("falha do Asaas apaga o pedido e devolve erro", async () => {
     const fetchFn = vi.fn(async (url: string) =>
       url.includes("/v3/checkouts")
         ? new Response("{}", { status: 500 })
@@ -154,6 +160,25 @@ describe("startCheckout", () => {
     const r = await startCheckout(deps(client, fetchFn), input);
     expect(r).toEqual({ ok: false, error: "Não foi possível iniciar o pagamento. Tente novamente." });
     expect(calls.some((c) => c.table === "order_payments")).toBe(false);
+    expect(calls.some((c) => c.table === "orders" && c.method === "delete")).toBe(true);
+  });
+
+  it("falha ao gravar o pagamento apaga o pedido", async () => {
+    const fetchFn = vi.fn(async (url: string) =>
+      url.includes("/v3/checkouts")
+        ? new Response(JSON.stringify({ id: "chk_1", link: "https://asaas.test/c/chk_1" }), { status: 200 })
+        : new Response(JSON.stringify([{ id: 1, name: "PAC", custom_price: "20.00", company: { name: "Correios" } }]), { status: 200 }),
+    ) as unknown as typeof fetch;
+    const { client, calls } = fakeSupabase({
+      products: [{ data: [productRow(ID_A, "Shampoo", 25, 5)] }],
+      orders: [{ data: { id: "o1", number: 1042 } }, {}],
+      order_items: [{}],
+      order_shipping: [{}],
+      order_payments: [{ error: { message: "x" } }],
+    });
+    const r = await startCheckout(deps(client, fetchFn), input);
+    expect(r.ok).toBe(false);
+    expect(calls.some((c) => c.table === "orders" && c.method === "delete")).toBe(true);
   });
 
   it("falha ao gravar os itens apaga o pedido", async () => {

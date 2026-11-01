@@ -36,6 +36,13 @@ describe("createAsaasCheckout", () => {
     expect(body.customerData).toEqual({ name: "Maria Souza", cpfCnpj: "52998224725", email: "maria@exemplo.com", phone: "11988887777" });
   });
 
+  it("passa um sinal de timeout ao fetch", async () => {
+    const fetchFn = vi.fn(async () => new Response(JSON.stringify({ id: "c", link: "l" }), { status: 200 })) as unknown as typeof fetch;
+    await createAsaasCheckout(cfg, input, fetchFn);
+    const init = (fetchFn as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0][1];
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
   it("sem parcelamento (1x) manda só DETACHED", async () => {
     const fetchFn = vi.fn(async () => new Response(JSON.stringify({ id: "c", link: "l" }), { status: 200 })) as unknown as typeof fetch;
     await createAsaasCheckout(cfg, { ...input, maxInstallments: 1 }, fetchFn);

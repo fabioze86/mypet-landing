@@ -49,6 +49,21 @@ describe("handleAsaasWebhook", () => {
     expect(onPaid).toHaveBeenCalledWith("o1");
   });
 
+  it("exceção após gravar o evento libera o evento e devolve 500", async () => {
+    const { client, calls } = fakeSupabase({
+      payment_webhook_events: [{}, {}],
+      order_payments: [linked("aguardando_pagamento")],
+    });
+    (client as unknown as { rpc: () => never }).rpc = () => {
+      throw new Error("boom");
+    };
+    const onPaid = vi.fn(async () => {});
+    const r = await handleAsaasWebhook({ supabase: client, asaas, onPaid }, { token: "w", body: paid });
+    expect(r).toEqual({ status: 500, body: "erro" });
+    expect(calls.some((c) => c.table === "payment_webhook_events" && c.method === "delete")).toBe(true);
+    expect(onPaid).not.toHaveBeenCalled();
+  });
+
   it("rpc devolve false (já pago): não avisa de novo", async () => {
     const { deps, onPaid } = setup({
       payment_webhook_events: [{}],

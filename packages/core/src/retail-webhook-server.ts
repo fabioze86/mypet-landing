@@ -35,49 +35,55 @@ export async function handleAsaasWebhook(deps: Deps, req: { token: string | null
     return { status: 500, body: "erro" };
   };
 
-  const { data: payment, error: lookupError } = await supabase
-    .from("order_payments")
-    .select("order_id, orders(id, status)")
-    .eq("asaas_checkout_id", event.checkoutId)
-    .maybeSingle();
-  if (lookupError) return fail("consulta do pagamento falhou:", lookupError.message);
-  const order = (payment as { order_id: string; orders: { id: string; status: string } | null } | null)?.orders;
-  if (!order) {
-    if (event.event === "CHECKOUT_PAID") return fail("pagamento recebido sem pedido; Asaas deve reenviar:", event.checkoutId);
-    console.error("[asaas-webhook] pedido não encontrado para o checkout", event.checkoutId);
-    return { status: 200, body: "pedido não encontrado" };
-  }
-
-  const now = new Date().toISOString();
-  let becamePaid = false;
-  if (event.event === "CHECKOUT_PAID") {
-    const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
-    if (error) return fail("pedido não marcado como pago:", error.message);
-    becamePaid = data === true;
-  } else {
-    const next = statusAfterCheckoutEvent(order.status, event.event);
-    if (next) {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: next, updated_at: now })
-        .eq("id", order.id)
-        .eq("status", "aguardando_pagamento");
-      if (error) return fail("pedido não atualizado:", error.message);
+  try {
+    const { data: payment, error: lookupError } = await supabase
+      .from("order_payments")
+      .select("order_id, orders(id, status)")
+      .eq("asaas_checkout_id", event.checkoutId)
+      .maybeSingle();
+    if (lookupError) return fail("consulta do pagamento falhou:", lookupError.message);
+    const order = (payment as { order_id: string; orders: { id: string; status: string } | null } | null)?.orders;
+    if (!order) {
+      if (event.event === "CHECKOUT_PAID") return fail("pagamento recebido sem pedido; Asaas deve reenviar:", event.checkoutId);
+      console.error("[asaas-webhook] pedido não encontrado para o checkout", event.checkoutId);
+      return { status: 200, body: "pedido não encontrado" };
     }
-  }
 
-  const { error: payError } = await supabase
-    .from("order_payments")
-    .update({ status: PAYMENT_STATUS[event.event], last_event_id: event.id, last_event_payload: req.body, updated_at: now })
-    .eq("asaas_checkout_id", event.checkoutId);
-  if (payError) console.error("[asaas-webhook] pagamento não atualizado:", payError.message);
-
-  if (becamePaid) {
-    try {
-      await deps.onPaid(order.id);
-    } catch (err) {
-      console.error("[asaas-webhook] aviso de pedido pago falhou:", (err as Error).message);
+    const now = new Date().toISOString();
+    let becamePaid = false;
+    if (event.event === "CHECKOUT_PAID") {
+      const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
+      if (error) return fail("pedido não marcado como pago:", error.message);
+      becamePaid = data === true;
+    } else {
+      const next = statusAfterCheckoutEvent(order.status, event.event);
+      if (next) {
+        const { error } = await supabase
+          .from("orders")
+          .update({ status: next, updated_at: now })
+          .eq("id", order.id)
+          .eq("status", "aguardando_pagamento");
+        if (error) return fail("pedido não atualizado:", error.message);
+      }
     }
-  }
+
+    const { error: payError } = await supabase
+      .from("order_payments")
+      .update({ status: PAYMENT_STATUS[event.event], last_event_id: event.id, last_event_payload: req.body, updated_at: now })
+      .eq("asaas_checkout_id", event.checkoutId);
+    if (payError) console.error("[asaas-webhook] pagamento não atualizado:", payError.message);
+
+    if (becamePaid) {
+      try {
+        await deps.onPaid(order.id);
+      } catch (err) {
+        console.error("[asaas-webhook] aviso de pedido pago falhou:", (err as Error).message);
+      }
+    }
   return { status: 200, body: "ok" };
+  } catch (err) {
+    console.error("[asaas-webhook] exceção ao processar:", (err as Error).message);
+    await releaseEvent();
+    return { status: 500, body: "erro" };
+  }
 }

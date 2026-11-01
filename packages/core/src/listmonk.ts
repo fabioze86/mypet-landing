@@ -10,8 +10,17 @@ export async function sendListmonkTx(
     const res = await fetchFn(`${cfg.baseUrl.replace(/\/$/, "")}/api/tx`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `token ${cfg.apiUser}:${cfg.apiToken}` },
-      body: JSON.stringify({ subscriber_email: msg.email, template_id: msg.templateId, data: msg.data, content_type: "html" }),
+      // "external": o cliente do varejo não é assinante do Listmonk (exige Listmonk >= 5;
+      // versões antigas exigem que o assinante já exista).
+      body: JSON.stringify({
+        subscriber_email: msg.email,
+        template_id: msg.templateId,
+        data: msg.data,
+        content_type: "html",
+        subscriber_mode: "external",
+      }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) console.error("[listmonk] HTTP", res.status, (await res.text()).slice(0, 300));
     return res.ok;

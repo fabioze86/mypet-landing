@@ -39,6 +39,22 @@ describe("quoteShipping", () => {
     });
   });
 
+  it("preço vazio é tratado como ausente: cai para price e descarta opção sem preço", async () => {
+    const r = await quoteShipping(cfg, { toCep: "20040002", pkg, insuranceValue: 10 }, fakeFetch(200, [
+      { id: 1, name: "PAC", custom_price: "", price: "25.00", company: { name: "Correios" } },
+      { id: 2, name: "Grátis?", custom_price: "", price: "", company: { name: "X" } },
+      { id: 3, name: "Zero", custom_price: "0.00", price: "0.00", company: { name: "Y" } },
+    ]));
+    expect(r).toEqual({ ok: true, options: [{ serviceId: 1, name: "PAC", company: "Correios", price: 25, deliveryDays: null }] });
+  });
+
+  it("passa um sinal de timeout ao fetch", async () => {
+    const fetchFn = fakeFetch(200, [{ id: 1, name: "PAC", price: "20.00", company: { name: "C" } }]);
+    await quoteShipping(cfg, { toCep: "20040002", pkg, insuranceValue: 10 }, fetchFn);
+    const init = (fetchFn as unknown as { mock: { calls: [string, RequestInit][] } }).mock.calls[0][1];
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
   it("erro HTTP vira erro amigável", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const r = await quoteShipping(cfg, { toCep: "20040002", pkg, insuranceValue: 10 }, fakeFetch(500, { message: "x" }));

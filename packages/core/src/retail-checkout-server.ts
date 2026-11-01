@@ -36,6 +36,7 @@ export async function priceCart(
     .from("products")
     .select("id, name, stock_qty, product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)")
     .in("id", lines.map((l) => l.id))
+    .eq("status", "active")
     .eq("product_channel_links.channel", channel)
     .eq("product_channel_prices.channel", channel);
   if (error || !data) {
@@ -164,7 +165,11 @@ export async function startCheckout(
     },
     deps.fetchFn,
   );
-  if (!checkout.ok) return checkout; // pedido fica "aguardando_pagamento" sem cobrança; expira sem efeito
+  if (!checkout.ok) {
+    // Sem cobrança criada o pedido não tem como ser pago: apaga (a cascata leva itens e entrega).
+    await rollback();
+    return checkout;
+  }
 
   const { error: paymentError } = await supabase.from("order_payments").insert({
     order_id: orderId,
@@ -175,6 +180,7 @@ export async function startCheckout(
   if (paymentError) {
     // Sem esse registro o webhook não acha o pedido: não manda o cliente pagar.
     console.error("[retail-checkout] pagamento não gravado:", paymentError.message);
+    await rollback();
     return { ok: false, error: ERRO_PEDIDO };
   }
 

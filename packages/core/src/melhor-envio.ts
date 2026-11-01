@@ -38,6 +38,7 @@ export async function quoteShipping(
         options: { insurance_value: input.insuranceValue, receipt: false, own_hand: false },
       }),
       cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) {
       console.error("[melhor-envio] HTTP", res.status);
@@ -49,16 +50,23 @@ export async function quoteShipping(
     return { ok: false, error: ERRO_COTACAO };
   }
 
+  // Vazio, nulo ou não numérico conta como ausente (Number("") seria 0 = frete grátis falso).
+  const parsePrice = (v: unknown): number | null => {
+    if (typeof v !== "string" && typeof v !== "number") return null;
+    if (typeof v === "string" && v.trim() === "") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
   const options = (Array.isArray(raw) ? raw : [])
-    .filter((o) => !o.error && (o.custom_price ?? o.price) != null)
+    .filter((o) => !o.error)
     .map((o) => ({
       serviceId: o.id,
       name: o.name ?? "Entrega",
       company: o.company?.name ?? "",
-      price: Number(o.custom_price ?? o.price),
+      price: parsePrice(o.custom_price) ?? parsePrice(o.price),
       deliveryDays: o.custom_delivery_time ?? o.delivery_time ?? null,
     }))
-    .filter((o) => Number.isFinite(o.price) && o.price >= 0)
+    .filter((o): o is ShippingOption => o.price !== null && o.price > 0)
     .sort((a, b) => a.price - b.price);
 
   if (options.length === 0) return { ok: false, error: "Não há opção de entrega para este CEP." };

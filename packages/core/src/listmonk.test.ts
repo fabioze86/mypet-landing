@@ -19,7 +19,9 @@ describe("sendListmonkTx", () => {
       template_id: 7,
       data: { numero: 1042 },
       content_type: "html",
+      subscriber_mode: "external",
     });
+    expect(init.signal).toBeInstanceOf(AbortSignal);
   });
 
   it("HTTP 4xx devolve false", async () => {
