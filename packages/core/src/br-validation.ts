@@ -28,6 +28,29 @@ export function isValidCnpj(cnpj: string): boolean {
   return digit(12) === Number(cnpj[12]) && digit(13) === Number(cnpj[13]);
 }
 
+export function isValidCpf(cpf: string): boolean {
+  if (!/^\d{11}$/.test(cpf) || /^(\d)\1{10}$/.test(cpf)) return false;
+  const digit = (length: number) => {
+    const sum = cpf
+      .slice(0, length)
+      .split("")
+      .reduce((total, char, index) => total + Number(char) * (length + 1 - index), 0);
+    const remainder = (sum * 10) % 11;
+    return remainder === 10 ? 0 : remainder;
+  };
+  return digit(9) === Number(cpf[9]) && digit(10) === Number(cpf[10]);
+}
+
+export function formatCpf(value: string): string {
+  const d = onlyDigits(value).slice(0, 11);
+  return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+}
+
+export function formatCep(value: string): string {
+  const d = onlyDigits(value).slice(0, 8);
+  return d.replace(/^(\d{5})(\d{3})$/, "$1-$2");
+}
+
 // Mesmo formato gravado pelo pré-acesso do mypet: 55 + DDD + número.
 export function normalizeWhatsapp(value: string): string | null {
   let digits = onlyDigits(value);

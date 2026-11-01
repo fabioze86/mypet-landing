@@ -40,6 +40,7 @@
     "./push-server": "./src/push-server.ts",
     "./querystring": "./src/querystring.ts",
     "./retail": "./src/retail.ts",
+    "./retail-checkout": "./src/retail-checkout.ts",
     "./seo": "./src/seo.ts",
     "./supabase": "./src/supabase.ts",
     "./supabase-browser": "./src/supabase-browser.ts",

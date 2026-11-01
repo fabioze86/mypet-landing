@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCnpj, formatWhatsapp, isValidCnpj, normalizeWhatsapp, onlyDigits, validateIdentity } from "./br-validation";
+import { formatCnpj, formatCep, formatCpf, formatWhatsapp, isValidCnpj, isValidCpf, normalizeWhatsapp, onlyDigits, validateIdentity } from "./br-validation";
 
 describe("isValidCnpj", () => {
   it("aceita CNPJ válido", () => expect(isValidCnpj("11222333000181")).toBe(true));
@@ -59,5 +59,24 @@ describe("validateIdentity", () => {
     [{ nome: 42, whatsapp: null }, "nome", "Informe seu nome."],
   ])("recusa %j", (input, field, error) => {
     expect(validateIdentity(input)).toEqual({ ok: false, field, error });
+  });
+});
+
+describe("isValidCpf", () => {
+  it("aceita CPF válido só com dígitos", () => {
+    expect(isValidCpf("52998224725")).toBe(true);
+  });
+  it("rejeita dígito verificador errado, repetidos e tamanho errado", () => {
+    expect(isValidCpf("52998224724")).toBe(false);
+    expect(isValidCpf("11111111111")).toBe(false);
+    expect(isValidCpf("5299822472")).toBe(false);
+    expect(isValidCpf("529.982.247-25")).toBe(false);
+  });
+});
+
+describe("formatCpf / formatCep", () => {
+  it("formata", () => {
+    expect(formatCpf("52998224725")).toBe("529.982.247-25");
+    expect(formatCep("01001000")).toBe("01001-000");
   });
 });
