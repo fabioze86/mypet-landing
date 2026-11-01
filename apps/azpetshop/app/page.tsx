@@ -58,23 +58,11 @@ function Hero() {
           </h1>
           <p style={{ marginTop: 18, fontSize: 17, color: PALETTE.gray600, maxWidth: "46ch", lineHeight: 1.5 }}>
             Ração, petisco, banho e brincadeira — separado e entregue rapidinho.
-            Já colocou tudo no carrinho? Finalize pelo WhatsApp, sem precisar criar conta.
+            Escolha, coloque no carrinho e fale com a gente pelo WhatsApp, sem precisar criar conta.
           </p>
           <div style={{ display: "flex", gap: 14, marginTop: 26, flexWrap: "wrap" }}>
             <a href="#catalogo" className="btn-primary">Ver ofertas da semana</a>
             <Link href="/cotacao" className="btn-secondary">Finalizar pelo WhatsApp</Link>
-          </div>
-          <div style={{ display: "flex", gap: 26, marginTop: 32, flexWrap: "wrap" }}>
-            {[
-              ["+1.200", "produtos no catálogo"],
-              ["24h", "resposta da cotação"],
-              ["4.8★", "avaliação dos tutores"],
-            ].map(([n, l]) => (
-              <div key={l} style={{ display: "flex", flexDirection: "column" }}>
-                <b style={{ fontFamily: "var(--font-baloo)", fontSize: 22, color: PALETTE.cyan }}>{n}</b>
-                <span style={{ fontSize: 12.5, color: PALETTE.gray600, fontWeight: 600 }}>{l}</span>
-              </div>
-            ))}
           </div>
         </div>
         <div className="hero-art">
@@ -83,30 +71,6 @@ function Hero() {
           <div className="blob-card bc3"><span className="blob-emoji">🦴</span><b>Petiscos naturais</b><span>cães &amp; gatos</span></div>
           <div className="blob-card bc4"><span className="blob-emoji">🏠</span><b>Casinhas</b><span>e camas confort</span></div>
           <div className="sticker">bipou, chegou! 🚀</div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function PromoStrip() {
-  return (
-    <section style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 24px" }}>
-      <div className="promo-grid">
-        <div className="promo-card" style={{ background: PALETTE.orange, color: PALETTE.white }}>
-          <span className="promo-tag" style={{ background: "rgba(255,255,255,.25)" }}>Clube AZ</span>
-          <h3>Assine e ganhe 10% em toda ração</h3>
-          <p>Entrega programada, sem taxa, cancele quando quiser.</p>
-        </div>
-        <div className="promo-card" style={{ background: PALETTE.navy, color: PALETTE.gray50 }}>
-          <span className="promo-tag" style={{ background: "rgba(255,255,255,.18)" }}>Novidade</span>
-          <h3>Linha natural pet</h3>
-          <p>Petiscos sem conservante, direto da fábrica.</p>
-        </div>
-        <div className="promo-card" style={{ background: PALETTE.white, color: PALETTE.navy, border: `2px solid ${PALETTE.navy}` }}>
-          <span className="promo-tag" style={{ background: LIME, color: PALETTE.navy }}>Sem conta</span>
-          <h3>Cotação por WhatsApp</h3>
-          <p>Monte o carrinho e finalize direto pelo Zap.</p>
         </div>
       </div>
     </section>
@@ -134,10 +98,10 @@ function QuoteCta() {
 
 function TrustRow() {
   const items = [
-    ["🚚", "Entrega rápida", "Mesmo dia na capital, em até 3 dias no resto do país."],
-    ["💳", "Pagamento seguro", "Pix, cartão em até 6x e boleto para revenda."],
-    ["💬", "Atendimento humano", "Time que entende de bicho responde sua dúvida."],
-    ["🛡️", "Garantia do tutor", "Produto com problema, troca sem burocracia."],
+    ["🚚", "Entrega para todo o Brasil", "Frete e prazo calculados pelo CEP antes de pagar."],
+    ["💳", "Pagamento seguro", "Pix ou cartão de crédito parcelado sem juros."],
+    ["💬", "Atendimento humano", "Tire dúvidas pelo WhatsApp com o nosso time."],
+    ["🛡️", "7 dias para desistir", "Troca e devolução conforme o Código de Defesa do Consumidor."],
   ];
   return (
     <section style={{ maxWidth: 1200, margin: "0 auto", padding: "8px 24px 20px" }}>
@@ -208,15 +172,6 @@ export default async function Home({
           text-decoration: none; display: inline-block; font-family: var(--font-nunito), sans-serif;
         }
 
-        .promo-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 18px; }
-        .promo-card { border-radius: 22px; padding: 26px; min-height: 140px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
-        .promo-card h3 { font-family: var(--font-baloo), sans-serif; font-size: 21px; font-weight: 800; }
-        .promo-card p { margin: 0; font-size: 13.5px; font-weight: 600; opacity: 0.85; }
-        .promo-tag {
-          align-self: flex-start; border-radius: 100px; padding: 4px 12px; font-size: 11px;
-          font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;
-        }
-
         .quote-box {
           background: ${PALETTE.cyan}; border-radius: 26px; padding: 40px;
           display: grid; grid-template-columns: 1.2fr auto; gap: 26px; align-items: center;
@@ -262,7 +217,6 @@ export default async function Home({
         @media (max-width: 900px) {
           .hero-grid { grid-template-columns: 1fr; }
           .hero-art { height: 320px; margin-top: 10px; }
-          .promo-grid { grid-template-columns: 1fr; }
           .quote-box { grid-template-columns: 1fr; text-align: left; }
           .trust-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -275,7 +229,6 @@ export default async function Home({
       <SearchBar action="/busca" />
 
       <Hero />
-      <PromoStrip />
 
       <div id="catalogo">
         <Suspense fallback={<p style={{ padding: 24, color: PALETTE.gray600 }}>Carregando catálogo…</p>}>
