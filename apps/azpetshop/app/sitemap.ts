@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getSitemapProducts, getCategories } from "@mypet/core/catalog";
 import { clientConfig } from "@/client.config";
+import { POLITICAS } from "@/lib/politicas";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [products, categories] = await Promise.all([
@@ -12,6 +13,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
+    ...POLITICAS.map((p) => ({
+      url: `${base}/politicas/${p.slug}`,
+      changeFrequency: "yearly" as const,
+      priority: 0.2,
+    })),
     ...categories.map((c) => ({
       url: `${base}/categoria/${c.slug}`,
       changeFrequency: "daily" as const,
