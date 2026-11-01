@@ -27,7 +27,10 @@ entra em nenhum critério desta entrega.
 
 ## Decisões validadas com o usuário
 
-1. **Checkout real no site** (não link de pagamento, não WhatsApp).
+1. **Checkout real no site** (não link de pagamento). **A forma de finalizar é escolha por site**,
+   via nova feature `checkout` em `packages/core/src/features.ts`: `whatsapp` (cotação atual),
+   `online` (pagamento Asaas) ou `ambos` (os dois botões no carrinho). A azpetshop usa `ambos`;
+   os demais sites ficam em `whatsapp` (comportamento atual). Google Shopping exige `online` ou `ambos`.
 2. **Frete via Melhor Envio** (API de cotação; etiqueta gerada à mão no painel do Melhor Envio).
    O produto sai do mesmo estoque/endereço da My Pet (`stock_qty` do hub é compartilhado).
 3. **Pagamento via Asaas, checkout hospedado**: o site cria a cobrança pela API e redireciona o
@@ -61,8 +64,9 @@ Cada fase recebe seu próprio plano de implementação.
 ## Fase 1 — Conformidade da loja
 
 **Dados da empresa** num único módulo, `apps/azpetshop/lib/empresa.ts`: razão social, nome
-fantasia, CNPJ, endereço completo, e-mail, WhatsApp de atendimento, horário. Os valores reais são
-fornecidos pelo usuário na implementação. Rodapé, páginas de política e JSON-LD `Organization`
+fantasia, CNPJ, endereço completo, e-mail, WhatsApp de atendimento, horário. Nesta fase usa
+**valores genéricos de exemplo** (decisão do usuário); a troca pelos reais é bloqueante para o
+deploy de produção e para o cadastro no Merchant Center. Rodapé, páginas de política e JSON-LD `Organization`
 leem só daqui.
 
 **Rodapé** da loja: dados da empresa, links das políticas, formas de pagamento (Pix, cartão).
@@ -96,8 +100,10 @@ e estoque; regras de "Consultar preço" / "Esgotado" conforme decisão 8.
    id do evento. `PAYMENT_CONFIRMED`/`PAYMENT_RECEIVED` → `pago`, baixa estoque e dispara avisos;
    `PAYMENT_OVERDUE`/cancelamento → `expirado`/`cancelado`.
 
-O carrinho de cotação por WhatsApp é substituído pelo checkout. `/cotacao` passa a redirecionar
-para o carrinho; o WhatsApp fica como botão de dúvida e como "Consultar preço".
+A cotação por WhatsApp **não é removida**. Com `checkout: "ambos"`, o carrinho mostra
+"Pagar agora" (vai para `/checkout`) e "Finalizar pelo WhatsApp" (fluxo atual de `/cotacao`).
+Com `whatsapp`, só o segundo; com `online`, só o primeiro. A feature aparece no admin em
+"funcionalidades", como `commerce`.
 
 ### Dados (migração no `hub_catalogo`)
 

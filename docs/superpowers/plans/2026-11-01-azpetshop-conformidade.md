@@ -1193,3 +1193,4 @@ git commit -m "fix(azpetshop): home sem afirmações não verificáveis (Merchan
 - [ ] Nenhum `<` de placeholder em `apps/azpetshop/lib/empresa.ts`: `grep -n "<" apps/azpetshop/lib/empresa.ts` sem resultados.
 - [ ] Usuário revisou o texto das 4 políticas.
 - [ ] Não promover para produção até a fase 2 estar pronta (ver Global Constraints).
+- [ ] **Bloqueante para produção:** `apps/azpetshop/lib/empresa.ts` usa dados genéricos de exemplo (decisão do usuário em 2026-11-01); trocar pelos reais antes do deploy e do Merchant Center.
