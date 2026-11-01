@@ -29,6 +29,8 @@ export function smtpMailer(): Mailer {
     port,
     secure: port === 465,
     connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
     auth: { user: SMTP_USER, pass: SMTP_PASS },
   });
   return async ({ to, subject, text }) => {

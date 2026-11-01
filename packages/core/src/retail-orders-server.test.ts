@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fakeSupabase } from "./test-utils/fake-supabase";
-import { getRetailOrder } from "./retail-orders-server";
+import { getRetailOrder, getRetailOrderById } from "./retail-orders-server";
 
 const ID = "33333333-3333-4333-8333-333333333333";
 const row = {
@@ -20,10 +20,20 @@ describe("getRetailOrder", () => {
     expect(order?.shipping?.serviceName).toBe("Correios PAC");
   });
 
-  it("token errado ou ausente quando exigido devolve null", async () => {
+  it("token errado ou vazio devolve null", async () => {
     const { client } = fakeSupabase({ orders: [{ data: row }, { data: row }] });
     expect(await getRetailOrder(client, ID, "outro")).toBeNull();
     expect(await getRetailOrder(client, ID, "")).toBeNull();
+  });
+
+  it("a visão pública nunca expõe o accessToken", async () => {
+    const { client } = fakeSupabase({ orders: [{ data: row }] });
+    expect(await getRetailOrder(client, ID, "tok")).not.toHaveProperty("accessToken");
+  });
+
+  it("a leitura interna devolve o accessToken", async () => {
+    const { client } = fakeSupabase({ orders: [{ data: row }] });
+    expect(await getRetailOrderById(client, ID)).toMatchObject({ id: ID, accessToken: "tok" });
   });
 
   it("id que não é uuid nem consulta", async () => {

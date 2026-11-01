@@ -26,28 +26,43 @@ export async function handleAsaasWebhook(deps: Deps, req: { token: string | null
     return { status: 500, body: "erro" };
   }
   const releaseEvent = async () => {
-    await supabase.from("payment_webhook_events").delete().eq("id", event.id);
+    const { error } = await supabase.from("payment_webhook_events").delete().eq("id", event.id);
+    if (error) console.error(`[asaas-webhook] evento ${event.id} NÃO liberado para reenvio:`, error.message);
+  };
+  const fail = async (msg: string, detail?: string) => {
+    console.error(`[asaas-webhook] ${msg}`, detail ?? "");
+    await releaseEvent();
+    return { status: 500, body: "erro" };
   };
 
-  const { data: payment } = await supabase
+  const { data: payment, error: lookupError } = await supabase
     .from("order_payments")
     .select("order_id, orders(id, status)")
     .eq("asaas_checkout_id", event.checkoutId)
     .maybeSingle();
+  if (lookupError) return fail("consulta do pagamento falhou:", lookupError.message);
   const order = (payment as { order_id: string; orders: { id: string; status: string } | null } | null)?.orders;
   if (!order) {
+    if (event.event === "CHECKOUT_PAID") return fail("pagamento recebido sem pedido; Asaas deve reenviar:", event.checkoutId);
     console.error("[asaas-webhook] pedido não encontrado para o checkout", event.checkoutId);
     return { status: 200, body: "pedido não encontrado" };
   }
 
   const now = new Date().toISOString();
-  const next = statusAfterCheckoutEvent(order.status, event.event);
-  if (next) {
-    const { error } = await supabase.from("orders").update({ status: next, updated_at: now }).eq("id", order.id);
-    if (error) {
-      console.error("[asaas-webhook] pedido não atualizado:", error.message);
-      await releaseEvent();
-      return { status: 500, body: "erro" };
+  let becamePaid = false;
+  if (event.event === "CHECKOUT_PAID") {
+    const { data, error } = await supabase.rpc("mark_order_paid", { p_order_id: order.id });
+    if (error) return fail("pedido não marcado como pago:", error.message);
+    becamePaid = data === true;
+  } else {
+    const next = statusAfterCheckoutEvent(order.status, event.event);
+    if (next) {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: next, updated_at: now })
+        .eq("id", order.id)
+        .eq("status", "aguardando_pagamento");
+      if (error) return fail("pedido não atualizado:", error.message);
     }
   }
 
@@ -57,9 +72,7 @@ export async function handleAsaasWebhook(deps: Deps, req: { token: string | null
     .eq("asaas_checkout_id", event.checkoutId);
   if (payError) console.error("[asaas-webhook] pagamento não atualizado:", payError.message);
 
-  if (next === "pago") {
-    const { error: stockError } = await supabase.rpc("decrement_order_stock", { p_order_id: order.id });
-    if (stockError) console.error("[asaas-webhook] estoque não baixado:", stockError.message);
+  if (becamePaid) {
     try {
       await deps.onPaid(order.id);
     } catch (err) {

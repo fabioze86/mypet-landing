@@ -36,18 +36,20 @@ function sameToken(a: string, b: string): boolean {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-/** Com `token` (página pública do pedido) só devolve o pedido se o token bater; sem token, uso interno. */
-export async function getRetailOrder(supabase: SupabaseClient, id: string, token?: string): Promise<RetailOrderView | null> {
+/** Uso interno (webhook, e-mails): sem verificação de token; devolve o accessToken para montar links. Nunca expor ao cliente. */
+export async function getRetailOrderById(
+  supabase: SupabaseClient,
+  id: string,
+): Promise<(RetailOrderView & { accessToken: string | null }) | null> {
   if (!UUID_RE.test(id)) return null;
-  if (token !== undefined && !token) return null;
   const { data, error } = await supabase.from("orders").select(SELECT).eq("id", id).maybeSingle();
   if (error || !data) return null;
   const r = data as unknown as Record<string, unknown> & { access_token: string | null };
-  if (token !== undefined && (!r.access_token || !sameToken(r.access_token, token))) return null;
 
   const s = one(r.order_shipping as Record<string, unknown> | Record<string, unknown>[] | null);
   const p = one(r.order_payments as { checkout_url: string | null } | { checkout_url: string | null }[] | null);
   return {
+    accessToken: r.access_token ?? null,
     id: r.id as string,
     number: num(r.number),
     status: r.status as string,
@@ -73,4 +75,14 @@ export async function getRetailOrder(supabase: SupabaseClient, id: string, token
       : null,
     paymentUrl: p?.checkout_url ?? null,
   };
+}
+
+/** Página pública do pedido: exige token não vazio que bata (comparação em tempo constante) e nunca devolve o accessToken. */
+export async function getRetailOrder(supabase: SupabaseClient, id: string, token: string): Promise<RetailOrderView | null> {
+  if (!token) return null;
+  const order = await getRetailOrderById(supabase, id);
+  if (!order || !order.accessToken || !sameToken(order.accessToken, token)) return null;
+  const { accessToken, ...view } = order;
+  void accessToken;
+  return view;
 }
