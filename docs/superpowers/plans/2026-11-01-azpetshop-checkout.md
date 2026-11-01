@@ -1505,14 +1505,13 @@ git commit -m "feat(core): checkout de varejo no servidor (preço, frete, pedido
   - `smtpMailer(): Mailer` (lê `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`)
   - `emailPedidoPagoEquipe(p: PedidoParaEmail): { subject: string; text: string }`
   - `emailPedidoPagoCliente(p: PedidoParaEmail): { subject: string; text: string }`
-  - `emailPedidoEnviadoCliente(p: PedidoParaEmail): { subject: string; text: string }`
   - `avisarPedidoPago(p: PedidoParaEmail, mailer: Mailer, equipeEmail: string): Promise<void>` (envia os dois; falha de um não impede o outro; nunca lança)
 
 - [ ] **Step 1: Teste** — `apps/azpetshop/lib/pedido-emails.test.ts`:
 
 ```ts
 import { describe, expect, it, vi } from "vitest";
-import { avisarPedidoPago, emailPedidoEnviadoCliente, emailPedidoPagoCliente, emailPedidoPagoEquipe, type PedidoParaEmail } from "./pedido-emails";
+import { avisarPedidoPago, emailPedidoPagoCliente, emailPedidoPagoEquipe, type PedidoParaEmail } from "./pedido-emails";
 
 const pedido: PedidoParaEmail = {
   id: "o1",
@@ -1541,11 +1540,6 @@ describe("e-mails de pedido", () => {
     const { subject, text } = emailPedidoPagoCliente(pedido);
     expect(subject).toBe("Recebemos seu pagamento — pedido 1042");
     expect(text).toContain(pedido.orderUrl);
-  });
-
-  it("aviso de envio leva o código de rastreio", () => {
-    const { text } = emailPedidoEnviadoCliente({ ...pedido, trackingCode: "BR123" });
-    expect(text).toContain("BR123");
   });
 
   it("avisarPedidoPago manda para equipe e cliente e não lança se um falhar", async () => {
@@ -1655,19 +1649,6 @@ export function emailPedidoPagoCliente(p: PedidoParaEmail) {
   };
 }
 
-export function emailPedidoEnviadoCliente(p: PedidoParaEmail) {
-  return {
-    subject: `Seu pedido ${p.number} foi enviado`,
-    text: [
-      `Olá, ${p.customerName}!`,
-      "",
-      `Seu pedido ${p.number} foi despachado por ${p.serviceName}.`,
-      `Código de rastreio: ${p.trackingCode ?? "—"}`,
-      `Acompanhe: ${p.orderUrl}`,
-    ].join("\n"),
-  };
-}
-
 /** Avisa equipe e cliente; falhas são registradas e nunca derrubam o webhook. */
 export async function avisarPedidoPago(p: PedidoParaEmail, mailer: Mailer, equipeEmail: string): Promise<void> {
   const envios = [
@@ -1693,7 +1674,7 @@ Expected: PASS. Se `formatWhatsapp("5511988887777")` não der `(11) 98888-7777`,
 
 ```bash
 git add apps/azpetshop/package.json pnpm-lock.yaml apps/azpetshop/lib/pedido-emails.ts apps/azpetshop/lib/pedido-emails.test.ts
-git commit -m "feat(azpetshop): e-mails de pedido pago e enviado"
+git commit -m "feat(azpetshop): e-mails de pedido pago (equipe e cliente)"
 ```
 
 ---
@@ -2748,7 +2729,65 @@ export async function markOrderShipped(formData: FormData) {
 }
 ```
 
-O e-mail de "pedido enviado" ao cliente **não** sai do admin nesta fase (o admin não tem SMTP nem o token do pedido); registre como pendência no relatório. O cliente vê o rastreio na página do pedido.
+**E-mail "pedido enviado" via Listmonk (decisão do usuário).** Depois de marcar enviado, chame `notifyOrderShipped` (abaixo). Falha ou Listmonk não configurado **não** desfaz o envio: só registra `console.error`.
+
+Crie `packages/core/src/listmonk.ts` (+ `listmonk.test.ts`, + export `"./listmonk"`):
+
+```ts
+export type ListmonkConfig = { baseUrl: string; apiUser: string; apiToken: string };
+
+/** E-mail transacional pelo Listmonk (POST /api/tx). Devolve false em qualquer falha. */
+export async function sendListmonkTx(
+  cfg: ListmonkConfig,
+  msg: { templateId: number; email: string; data: Record<string, unknown> },
+  fetchFn: typeof fetch = fetch,
+): Promise<boolean> {
+  try {
+    const res = await fetchFn(`${cfg.baseUrl.replace(/\/$/, "")}/api/tx`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `token ${cfg.apiUser}:${cfg.apiToken}` },
+      body: JSON.stringify({ subscriber_email: msg.email, template_id: msg.templateId, data: msg.data, content_type: "html" }),
+      cache: "no-store",
+    });
+    if (!res.ok) console.error("[listmonk] HTTP", res.status, (await res.text()).slice(0, 300));
+    return res.ok;
+  } catch (err) {
+    console.error("[listmonk] falha:", (err as Error).message);
+    return false;
+  }
+}
+```
+
+Testes: corpo e header `Authorization: token user:tok` corretos; HTTP 4xx → `false`; exceção de rede → `false` (silencie `console.error` no teste).
+
+Em `apps/admin/lib/orders.ts`, acrescente `listmonkEnv(): ListmonkConfig & { templateId: number; siteUrl: string } | null` lendo `LISTMONK_URL`, `LISTMONK_API_USER`, `LISTMONK_API_TOKEN`, `LISTMONK_TEMPLATE_PEDIDO_ENVIADO` (número) e `AZPETSHOP_SITE_URL` (padrão `https://www.azpetshop.com.br`); devolve `null` se faltar qualquer um (teste para os dois casos). Em `actions.ts`, após marcar enviado:
+
+```ts
+async function notifyOrderShipped(supabase: SupabaseClient, orderId: string, trackingCode: string) {
+  const env = listmonkEnv();
+  if (!env) return console.error("[admin/pedidos] Listmonk não configurado; e-mail de envio não enviado.");
+  const { data } = await supabase
+    .from("orders")
+    .select("number, customer_name, customer_email, access_token, order_shipping(service_name)")
+    .eq("id", orderId)
+    .maybeSingle();
+  const o = data as { number: number; customer_name: string; customer_email: string | null; access_token: string | null; order_shipping: { service_name: string } | null } | null;
+  if (!o?.customer_email || !o.access_token) return;
+  await sendListmonkTx(env, {
+    templateId: env.templateId,
+    email: o.customer_email,
+    data: {
+      numero: o.number,
+      nome: o.customer_name,
+      rastreio: trackingCode,
+      transportadora: o.order_shipping?.service_name ?? "",
+      link_pedido: `${env.siteUrl}/pedido/${orderId}?t=${o.access_token}`,
+    },
+  });
+}
+```
+
+O template no Listmonk usa essas chaves como `{{ .Tx.Data.numero }}`, `{{ .Tx.Data.rastreio }}` etc. Documente as chaves num comentário acima de `notifyOrderShipped`. Acrescente as env vars ao `.env.example` do admin (crie a seção se não existir). O cliente também vê o rastreio na página do pedido.
 
 - [ ] **Step 5: Formulário de rastreio** — `apps/admin/app/(dashboard)/pedidos/shipping-form.tsx`:
 
@@ -2810,7 +2849,7 @@ Expected: tudo PASS; builds ok.
 
 ```markdown
 - [ ] **Aviso de pedido por WhatsApp para a equipe** (fase 2 entregou só e-mail; falta API de WhatsApp).
-- [ ] **E-mail "pedido enviado" ao cliente** a partir do admin (hoje o rastreio aparece só na página do pedido).
+- [ ] **Listmonk:** criar o template transacional "pedido enviado" (chaves `numero`, `nome`, `rastreio`, `transportadora`, `link_pedido`), usuário de API e env vars no admin; confirmar se a versão do Listmonk exige o cliente já cadastrado como subscriber para `/api/tx`.
 - [ ] **Teste ponta a ponta em sandbox** (Task 13 da fase 2), se não foi feito.
 - [ ] **Credenciais de produção** do Asaas e Melhor Envio, webhook de produção e `SITE_URL` no projeto Vercel.
 ```
