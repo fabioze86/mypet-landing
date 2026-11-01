@@ -249,9 +249,15 @@ Fase 1 entregue e enviada para a `main` (`f4c7d99..853bc57`). Itens abaixo ficam
 - [x] Migrations `20261101120000_retail_checkout` e `20261101130000_mark_order_paid` aplicadas no `hub_catalogo`.
 - [ ] **Teste ponta a ponta em sandbox** (Task 13 do plano da fase 2): não feito, faltam credenciais.
 - [ ] **Credenciais de produção** do Asaas e Melhor Envio, webhook de produção, `SITE_URL`, SMTP e Listmonk nos projetos Vercel (azpetshop e admin).
-- [ ] **Pedidos órfãos** em `aguardando_pagamento` quando o Asaas falha ao criar a cobrança (sem varredura que os expire).
+- [x] **Pedidos órfãos** quando o Asaas falha: o pedido agora é apagado (rollback).
 - [ ] **Rastreio não reeditável** se a gravação falhar depois de o pedido virar `enviado`.
-- [ ] Timeouts nas chamadas ao Asaas e ao Melhor Envio (`AbortSignal.timeout`).
+- [x] Timeouts nas chamadas ao Asaas, Melhor Envio e Listmonk (10 s).
+- [ ] **Cuidado no teste em sandbox:** o preview usa o `hub_catalogo` de produção. Um pagamento de teste baixa o
+  `stock_qty` real (compartilhado por todos os canais) e o pedido aparece no admin. Usar um produto exclusivo de teste
+  e configurar `SITE_URL` do preview (sem ele, os links de retorno do pagamento vão para o site de produção).
+- [ ] **Estornos e chargebacks** (`PAYMENT_REFUNDED` etc.) não são tratados pelo webhook.
+- [ ] **Versão do Listmonk:** o envio usa `subscriber_mode: "external"` (Listmonk ≥ 5); versões antigas exigem o cliente cadastrado.
+- [ ] Remover a função `decrement_order_stock` (sem uso) numa migration futura.
 
 ### Menores (quando conveniente)
 - [ ] Ano do copyright fixo (`ANO_COPYRIGHT = 2026` em `app/site-footer.tsx`): atualizar a cada ano.
