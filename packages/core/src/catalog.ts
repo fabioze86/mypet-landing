@@ -21,7 +21,7 @@ import {
 } from "./catalog-utils";
 
 export const CATALOG_SELECT =
-  "id, name, reference, brand, category_id, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at)";
+  "id, name, reference, brand, category_id, stock_qty, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at)";
 
 type RawCatalogVariantPriceRow = {
   parent_product_id: string | null;

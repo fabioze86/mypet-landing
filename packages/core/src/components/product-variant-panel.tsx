@@ -5,6 +5,7 @@ import Image from "next/image";
 import { badgeStyle, useClientConfig } from "../theme";
 import { showsListPrice } from "../features";
 import { AddToCartControl } from "./add-to-cart-control";
+import { RetailBuyAction } from "./retail-buy-action";
 import { VariantSelector, hasAxisData, useSelectedVariant } from "./variant-selector";
 import { VariantTable } from "./variant-table";
 import type { Badge, ProductVariant } from "../catalog-utils";
@@ -20,6 +21,7 @@ export type PdpProduct = {
   variants: ProductVariant[];
   salePrice?: number | null;
   priceLabel?: string | null;
+  stockQty?: number | null;
 };
 
 export function ProductVariantPanel({ product }: { product: PdpProduct }) {
@@ -76,7 +78,7 @@ function PurchaseGrid({
   selected: ProductVariant;
   onSelect: (id: string) => void;
 }) {
-  const { palette: PALETTE, features, priceEyebrow } = useClientConfig();
+  const { palette: PALETTE, features, priceEyebrow, retail } = useClientConfig();
   const hasVariants = product.variants.length > 0;
   const useTable = hasVariants && !hasAxisData(product.variants);
 
@@ -153,36 +155,49 @@ function PurchaseGrid({
                 marginTop: 16,
               }}
             >
-              {showsListPrice(features) ? (
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
-                    {priceLabel ?? "Preço indisponível"}
-                  </div>
-                </div>
+              {retail ? (
+                <RetailBuyAction
+                  retail={retail}
+                  size="pdp"
+                  product={{ id: cartId, name: cartName, sku, brand: product.brand, img, unitPrice }}
+                  salePrice={unitPrice ?? null}
+                  priceLabel={priceLabel ?? null}
+                  inStock={product.stockQty == null ? undefined : product.stockQty > 0}
+                />
               ) : (
-                <div style={{ marginBottom: 20 }}>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: PALETTE.gray600,
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {priceEyebrow ?? "Atacado B2B"}
-                  </div>
-                  <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
-                    {priceLabel ?? "Preço sob consulta"}
-                  </div>
-                  <p style={{ fontSize: 13, color: PALETTE.gray600, marginTop: 4 }}>
-                    Venda exclusiva para CNPJ de pet shops e revendedores.
-                  </p>
-                </div>
-              )}
+                <>
+                  {showsListPrice(features) ? (
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
+                        {priceLabel ?? "Preço indisponível"}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginBottom: 20 }}>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: PALETTE.gray600,
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          marginBottom: 4,
+                        }}
+                      >
+                        {priceEyebrow ?? "Atacado B2B"}
+                      </div>
+                      <div style={{ fontSize: 26, fontWeight: 900, color: PALETTE.pink }}>
+                        {priceLabel ?? "Preço sob consulta"}
+                      </div>
+                      <p style={{ fontSize: 13, color: PALETTE.gray600, marginTop: 4 }}>
+                        Venda exclusiva para CNPJ de pet shops e revendedores.
+                      </p>
+                    </div>
+                  )}
 
-              <AddToCartControl product={{ id: cartId, name: cartName, sku, brand: product.brand, img, unitPrice }} />
+                  <AddToCartControl product={{ id: cartId, name: cartName, sku, brand: product.brand, img, unitPrice }} />
+                </>
+              )}
             </div>
           </>
         )}

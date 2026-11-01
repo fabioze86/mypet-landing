@@ -6,6 +6,7 @@ import { badgeStyle, useClientConfig } from "../theme";
 import { showsListPrice } from "../features";
 import { PriceLockSlot } from "./lead-gate";
 import { AddToCartControl } from "./add-to-cart-control";
+import { RetailBuyAction } from "./retail-buy-action";
 import { CartStepperControl } from "./cart-stepper-control";
 import type { CatalogProduct } from "../catalog-utils";
 
@@ -19,7 +20,7 @@ export function ProductCard({
   /** "masonry": estilo Pinterest — imagem na proporção natural, sem moldura de card. */
   layout?: "grid" | "masonry";
 }) {
-  const { palette, features } = useClientConfig();
+  const { palette, features, retail } = useClientConfig();
   const style = product.badge ? badgeStyle(product.badge.code, palette) : null;
   const masonry = layout === "masonry";
   return (
@@ -82,49 +83,62 @@ export function ProductCard({
         </div>
       </Link>
       <div style={{ padding: masonry ? "0 4px 4px" : "0 12px 12px" }}>
-        {showsListPrice(features) ? (
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: palette.navy }}>
-              {product.priceLabel ?? "Preço indisponível"}
-            </div>
-          </div>
+        {retail && !product.hasVariants ? (
+          <RetailBuyAction
+            retail={retail}
+            size="card"
+            product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img, unitPrice: product.salePrice ?? undefined }}
+            salePrice={product.salePrice}
+            priceLabel={product.priceLabel}
+            inStock={product.stockQty == null ? undefined : product.stockQty > 0}
+          />
         ) : (
-          <PriceLockSlot priceLabel={product.priceLabel} category={product.category} />
+          <>
+            {showsListPrice(features) ? (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: palette.navy }}>
+                  {product.priceLabel ?? "Preço indisponível"}
+                </div>
+              </div>
+            ) : (
+              <PriceLockSlot priceLabel={product.priceLabel} category={product.category} />
+            )}
+            {(() => {
+              const cartProduct = {
+                id: product.id,
+                name: product.name,
+                sku: product.sku,
+                brand: product.brand,
+                img: product.img,
+                unitPrice: product.salePrice ?? undefined,
+              };
+              if (addControl !== "stepper") return <AddToCartControl product={cartProduct} compact />;
+              if (product.hasVariants) {
+                return (
+                  <Link
+                    href={`/produtos/${product.id}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: 38,
+                      marginTop: 8,
+                      border: `1.5px solid ${palette.pink}`,
+                      borderRadius: 10,
+                      color: palette.pink,
+                      fontSize: 14,
+                      fontWeight: 800,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Ver opções
+                  </Link>
+                );
+              }
+              return <CartStepperControl product={cartProduct} />;
+            })()}
+          </>
         )}
-        {(() => {
-          const cartProduct = {
-            id: product.id,
-            name: product.name,
-            sku: product.sku,
-            brand: product.brand,
-            img: product.img,
-            unitPrice: product.salePrice ?? undefined,
-          };
-          if (addControl !== "stepper") return <AddToCartControl product={cartProduct} compact />;
-          if (product.hasVariants) {
-            return (
-              <Link
-                href={`/produtos/${product.id}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 38,
-                  marginTop: 8,
-                  border: `1.5px solid ${palette.pink}`,
-                  borderRadius: 10,
-                  color: palette.pink,
-                  fontSize: 14,
-                  fontWeight: 800,
-                  textDecoration: "none",
-                }}
-              >
-                Ver opções
-              </Link>
-            );
-          }
-          return <CartStepperControl product={cartProduct} />;
-        })()}
       </div>
     </div>
   );

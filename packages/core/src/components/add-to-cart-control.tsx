@@ -9,11 +9,14 @@ export function AddToCartControl({
   product,
   compact = false,
   minQty = 1,
+  label = "+Adicionar",
 }: {
   product: Omit<CartItem, "qty">;
   compact?: boolean;
   /** Quantidade mínima (ex: `min_quantity` da oferta) — piso do decremento e valor inicial. Default 1. */
   minQty?: number;
+  /** Texto do botão no modo não compacto. */
+  label?: string;
 }) {
   const { addItem } = useCart();
   const { palette } = useClientConfig();
@@ -68,7 +71,7 @@ export function AddToCartControl({
         }}
         aria-label="Adicionar ao carrinho"
       >
-        {added ? "✓" : compact ? "🛒" : "+Adicionar"}
+        {added ? "✓" : compact ? "🛒" : label}
       </button>
     </div>
   );

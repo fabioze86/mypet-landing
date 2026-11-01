@@ -41,6 +41,7 @@ export type RawProductRow = {
   product_assets: { url: string; type: string }[] | null;
   product_badges: RawBadge[] | null;
   product_channel_prices?: RawChannelPrice[] | null;
+  stock_qty?: number | null;
 };
 
 export type CatalogProduct = {
@@ -55,6 +56,8 @@ export type CatalogProduct = {
   priceLabel: string | null;
   /** Produto-pai com variações no canal: escolha de variação acontece na página do produto. */
   hasVariants?: true;
+  /** Ausente quando a consulta não trouxe estoque. */
+  stockQty?: number | null;
 };
 
 export type CatalogResult = {
@@ -168,6 +171,7 @@ export function mapProduct(row: RawProductRow, now: Date = new Date()): CatalogP
     category: row.categories ?? null,
     salePrice,
     priceLabel: formatPrice(salePrice),
+    ...(row.stock_qty !== undefined ? { stockQty: row.stock_qty } : {}),
   };
 }
 

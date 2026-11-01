@@ -89,3 +89,26 @@ describe("CategoryListing — addControl", () => {
     expect(screen.getByRole("button", { name: "Adicionar Coleira P" })).toBeInTheDocument();
   });
 });
+
+describe("ProductCard — modo varejo (retail)", () => {
+  const retailConfig: ClientConfig = {
+    ...config,
+    features: { commerce: "cart" },
+    retail: { installments: { max: 6, minInstallment: 30 }, consultWhatsApp: "5511999990000" },
+  };
+
+  it("produto sem preço mostra consulta no WhatsApp em vez do carrinho", () => {
+    render(createElement(ClientConfigProvider, { config: retailConfig },
+      createElement(CartProvider, null,
+        createElement(ProductCard, { product: { ...product, salePrice: null, priceLabel: null } }))));
+    expect(screen.getByRole("link", { name: "Consultar preço no WhatsApp" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Adicionar ao carrinho" })).toBeNull();
+  });
+
+  it("produto esgotado mostra Esgotado", () => {
+    render(createElement(ClientConfigProvider, { config: retailConfig },
+      createElement(CartProvider, null,
+        createElement(ProductCard, { product: { ...product, stockQty: 0 } }))));
+    expect(screen.getByText("Esgotado")).toBeInTheDocument();
+  });
+});
