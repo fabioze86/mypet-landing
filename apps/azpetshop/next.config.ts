@@ -1,4 +1,12 @@
 import type { NextConfig } from "next";
+import { DADOS_DE_EXEMPLO } from "./lib/empresa";
+
+// Trava de publicação: dados genéricos da empresa e checkout da fase 2 ainda não existem.
+if (process.env.VERCEL_ENV === "production" && DADOS_DE_EXEMPLO) {
+  throw new Error(
+    "Publicação em produção bloqueada: a loja azpetshop ainda usa dados genéricos da empresa (lib/empresa.ts) e o checkout da fase 2 não existe. Troque DADOS_DE_EXEMPLO para false junto com os dados reais antes de publicar.",
+  );
+}
 
 // O blog Astro (Worker na Cloudflare) continua respondendo em
 // www.azpetshop.com.br/blog/... — URLs que já rankeiam no Google. A loja é dona

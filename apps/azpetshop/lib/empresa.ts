@@ -21,6 +21,9 @@ export type Empresa = {
   horario: string;
 };
 
+// Trava de publicação: enquanto true, o build de produção na Vercel é bloqueado (ver next.config.ts). Trocar para false junto com os dados reais da empresa e o checkout da fase 2.
+export const DADOS_DE_EXEMPLO = true;
+
 // DADOS GENÉRICOS DE EXEMPLO (decisão do usuário em 2026-11-01) — trocar pelos reais antes do deploy de produção e do cadastro no Merchant Center. Vendedor oficial = mesmo CNPJ da My Pet / Grupo AZ. Fonte única para rodapé, políticas e JSON-LD.
 export const EMPRESA: Empresa = {
   razaoSocial: "Empresa Exemplo Ltda",
