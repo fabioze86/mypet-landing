@@ -5,6 +5,18 @@ export const ORDER_STATUSES = [
 ] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
+const LEGACY_MANUAL_STATUSES: readonly OrderStatus[] = ["pendente", "confirmado", "entregue", "cancelado"];
+
+/**
+ * Status que o admin pode escolher à mão. No varejo (azpetshop) "pago" vem só do
+ * webhook do Asaas e "enviado" só de "Marcar enviado"; sobram o atual, entregue e
+ * cancelado. Os demais canais usam apenas os status antigos.
+ */
+export function allowedManualStatuses(channel: string, current: OrderStatus): OrderStatus[] {
+  const list = channel === "azpetshop" ? [current, "entregue", "cancelado"] : [...LEGACY_MANUAL_STATUSES, current];
+  return [...new Set<OrderStatus>(list as OrderStatus[])];
+}
+
 // Pedidos sem login (distribuidora) não têm buyer: os dados do cliente vêm em customer_*.
 export const ORDERS_SELECT =
   "id, number, channel, status, created_at, customer_name, customer_company, customer_whatsapp, customer_cnpj, " +

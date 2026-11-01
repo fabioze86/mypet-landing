@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
-import { ORDER_STATUSES, ORDERS_SELECT, listmonkEnv, itemUnitPrice, orderCustomer, orderTotal, type OrderRow } from "./orders";
+import { ORDER_STATUSES, ORDERS_SELECT, allowedManualStatuses, listmonkEnv, itemUnitPrice, orderCustomer, orderTotal, type OrderRow } from "./orders";
 
 describe("ORDER_STATUSES", () => {
   it("contém os status esperados, na ordem do fluxo", () => {
@@ -95,5 +95,20 @@ describe("listmonkEnv", () => {
     setAll();
     vi.stubEnv("LISTMONK_TEMPLATE_PEDIDO_ENVIADO", "abc");
     expect(listmonkEnv()).toBeNull();
+  });
+});
+
+describe("allowedManualStatuses", () => {
+  it("azpetshop: só o atual, entregue e cancelado (pago vem do webhook, enviado do Marcar enviado)", () => {
+    expect(allowedManualStatuses("azpetshop", "pago")).toEqual(["pago", "entregue", "cancelado"]);
+    expect(allowedManualStatuses("azpetshop", "enviado")).toEqual(["enviado", "entregue", "cancelado"]);
+    expect(allowedManualStatuses("azpetshop", "entregue")).toEqual(["entregue", "cancelado"]);
+    expect(allowedManualStatuses("azpetshop", "aguardando_pagamento")).not.toContain("pago");
+  });
+
+  it("demais canais: só os status antigos", () => {
+    expect(allowedManualStatuses("distribuidora", "pendente")).toEqual(["pendente", "confirmado", "entregue", "cancelado"]);
+    expect(allowedManualStatuses("mypetbrasil", "confirmado")).toEqual(["pendente", "confirmado", "entregue", "cancelado"]);
+    expect(allowedManualStatuses("distribuidora", "pendente")).not.toContain("pago");
   });
 });

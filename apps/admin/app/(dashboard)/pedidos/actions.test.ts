@@ -12,7 +12,7 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@mypet/core/listmonk", () => ({ sendListmonkTx: mocks.sendListmonkTx }));
 
-import { markOrderShipped } from "./actions";
+import { markOrderShipped, updateOrderStatus } from "./actions";
 
 const ORDER_ID = "00000000-0000-4000-8000-000000000001";
 const TRACKING = "BR123456789";
@@ -78,5 +78,48 @@ describe("markOrderShipped", () => {
     expect(shippingUpdate).toBeGreaterThan(statusGuard);
     expect(calls[shippingUpdate].args[0]).toMatchObject({ tracking_code: TRACKING });
     expect(mocks.sendListmonkTx).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("updateOrderStatus", () => {
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+  afterEach(() => errorSpy.mockRestore());
+
+  function statusForm(status: string) {
+    const fd = new FormData();
+    fd.set("id", ORDER_ID);
+    fd.set("status", status);
+    return fd;
+  }
+
+  it("rejeita status que não é permitido manualmente para o canal (pago no azpetshop)", async () => {
+    const { client, calls } = fakeSupabase({ orders: [{ data: { channel: "azpetshop", status: "aguardando_pagamento" } }] });
+    mocks.supabase = client;
+
+    await updateOrderStatus(statusForm("pago"));
+
+    expect(calls.some((c) => c.table === "orders" && c.method === "update")).toBe(false);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("não permitido"));
+  });
+
+  it("aceita status permitido para o canal (entregue no azpetshop)", async () => {
+    const { client, calls } = fakeSupabase({ orders: [{ data: { channel: "azpetshop", status: "enviado" } }, {}] });
+    mocks.supabase = client;
+
+    await updateOrderStatus(statusForm("entregue"));
+
+    expect(calls.find((c) => c.table === "orders" && c.method === "update")?.args[0]).toMatchObject({ status: "entregue" });
+  });
+
+  it("rejeita status de varejo em pedido de outro canal", async () => {
+    const { client, calls } = fakeSupabase({ orders: [{ data: { channel: "distribuidora", status: "pendente" } }] });
+    mocks.supabase = client;
+
+    await updateOrderStatus(statusForm("enviado"));
+
+    expect(calls.some((c) => c.table === "orders" && c.method === "update")).toBe(false);
   });
 });

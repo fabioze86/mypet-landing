@@ -127,7 +127,7 @@ async function PedidosContent({
                     {total !== null ? formatPrice(total) : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    <OrderStatusSelect orderId={order.id} currentStatus={order.status} action={updateOrderStatus} />
+                    <OrderStatusSelect orderId={order.id} channel={order.channel} currentStatus={order.status} action={updateOrderStatus} />
                   </td>
                 </tr>
               );

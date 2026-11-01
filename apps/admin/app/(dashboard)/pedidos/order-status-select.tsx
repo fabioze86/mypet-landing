@@ -1,14 +1,16 @@
 "use client";
 
 import type { OrderStatus } from "@/lib/orders";
-import { ORDER_STATUSES } from "@/lib/orders";
+import { allowedManualStatuses } from "@/lib/orders";
 
 export function OrderStatusSelect({
   orderId,
+  channel,
   currentStatus,
   action,
 }: {
   orderId: string;
+  channel: string;
   currentStatus: OrderStatus;
   action: (formData: FormData) => void;
 }) {
@@ -21,7 +23,7 @@ export function OrderStatusSelect({
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
         className="rounded-lg border border-slate-300 px-2 py-1 text-xs"
       >
-        {ORDER_STATUSES.map((s) => (
+        {allowedManualStatuses(channel, currentStatus).map((s) => (
           <option key={s} value={s}>{s}</option>
         ))}
       </select>

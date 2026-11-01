@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAdminSession, type AdminSession } from "@/lib/auth";
 import { sendListmonkTx } from "@mypet/core/listmonk";
-import { ORDER_STATUSES, listmonkEnv } from "@/lib/orders";
+import { ORDER_STATUSES, allowedManualStatuses, listmonkEnv, type OrderStatus } from "@/lib/orders";
 
 const UpdateStatusSchema = z.object({
   id: z.string().uuid(),
@@ -19,6 +19,22 @@ export async function updateOrderStatus(formData: FormData): Promise<void> {
   });
 
   if (!parsed.success) return;
+
+  // O servidor decide o que vale: o select da tela é só conveniência.
+  const { data: current, error: readError } = await supabase
+    .from("orders")
+    .select("channel, status")
+    .eq("id", parsed.data.id)
+    .maybeSingle();
+  const row = current as { channel: string; status: OrderStatus } | null;
+  if (readError || !row) {
+    console.error("[admin/pedidos] pedido não encontrado para atualizar status:", readError?.message);
+    return;
+  }
+  if (!allowedManualStatuses(row.channel, row.status).includes(parsed.data.status)) {
+    console.error(`[admin/pedidos] status "${parsed.data.status}" não permitido para o canal ${row.channel}.`);
+    return;
+  }
 
   const { error } = await supabase
     .from("orders")
