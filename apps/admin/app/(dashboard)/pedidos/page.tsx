@@ -14,6 +14,13 @@ const CHANNEL_LABEL: Record<string, string> = {
   azpetshop: "AZ Pet Shop",
 };
 
+const PAYMENT_STATUS_LABEL: Record<string, string> = {
+  ACTIVE: "Aguardando",
+  PAID: "Pago",
+  CANCELED: "Cancelado",
+  EXPIRED: "Expirado",
+};
+
 async function PedidosContent({
   searchParams,
 }: {
@@ -96,7 +103,7 @@ async function PedidosContent({
                         <div>
                           Frete: {order.order_shipping.service_name} ({formatPrice(Number(order.order_shipping.price))})
                         </div>
-                        {order.order_payments && <div>Pagamento: {order.order_payments.status}</div>}
+                        {order.order_payments && <div>Pagamento: {PAYMENT_STATUS_LABEL[order.order_payments.status] ?? order.order_payments.status}</div>}
                         {order.order_shipping.tracking_code && <div>Rastreio: {order.order_shipping.tracking_code}</div>}
                         {order.status === "pago" && <ShippingForm orderId={order.id} action={markOrderShipped} />}
                       </div>

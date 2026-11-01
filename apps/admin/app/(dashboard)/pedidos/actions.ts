@@ -68,23 +68,39 @@ export async function markOrderShipped(formData: FormData): Promise<void> {
   if (!parsed.success) return;
   const { supabase } = await requireAdminSession();
   const now = new Date().toISOString();
+
+  // Primeiro e condicional: só pedido pago vira enviado. Um post forjado
+  // em pedido não pago, de outro canal ou já enviado não grava nada e não
+  // reenvia o e-mail.
+  const { data: marked, error } = await supabase
+    .from("orders")
+    .update({ status: "enviado", updated_at: now })
+    .eq("id", parsed.data.orderId)
+    .eq("status", "pago")
+    .select("id");
+  if (error) {
+    console.error("[admin/pedidos] erro ao marcar enviado:", error.message);
+    return;
+  }
+  if (!marked || marked.length === 0) {
+    console.error("[admin/pedidos] pedido não está pago; envio ignorado.");
+    return;
+  }
+
+  // Se falhar aqui o pedido já está "enviado" e o e-mail segue; o admin pode
+  // digitar o rastreio de novo pelo formulário (pedido enviado não é reaberto).
   const { error: shipError } = await supabase
     .from("order_shipping")
     .update({ tracking_code: parsed.data.trackingCode, shipped_at: now })
     .eq("order_id", parsed.data.orderId);
   if (shipError) {
     console.error("[admin/pedidos] erro ao gravar rastreio:", shipError.message);
-    return;
   }
-  const { error } = await supabase.from("orders").update({ status: "enviado", updated_at: now }).eq("id", parsed.data.orderId);
-  if (error) {
-    console.error("[admin/pedidos] erro ao marcar enviado:", error.message);
-  } else {
-    try {
-      await notifyOrderShipped(supabase, parsed.data.orderId, parsed.data.trackingCode);
-    } catch (err) {
-      console.error("[admin/pedidos] erro ao avisar envio:", (err as Error).message);
-    }
-  }
+
   revalidatePath("/pedidos");
+  try {
+    await notifyOrderShipped(supabase, parsed.data.orderId, parsed.data.trackingCode);
+  } catch (err) {
+    console.error("[admin/pedidos] erro ao avisar envio:", (err as Error).message);
+  }
 }
