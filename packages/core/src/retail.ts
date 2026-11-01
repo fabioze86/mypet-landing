@@ -23,3 +23,12 @@ export function installmentLabel(price: number | null, cfg: RetailConfig["instal
   if (!plan) return null;
   return `ou até ${plan.count}x de ${formatBRL(plan.value)} sem juros`;
 }
+
+/**
+ * Disponibilidade a partir do estoque, na mesma regra do feed e do JSON-LD (`(qty ?? 0) > 0`).
+ * `undefined` = campo não buscado (desconhecido, tratado como disponível); `null` = sem estoque.
+ */
+export function inStockFromQty(qty: number | null | undefined): boolean | undefined {
+  if (qty === undefined) return undefined;
+  return (qty ?? 0) > 0;
+}

@@ -110,5 +110,7 @@ describe("ProductCard — modo varejo (retail)", () => {
       createElement(CartProvider, null,
         createElement(ProductCard, { product: { ...product, stockQty: 0 } }))));
     expect(screen.getByText("Esgotado")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Adicionar ao carrinho" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Consultar no WhatsApp" })).toBeInTheDocument();
   });
 });

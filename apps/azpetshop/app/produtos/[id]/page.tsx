@@ -96,7 +96,11 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     productGroupJsonLd(product, clientConfig.domain) ??
     productJsonLd(product, clientConfig.domain, { offers: true });
 
-  const inStock = (product.stockQty ?? 0) > 0;
+  // Produto-pai tem estoque nulo: está disponível se alguma variação tiver estoque.
+  const inStock =
+    product.variants.length > 0
+      ? product.variants.some((variant) => (variant.stockQty ?? 0) > 0)
+      : (product.stockQty ?? 0) > 0;
   const description = product.channelDescription ?? product.description;
 
   return (

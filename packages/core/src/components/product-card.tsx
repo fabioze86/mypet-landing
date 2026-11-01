@@ -6,6 +6,7 @@ import { badgeStyle, useClientConfig } from "../theme";
 import { showsListPrice } from "../features";
 import { PriceLockSlot } from "./lead-gate";
 import { AddToCartControl } from "./add-to-cart-control";
+import { inStockFromQty } from "../retail";
 import { RetailBuyAction } from "./retail-buy-action";
 import { CartStepperControl } from "./cart-stepper-control";
 import type { CatalogProduct } from "../catalog-utils";
@@ -90,7 +91,7 @@ export function ProductCard({
             product={{ id: product.id, name: product.name, sku: product.sku, brand: product.brand, img: product.img, unitPrice: product.salePrice ?? undefined }}
             salePrice={product.salePrice}
             priceLabel={product.priceLabel}
-            inStock={product.stockQty == null ? undefined : product.stockQty > 0}
+            inStock={inStockFromQty(product.stockQty)}
           />
         ) : (
           <>

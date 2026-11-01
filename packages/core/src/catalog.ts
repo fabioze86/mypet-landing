@@ -277,7 +277,7 @@ async function getVariantsByParentId(parentId: string, channel: string): Promise
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id, name, reference, barcode, variant_axis, product_assets(url, type), product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)"
+      "id, name, reference, barcode, variant_axis, stock_qty, product_assets(url, type), product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)"
     )
     .eq("parent_product_id", parentId)
     .eq("status", "active")

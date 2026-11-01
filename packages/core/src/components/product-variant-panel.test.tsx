@@ -66,3 +66,33 @@ describe("ProductVariantPanel — preço no carrinho", () => {
     expect(renderPanel(parent)).toMatchObject({ id: "pai", unitPrice: 20 });
   });
 });
+
+describe("ProductVariantPanel — estoque da variação no modo varejo", () => {
+  const retailConfig: ClientConfig = {
+    ...config,
+    catalogChannel: "azpetshop",
+    features: { commerce: "cart" },
+    retail: { installments: { max: 6, minInstallment: 30 }, consultWhatsApp: "5511999990000" },
+  };
+  const withStock = (id: string, stockQty: number | null) => ({ ...variant(id, 50), priceLabel: "R$ 50,00", stockQty });
+
+  function renderRetail(selected: string, variants: ReturnType<typeof withStock>[]) {
+    query.variante = selected;
+    // Pai com estoque nulo (como no banco): quem manda é a variação selecionada.
+    render(createElement(ClientConfigProvider, { config: retailConfig },
+      createElement(CartProvider, null,
+        createElement(ProductVariantPanel, { product: { ...parent, stockQty: null, variants } }))));
+  }
+
+  it("variação com estoque mostra o botão de compra", () => {
+    renderRetail("p", [withStock("p", 5), withStock("g", 0)]);
+    expect(screen.getByRole("button", { name: "Adicionar ao carrinho" })).toBeInTheDocument();
+    expect(screen.queryByText("Esgotado")).toBeNull();
+  });
+
+  it("variação sem estoque mostra Esgotado e não vende", () => {
+    renderRetail("g", [withStock("p", 5), withStock("g", 0)]);
+    expect(screen.getByText("Esgotado")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Adicionar ao carrinho" })).toBeNull();
+  });
+});

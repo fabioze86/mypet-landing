@@ -78,6 +78,8 @@ export type ProductVariant = {
   axis: VariantAxisEntry[];
   salePrice: number | null;
   priceLabel: string | null;
+  /** Ausente quando a consulta não trouxe estoque. */
+  stockQty?: number | null;
 };
 
 export type RawVariantRow = {
@@ -88,6 +90,7 @@ export type RawVariantRow = {
   variant_axis: VariantAxisEntry[] | null;
   product_assets: { url: string; type: string }[] | null;
   product_channel_prices?: RawChannelPrice[] | null;
+  stock_qty?: number | null;
 };
 
 export function mapVariant(row: RawVariantRow): ProductVariant {
@@ -102,6 +105,7 @@ export function mapVariant(row: RawVariantRow): ProductVariant {
     axis,
     salePrice,
     priceLabel: formatPrice(salePrice),
+    ...(row.stock_qty !== undefined ? { stockQty: row.stock_qty } : {}),
   };
 }
 

@@ -26,7 +26,7 @@ export function RetailBuyAction({
   const { palette } = useClientConfig();
   const pdp = size === "pdp";
   const soldOut = inStock === false;
-  const hasPrice = salePrice !== null;
+  const hasPrice = salePrice !== null && salePrice > 0;
   const installments = hasPrice && !soldOut ? installmentLabel(salePrice, retail.installments) : null;
   const consultHref = buildWhatsAppLink(retail.consultWhatsApp, buildProductInterestMessage(product.name));
 

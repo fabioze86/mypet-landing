@@ -5,6 +5,7 @@ import Image from "next/image";
 import { badgeStyle, useClientConfig } from "../theme";
 import { showsListPrice } from "../features";
 import { AddToCartControl } from "./add-to-cart-control";
+import { inStockFromQty } from "../retail";
 import { RetailBuyAction } from "./retail-buy-action";
 import { VariantSelector, hasAxisData, useSelectedVariant } from "./variant-selector";
 import { VariantTable } from "./variant-table";
@@ -95,6 +96,9 @@ function PurchaseGrid({
   const variantPrice = product.variants.find((variant) => variant.id === cartId)?.salePrice;
   const unitPrice = (cartId === product.id ? variantPrice ?? product.salePrice : variantPrice) ?? undefined;
 
+  // Estoque da variação selecionada; produto-pai tem estoque nulo, o real fica nas variações.
+  const stockQty = cartId === product.id ? product.stockQty : product.variants.find((variant) => variant.id === cartId)?.stockQty;
+
   return (
     <div className="pdp-purchase-grid">
       <ProductImage product={product} img={img} cartName={cartName} />
@@ -162,7 +166,7 @@ function PurchaseGrid({
                   product={{ id: cartId, name: cartName, sku, brand: product.brand, img, unitPrice }}
                   salePrice={unitPrice ?? null}
                   priceLabel={priceLabel ?? null}
-                  inStock={product.stockQty == null ? undefined : product.stockQty > 0}
+                  inStock={inStockFromQty(stockQty)}
                 />
               ) : (
                 <>

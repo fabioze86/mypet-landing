@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { formatBRL } from "./catalog-utils";
-import { installmentLabel, installmentPlan } from "./retail";
+import { inStockFromQty, installmentLabel, installmentPlan } from "./retail";
 
 const cfg = { max: 6, minInstallment: 30 };
 
@@ -31,5 +31,21 @@ describe("installmentLabel", () => {
   it("retorna null sem preço ou sem parcelamento possível", () => {
     expect(installmentLabel(null, cfg)).toBeNull();
     expect(installmentLabel(50, cfg)).toBeNull();
+  });
+});
+
+describe("inStockFromQty", () => {
+  it("undefined (campo não buscado) = desconhecido", () => {
+    expect(inStockFromQty(undefined)).toBeUndefined();
+  });
+
+  it("null conta como esgotado (mesma regra do feed e do JSON-LD)", () => {
+    expect(inStockFromQty(null)).toBe(false);
+  });
+
+  it("zero ou negativo esgotado; positivo disponível", () => {
+    expect(inStockFromQty(0)).toBe(false);
+    expect(inStockFromQty(-1)).toBe(false);
+    expect(inStockFromQty(3)).toBe(true);
   });
 });

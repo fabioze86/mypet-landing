@@ -41,6 +41,13 @@ describe("RetailBuyAction", () => {
     expect(screen.getByRole("button", { name: "Adicionar ao carrinho" })).toBeInTheDocument();
   });
 
+  it("preço zero ou negativo é tratado como sem preço", () => {
+    renderAction({ salePrice: 0, priceLabel: "R$ 0,00", inStock: true });
+    expect(screen.getByRole("link", { name: "Consultar preço no WhatsApp" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Adicionar ao carrinho" })).toBeNull();
+    expect(screen.queryByText("R$ 0,00")).toBeNull();
+  });
+
   it("sem preço: link Consultar preço no WhatsApp com o nome do produto", () => {
     renderAction({ salePrice: null, priceLabel: null, inStock: true });
     const link = screen.getByRole("link", { name: "Consultar preço no WhatsApp" });
