@@ -9,7 +9,7 @@ describe("SiteFooter", () => {
   it("mostra razão social, CNPJ formatado, e-mail e endereço", () => {
     render(<SiteFooter />);
     expect(screen.getByText(new RegExp(EMPRESA.razaoSocial))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(formatCnpj(EMPRESA.cnpj).replace(/[./-]/g, "\$&")))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(formatCnpj(EMPRESA.cnpj).replace(/[./-]/g, "\\$&")))).toBeInTheDocument();
     expect(screen.getByRole("link", { name: EMPRESA.email })).toHaveAttribute("href", `mailto:${EMPRESA.email}`);
     expect(screen.getByText(new RegExp(EMPRESA.endereco.cidade))).toBeInTheDocument();
   });
