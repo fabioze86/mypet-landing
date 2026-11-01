@@ -3,12 +3,15 @@ import { requireAdminSession } from "@/lib/auth";
 import { formatPrice } from "@mypet/core/catalog-utils";
 import { formatWhatsapp } from "@mypet/core/br-validation";
 import { ORDER_STATUSES, ORDERS_SELECT, itemUnitPrice, orderCustomer, orderTotal, type OrderRow } from "@/lib/orders";
-import { updateOrderStatus } from "./actions";
+import { RETAIL_STATUS_LABEL, type RetailOrderStatus } from "@mypet/core/retail-order-status";
+import { markOrderShipped, updateOrderStatus } from "./actions";
+import { ShippingForm } from "./shipping-form";
 import { OrderStatusSelect } from "./order-status-select";
 
 const CHANNEL_LABEL: Record<string, string> = {
   mypetbrasil: "My Pet Brasil",
   distribuidora: "Distribuidora",
+  azpetshop: "AZ Pet Shop",
 };
 
 async function PedidosContent({
@@ -41,11 +44,12 @@ async function PedidosContent({
           <option value="">Todos os canais</option>
           <option value="mypetbrasil">My Pet Brasil</option>
           <option value="distribuidora">Distribuidora</option>
+          <option value="azpetshop">AZ Pet Shop</option>
         </select>
         <select name="status" defaultValue={status ?? ""} className="rounded-lg border border-slate-300 px-3 py-2 text-sm">
           <option value="">Todos os status</option>
           {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>{RETAIL_STATUS_LABEL[s as RetailOrderStatus] ?? s}</option>
           ))}
         </select>
         <button type="submit" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
@@ -80,7 +84,23 @@ async function PedidosContent({
                     {customer.nome} — {customer.empresa}
                     <div className="text-xs text-slate-400">{formatWhatsapp(customer.whatsapp)}</div>
                     {customer.cnpj && <div className="text-xs text-slate-400">CNPJ: {customer.cnpj}</div>}
-                    {!order.buyers && <div className="text-xs text-slate-400">Sem cadastro</div>}
+                    {!order.buyers && !order.order_shipping && <div className="text-xs text-slate-400">Sem cadastro</div>}
+                    {order.order_shipping && (
+                      <div className="mt-1 space-y-0.5 text-xs text-slate-500">
+                        {order.customer_email && <div>{order.customer_email}</div>}
+                        <div>
+                          {order.order_shipping.logradouro}, {order.order_shipping.numero}
+                          {order.order_shipping.complemento ? ` ${order.order_shipping.complemento}` : ""} — {order.order_shipping.bairro},{" "}
+                          {order.order_shipping.cidade}/{order.order_shipping.uf} — CEP {order.order_shipping.cep}
+                        </div>
+                        <div>
+                          Frete: {order.order_shipping.service_name} ({formatPrice(Number(order.order_shipping.price))})
+                        </div>
+                        {order.order_payments && <div>Pagamento: {order.order_payments.status}</div>}
+                        {order.order_shipping.tracking_code && <div>Rastreio: {order.order_shipping.tracking_code}</div>}
+                        {order.status === "pago" && <ShippingForm orderId={order.id} action={markOrderShipped} />}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3">{CHANNEL_LABEL[order.channel] ?? order.channel}</td>
                   <td className="px-4 py-3">

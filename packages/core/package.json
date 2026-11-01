@@ -31,6 +31,7 @@
     "./help-center": "./src/help-center.ts",
     "./identity-leads-server": "./src/identity-leads-server.ts",
     "./leads": "./src/leads.ts",
+    "./listmonk": "./src/listmonk.ts",
     "./leads-server": "./src/leads-server.ts",
     "./offers": "./src/offers.ts",
     "./offers-calc": "./src/offers-calc.ts",

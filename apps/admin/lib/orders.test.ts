@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { ORDER_STATUSES, ORDERS_SELECT, itemUnitPrice, orderCustomer, orderTotal, type OrderRow } from "./orders";
+import { afterEach, describe, it, expect, vi } from "vitest";
+import { ORDER_STATUSES, ORDERS_SELECT, listmonkEnv, itemUnitPrice, orderCustomer, orderTotal, type OrderRow } from "./orders";
 
 describe("ORDER_STATUSES", () => {
-  it("contém os quatro status esperados, na ordem do fluxo", () => {
-    expect(ORDER_STATUSES).toEqual(["pendente", "confirmado", "entregue", "cancelado"]);
+  it("contém os status esperados, na ordem do fluxo", () => {
+    expect(ORDER_STATUSES).toEqual(["pendente", "confirmado", "aguardando_pagamento", "pago", "enviado", "entregue", "cancelado", "expirado"]);
   });
 });
 
@@ -61,5 +61,39 @@ describe("orderTotal / itemUnitPrice", () => {
 
   it("sem nenhum preço não tem total", () => {
     expect(orderTotal({ ...base, order_items: [item(null, 1)] })).toBeNull();
+  });
+});
+
+describe("pedidos de varejo", () => {
+  it("orderTotal usa o total gravado (com frete) quando existe", () => {
+    const order = { order_items: [{ product_id: "p", product_name_snapshot: "x", qty: 2, unit_price: "25.00" }], total: "70.00" } as unknown as OrderRow;
+    expect(orderTotal(order)).toBe(70);
+  });
+});
+
+describe("listmonkEnv", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  const setAll = () => {
+    vi.stubEnv("LISTMONK_URL", "https://mail.exemplo.com");
+    vi.stubEnv("LISTMONK_API_USER", "user");
+    vi.stubEnv("LISTMONK_API_TOKEN", "tok");
+    vi.stubEnv("LISTMONK_TEMPLATE_PEDIDO_ENVIADO", "7");
+    vi.stubEnv("AZPETSHOP_SITE_URL", "");
+  };
+
+  it("devolve a configuração com o site padrão", () => {
+    setAll();
+    expect(listmonkEnv()).toEqual({
+      baseUrl: "https://mail.exemplo.com", apiUser: "user", apiToken: "tok", templateId: 7, siteUrl: "https://www.azpetshop.com.br",
+    });
+  });
+
+  it("devolve null quando falta qualquer variável ou o template não é número", () => {
+    setAll();
+    vi.stubEnv("LISTMONK_API_TOKEN", "");
+    expect(listmonkEnv()).toBeNull();
+    setAll();
+    vi.stubEnv("LISTMONK_TEMPLATE_PEDIDO_ENVIADO", "abc");
+    expect(listmonkEnv()).toBeNull();
   });
 });
