@@ -58,14 +58,14 @@ export function productJsonLd(
 ) {
   if (product.productRole === "parent") return null;
   const url = canonicalUrl(domain, `/produtos/${product.id}`);
-  const withOffers = opts?.offers && hasSellablePrice(product.salePrice);
-  const offers = withOffers
+  const price = hasSellablePrice(product.salePrice) ? product.salePrice : null;
+  const offers = opts?.offers && price !== null
     ? {
         offers: {
           "@type": "Offer",
           url,
           priceCurrency: "BRL",
-          price: product.salePrice.toFixed(2),
+          price: price.toFixed(2),
           availability:
             (product.stockQty ?? 0) > 0
               ? "https://schema.org/InStock"
