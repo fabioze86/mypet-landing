@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { formatWhatsapp } from "@mypet/core/br-validation";
 import { EMPRESA } from "./empresa";
 import { POLITICAS, getPolitica } from "./politicas";
 
@@ -14,6 +15,12 @@ describe("POLITICAS", () => {
       expect(p.secoes.length).toBeGreaterThan(0);
       for (const s of p.secoes) expect(s.paragrafos.join("").length).toBeGreaterThan(20);
     }
+  });
+
+  it("troca e devolução informa e-mail e WhatsApp formatado", () => {
+    const texto = JSON.stringify(getPolitica("troca-e-devolucao"));
+    expect(texto).toContain(EMPRESA.email);
+    expect(texto).toContain(formatWhatsapp(EMPRESA.whatsapp));
   });
 
   it("troca e devolução cita o prazo de 7 dias do CDC", () => {

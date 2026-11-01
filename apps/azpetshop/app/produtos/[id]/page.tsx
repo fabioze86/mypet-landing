@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
 import { SearchBar } from "@mypet/core/components/search-bar";
+import { inStockFromQty } from "@mypet/core/retail";
 import { ProductVariantPanel } from "@mypet/core/components/product-variant-panel";
 import {
   canonicalUrl,
@@ -96,11 +97,8 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     productGroupJsonLd(product, clientConfig.domain) ??
     productJsonLd(product, clientConfig.domain, { offers: true });
 
-  // Produto-pai tem estoque nulo: está disponível se alguma variação tiver estoque.
-  const inStock =
-    product.variants.length > 0
-      ? product.variants.some((variant) => (variant.stockQty ?? 0) > 0)
-      : (product.stockQty ?? 0) > 0;
+  // Produto com variações não leva selo no servidor: o painel mostra "Esgotado" por variação selecionada.
+  const inStock = inStockFromQty(product.stockQty) !== false;
   const description = product.channelDescription ?? product.description;
 
   return (
@@ -148,6 +146,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
         </ol>
       </nav>
 
+      {product.variants.length === 0 && (
       <div style={{ marginBottom: 16 }}>
         <span
           style={{
@@ -165,6 +164,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
           {inStock ? "Em estoque" : "Esgotado"}
         </span>
       </div>
+      )}
 
       <ProductVariantPanel product={product} />
 

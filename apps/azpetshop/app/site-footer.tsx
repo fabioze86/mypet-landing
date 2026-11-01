@@ -37,7 +37,14 @@ export function SiteFooter() {
           <p style={{ color: muted, fontSize: 13, lineHeight: 1.8, marginTop: 8 }}>
             <a href={`mailto:${EMPRESA.email}`} style={{ color: PALETTE.white }}>{EMPRESA.email}</a>
             <br />
-            WhatsApp {formatWhatsapp(EMPRESA.whatsapp)}
+            <a
+              href={`https://wa.me/${EMPRESA.whatsapp}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: PALETTE.white }}
+            >
+              WhatsApp {formatWhatsapp(EMPRESA.whatsapp)}
+            </a>
             <br />
             {EMPRESA.horario}
           </p>

@@ -1,4 +1,4 @@
-import { formatCnpj } from "@mypet/core/br-validation";
+import { formatCnpj, formatWhatsapp } from "@mypet/core/br-validation";
 import { EMPRESA, enderecoEmLinha } from "./empresa";
 
 export type PoliticaSlug = "troca-e-devolucao" | "privacidade" | "entrega" | "pagamento";
@@ -11,7 +11,7 @@ export type Politica = {
 };
 
 const empresa = `${EMPRESA.razaoSocial}, CNPJ ${formatCnpj(EMPRESA.cnpj)}, com sede em ${enderecoEmLinha(EMPRESA.endereco)}`;
-const contato = `pelo e-mail ${EMPRESA.email} ou pelo WhatsApp da loja (${EMPRESA.horario})`;
+const contato = `pelo e-mail ${EMPRESA.email} ou pelo WhatsApp ${formatWhatsapp(EMPRESA.whatsapp)} (${EMPRESA.horario})`;
 
 // Rascunho para revisão jurídica do usuário antes do deploy de produção.
 export const POLITICAS: Politica[] = [

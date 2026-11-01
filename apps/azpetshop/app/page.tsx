@@ -69,7 +69,7 @@ function Hero() {
           <div className="blob-card bc1"><span className="blob-emoji">🍖</span><b>Ração premium</b><span>até 25% OFF</span></div>
           <div className="blob-card bc2"><span className="blob-emoji">🎾</span><b>Brinquedos</b><span>bola, corda &amp; +</span></div>
           <div className="blob-card bc3"><span className="blob-emoji">🦴</span><b>Petiscos naturais</b><span>cães &amp; gatos</span></div>
-          <div className="blob-card bc4"><span className="blob-emoji">🏠</span><b>Casinhas</b><span>e camas confort</span></div>
+          <div className="blob-card bc4"><span className="blob-emoji">🏠</span><b>Casinhas</b><span>e camas confortáveis</span></div>
           <div className="sticker">bipou, chegou! 🚀</div>
         </div>
       </div>

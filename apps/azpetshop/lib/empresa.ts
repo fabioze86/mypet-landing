@@ -43,9 +43,16 @@ export const EMPRESA: Empresa = {
   horario: "Segunda a sexta, das 9h às 18h",
 };
 
+export function cepFormatado(cep: string): string {
+  return `${cep.slice(0, 5)}-${cep.slice(5)}`;
+}
+
+export function ruaEmLinha(e: Empresa["endereco"]): string {
+  return [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", ");
+}
+
 export function enderecoEmLinha(e: Empresa["endereco"]): string {
-  const rua = [e.logradouro, e.numero, e.complemento].filter(Boolean).join(", ");
-  return `${rua} — ${e.bairro}, ${e.cidade}/${e.uf} — CEP ${e.cep.slice(0, 5)}-${e.cep.slice(5)}`;
+  return `${ruaEmLinha(e)} — ${e.bairro}, ${e.cidade}/${e.uf} — CEP ${cepFormatado(e.cep)}`;
 }
 
 export const RETAIL: RetailConfig = {

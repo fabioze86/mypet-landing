@@ -4,7 +4,7 @@ import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
-import { EMPRESA } from "@/lib/empresa";
+import { EMPRESA, cepFormatado, ruaEmLinha } from "@/lib/empresa";
 import { GoogleAnalytics } from "./google-analytics";
 import { SiteFooter } from "./site-footer";
 import "./globals.css";
@@ -58,12 +58,10 @@ export default function RootLayout({
                 email: EMPRESA.email,
                 telephone: `+${EMPRESA.whatsapp}`,
                 address: {
-                  streetAddress: [EMPRESA.endereco.logradouro, EMPRESA.endereco.numero, EMPRESA.endereco.complemento]
-                    .filter(Boolean)
-                    .join(", "),
+                  streetAddress: ruaEmLinha(EMPRESA.endereco),
                   addressLocality: EMPRESA.endereco.cidade,
                   addressRegion: EMPRESA.endereco.uf,
-                  postalCode: `${EMPRESA.endereco.cep.slice(0, 5)}-${EMPRESA.endereco.cep.slice(5)}`,
+                  postalCode: cepFormatado(EMPRESA.endereco.cep),
                 },
               }),
             ),
