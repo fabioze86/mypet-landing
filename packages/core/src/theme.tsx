@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react";
 import type { Features } from "./features";
+import type { RetailConfig } from "./retail";
 
 export type Palette = {
   pink: string;
@@ -34,6 +35,8 @@ export type ClientConfig = {
   features: Features;
   /** Rótulo acima do preço na página de produto. Padrão: "Atacado B2B". */
   priceEyebrow?: string;
+  /** Varejo com checkout (azpetshop): parcelamento e ação de compra/consulta. Ausente = comportamento atual. */
+  retail?: RetailConfig;
 };
 
 const ClientConfigContext = createContext<ClientConfig | null>(null);
