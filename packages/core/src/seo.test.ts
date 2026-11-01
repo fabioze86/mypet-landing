@@ -135,6 +135,24 @@ describe("organizationJsonLd", () => {
       logo: "https://mypetbrasil.com.br/opengraph-image",
     });
   });
+
+  it("inclui dados legais quando informados", () => {
+    const config = { name: "AZ Pet Shop", domain: "www.azpetshop.com.br" } as ClientConfig;
+    const ld = organizationJsonLd(config, {
+      legalName: "Empresa Ltda",
+      taxID: "11222333000181",
+      email: "contato@x.com",
+      telephone: "+5511999990000",
+      address: { streetAddress: "Rua A, 1", addressLocality: "São Paulo", addressRegion: "SP", postalCode: "01000-000" },
+    });
+    expect(ld).toMatchObject({
+      legalName: "Empresa Ltda",
+      taxID: "11222333000181",
+      email: "contato@x.com",
+      telephone: "+5511999990000",
+      address: { "@type": "PostalAddress", addressCountry: "BR", addressLocality: "São Paulo" },
+    });
+  });
 });
 
 describe("metaDescription", () => {

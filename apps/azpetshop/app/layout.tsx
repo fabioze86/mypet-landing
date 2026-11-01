@@ -4,6 +4,7 @@ import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
+import { EMPRESA } from "@/lib/empresa";
 import { GoogleAnalytics } from "./google-analytics";
 import "./globals.css";
 
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(`https://${clientConfig.domain}`),
   title: `${clientConfig.name} — ${clientConfig.tagline}`,
   description:
-    "Loja online de produtos para cães, gatos e outros pets. Preços à vista e pedido pelo WhatsApp.",
+    "Loja online de produtos para cães, gatos e outros pets. Pix ou cartão parcelado, entrega para todo o Brasil.",
 };
 
 export const viewport: Viewport = {
@@ -48,7 +49,24 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLdScript(organizationJsonLd(clientConfig)) }}
+          dangerouslySetInnerHTML={{
+            __html: jsonLdScript(
+              organizationJsonLd(clientConfig, {
+                legalName: EMPRESA.razaoSocial,
+                taxID: EMPRESA.cnpj,
+                email: EMPRESA.email,
+                telephone: `+${EMPRESA.whatsapp}`,
+                address: {
+                  streetAddress: [EMPRESA.endereco.logradouro, EMPRESA.endereco.numero, EMPRESA.endereco.complemento]
+                    .filter(Boolean)
+                    .join(", "),
+                  addressLocality: EMPRESA.endereco.cidade,
+                  addressRegion: EMPRESA.endereco.uf,
+                  postalCode: `${EMPRESA.endereco.cep.slice(0, 5)}-${EMPRESA.endereco.cep.slice(5)}`,
+                },
+              }),
+            ),
+          }}
         />
         <ClientConfigProvider config={clientConfig}>
           <CartProvider>{children}</CartProvider>

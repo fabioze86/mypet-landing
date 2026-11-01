@@ -107,13 +107,30 @@ export function breadcrumbJsonLd(
   };
 }
 
-export function organizationJsonLd(config: ClientConfig) {
+export type OrganizationLegal = {
+  legalName: string;
+  taxID: string;
+  email: string;
+  telephone: string;
+  address: { streetAddress: string; addressLocality: string; addressRegion: string; postalCode: string };
+};
+
+export function organizationJsonLd(config: ClientConfig, legal?: OrganizationLegal) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: config.name,
     url: canonicalUrl(config.domain, ""),
     logo: canonicalUrl(config.domain, "/opengraph-image"),
+    ...(legal
+      ? {
+          legalName: legal.legalName,
+          taxID: legal.taxID,
+          email: legal.email,
+          telephone: legal.telephone,
+          address: { "@type": "PostalAddress", addressCountry: "BR", ...legal.address },
+        }
+      : {}),
   };
 }
 

@@ -1,5 +1,6 @@
 import type { ClientConfig } from "@mypet/core/theme";
 import { SITES } from "@mypet/core/features";
+import { RETAIL } from "@/lib/empresa";
 
 // Identidade visual AZ Pet Shop — direção "vibrante e ousada", aprovada em 2026-09-13.
 // Nota: o campo `cyan` do tipo Palette é reaproveitado aqui como acento roxo
@@ -31,4 +32,5 @@ export const clientConfig: ClientConfig = {
   },
   logo: { emoji: "🐾" },
   features: SITES.azpetshop.features,
+  retail: RETAIL,
 };
