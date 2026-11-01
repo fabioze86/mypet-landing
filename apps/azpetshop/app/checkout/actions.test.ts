@@ -6,6 +6,11 @@ vi.mock("@mypet/core/retail-checkout-server", () => ({
   quoteCheckout: (...a: unknown[]) => quoteCheckout(...a),
   startCheckout: (...a: unknown[]) => startCheckout(...a),
 }));
+let onlineEnabled = true;
+vi.mock("@mypet/core/features", async (orig) => ({
+  ...(await orig<typeof import("@mypet/core/features")>()),
+  checkoutOptions: () => ({ online: onlineEnabled, whatsapp: true }),
+}));
 vi.mock("@mypet/core/supabase", () => ({ getHubServiceClient: () => ({}) }));
 vi.mock("@/lib/checkout-env", () => ({
   checkoutEnv: () => ({ asaas: {}, melhorEnvio: {}, siteUrl: "https://loja.test", equipeEmail: "e@x.com" }),
@@ -18,6 +23,7 @@ const ID = "11111111-1111-4111-8111-111111111111";
 beforeEach(() => {
   quoteCheckout.mockReset();
   startCheckout.mockReset();
+  onlineEnabled = true;
 });
 
 describe("cotarFrete", () => {
@@ -70,5 +76,23 @@ describe("configuração de pagamento ausente", () => {
       }),
     ).toEqual({ ok: false, error: msg });
     spy.mockRestore();
+  });
+});
+
+describe("pagamento online desligado na configuração do site", () => {
+  it("cotarFrete e iniciarPagamento recusam sem chamar o servidor", async () => {
+    onlineEnabled = false;
+    const msg = "Pagamento indisponível no momento. Tente novamente mais tarde.";
+    expect(await cotarFrete({ items: [{ id: ID, qty: 1 }], cep: "01001000" })).toEqual({ ok: false, error: msg });
+    expect(
+      await iniciarPagamento({
+        items: [{ id: ID, qty: 1 }],
+        customer: { nome: "Maria Souza", cpf: "52998224725", email: "m@x.com", whatsapp: "11988887777" },
+        address: { cep: "01001000", logradouro: "Rua A", numero: "1", complemento: "", bairro: "Sé", cidade: "São Paulo", uf: "SP" },
+        shippingServiceId: 1,
+      }),
+    ).toEqual({ ok: false, error: msg });
+    expect(quoteCheckout).not.toHaveBeenCalled();
+    expect(startCheckout).not.toHaveBeenCalled();
   });
 });

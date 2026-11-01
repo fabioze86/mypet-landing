@@ -23,7 +23,11 @@ export function GoogleAnalytics() {
           function gtag(){dataLayer.push(arguments);}
           window.gtag = gtag;
           gtag('js', new Date());
-          gtag('config', '${GA_ID}');
+          // O token do pedido viaja em ?t=: nas páginas /pedido/ o GA recebe a URL sem query
+          // (regra espelhada em safe-page-location.ts).
+          gtag('config', '${GA_ID}', {
+            page_location: location.pathname.indexOf('/pedido/') === 0 ? location.origin + location.pathname : location.href
+          });
 
           // O pedido é fechado no WhatsApp: o clique vira "click_whatsapp",
           // para marcar como evento-chave (conversão) no GA4.

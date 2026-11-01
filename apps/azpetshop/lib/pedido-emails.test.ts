@@ -32,11 +32,16 @@ describe("e-mails de pedido", () => {
   });
 
   it("avisarPedidoPago manda para equipe e cliente e não lança se um falhar", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    const erro = vi.spyOn(console, "error").mockImplementation(() => {});
     const mailer = vi.fn().mockRejectedValueOnce(new Error("smtp")).mockResolvedValueOnce(undefined);
     await expect(avisarPedidoPago(pedido, mailer, "pedidos@azpetshop.com.br")).resolves.toBeUndefined();
     expect(mailer).toHaveBeenCalledTimes(2);
     expect(mailer.mock.calls.map((c) => c[0].to)).toEqual(["pedidos@azpetshop.com.br", "maria@exemplo.com"]);
+    // LGPD: o log identifica o destinatário por papel e pedido, nunca pelo e-mail.
+    const logado = erro.mock.calls.flat().join(" ");
+    expect(logado).toContain("equipe");
+    expect(logado).toContain("1042");
+    expect(logado).not.toContain("pedidos@azpetshop.com.br");
   });
 });
 

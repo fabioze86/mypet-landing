@@ -1,5 +1,6 @@
 "use server";
 
+import { checkoutOptions } from "@mypet/core/features";
 import { getHubServiceClient } from "@mypet/core/supabase";
 import { parseCep, parseCheckoutInput, parseCheckoutLines } from "@mypet/core/retail-checkout";
 import { quoteCheckout, startCheckout, type CheckoutDeps } from "@mypet/core/retail-checkout-server";
@@ -32,6 +33,7 @@ export async function cotarFrete(input: {
   items: unknown;
   cep: unknown;
 }): Promise<{ ok: true; subtotal: number; options: ShippingOption[] } | { ok: false; error: string }> {
+  if (!checkoutOptions(clientConfig.features).online) return { ok: false, error: INDISPONIVEL };
   const items = parseCheckoutLines(input.items);
   if (!items.ok) return items;
   const cep = parseCep(input.cep);
@@ -42,6 +44,7 @@ export async function cotarFrete(input: {
 }
 
 export async function iniciarPagamento(input: unknown): Promise<{ ok: true; paymentUrl: string } | { ok: false; error: string }> {
+  if (!checkoutOptions(clientConfig.features).online) return { ok: false, error: INDISPONIVEL };
   const parsed = parseCheckoutInput(input);
   if (!parsed.ok) return parsed;
   const d = deps();

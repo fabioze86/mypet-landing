@@ -89,14 +89,15 @@ export function emailPedidoPagoCliente(p: PedidoParaEmail) {
 /** Avisa equipe e cliente; falhas são registradas e nunca derrubam o webhook. */
 export async function avisarPedidoPago(p: PedidoParaEmail, mailer: Mailer, equipeEmail: string): Promise<void> {
   const envios = [
-    { to: equipeEmail, ...emailPedidoPagoEquipe(p) },
-    { to: p.customerEmail, ...emailPedidoPagoCliente(p) },
+    { destino: "equipe", to: equipeEmail, ...emailPedidoPagoEquipe(p) },
+    { destino: "cliente", to: p.customerEmail, ...emailPedidoPagoCliente(p) },
   ];
   for (const msg of envios) {
     try {
-      await mailer(msg);
+      await mailer({ to: msg.to, subject: msg.subject, text: msg.text });
     } catch (err) {
-      console.error(`[pedido-emails] falha ao enviar para ${msg.to}:`, (err as Error).message);
+      // LGPD: não registra o endereço do cliente no log, só o papel e o número do pedido.
+      console.error(`[pedido-emails] falha ao enviar para ${msg.destino} (pedido ${p.number}):`, (err as Error).message);
     }
   }
 }
