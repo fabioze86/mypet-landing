@@ -9,7 +9,7 @@ import { finalizeQuote } from "./actions";
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
 
-export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
+export function CotacaoContent({ palette: PALETTE, checkout }: { palette: Palette; checkout: { online: boolean; whatsapp: boolean } }) {
   const { cart, removeItem, updateQty, clear } = useCart();
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -86,6 +86,18 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
         ))}
       </div>
 
+      {checkout.online && (
+        <div style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 20, marginBottom: 24, display: "grid", gap: 8 }}>
+          <Link href="/checkout" className="cta-primary" style={{ textDecoration: "none", textAlign: "center", padding: "14px 22px", fontSize: 16 }}>
+            Pagar agora
+          </Link>
+          <p style={{ fontSize: 13, color: PALETTE.gray600, textAlign: "center" }}>Pix ou cartão, com frete calculado pelo CEP.</p>
+        </div>
+      )}
+
+      {checkout.whatsapp && (
+        <>
+      {checkout.online && <p style={{ fontSize: 14, fontWeight: 800, color: PALETTE.navy, marginBottom: 8 }}>Prefere finalizar pelo WhatsApp?</p>}
       <form onSubmit={handleSubmit} style={{ background: PALETTE.white, border: `1px solid ${PALETTE.gray200}`, borderRadius: 16, padding: 24 }}>
         <input
           className="form-input"
@@ -108,6 +120,8 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
           {submitting ? "Enviando..." : "Enviar pedido pelo WhatsApp →"}
         </button>
       </form>
+        </>
+      )}
     </>
   );
 }

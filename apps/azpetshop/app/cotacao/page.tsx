@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { checkoutOptions } from "@mypet/core/features";
 import { clientConfig } from "@/client.config";
 import { CotacaoContent } from "./cotacao-content";
 
@@ -24,7 +25,7 @@ export default async function CotacaoPage() {
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "24px" }}>
         <Link href="/" style={{ color: PALETTE.gray600, fontSize: 14, fontWeight: 700, textDecoration: "none", display: "inline-block", marginBottom: 24 }}>← Continuar comprando</Link>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 20 }}>Seu pedido</h1>
-        <CotacaoContent palette={clientConfig.palette} />
+        <CotacaoContent palette={clientConfig.palette} checkout={checkoutOptions(clientConfig.features)} />
       </div>
     </div>
   );
