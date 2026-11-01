@@ -45,6 +45,8 @@
     "./retail-checkout": "./src/retail-checkout.ts",
     "./retail-checkout-server": "./src/retail-checkout-server.ts",
     "./retail-order-status": "./src/retail-order-status.ts",
+    "./retail-orders-server": "./src/retail-orders-server.ts",
+    "./retail-webhook-server": "./src/retail-webhook-server.ts",
     "./seo": "./src/seo.ts",
     "./shipping-package": "./src/shipping-package.ts",
     "./supabase": "./src/supabase.ts",

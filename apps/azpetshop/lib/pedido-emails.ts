@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { formatBRL } from "@mypet/core/catalog-utils";
 import { formatCep, formatWhatsapp } from "@mypet/core/br-validation";
+import type { RetailOrderView } from "@mypet/core/retail-orders-server";
 import { EMPRESA } from "@/lib/empresa";
 
 export type PedidoParaEmail = {
@@ -96,4 +97,23 @@ export async function avisarPedidoPago(p: PedidoParaEmail, mailer: Mailer, equip
       console.error(`[pedido-emails] falha ao enviar para ${msg.to}:`, (err as Error).message);
     }
   }
+}
+
+export function pedidoParaEmail(order: RetailOrderView, siteUrl: string, token: string): PedidoParaEmail {
+  return {
+    id: order.id,
+    number: order.number,
+    customerName: order.customerName,
+    customerEmail: order.customerEmail,
+    customerWhatsapp: order.customerWhatsapp,
+    total: order.total,
+    shippingPrice: order.shippingPrice,
+    items: order.items,
+    address: order.shipping
+      ? { cep: order.shipping.cep, logradouro: order.shipping.logradouro, numero: order.shipping.numero, complemento: order.shipping.complemento, bairro: order.shipping.bairro, cidade: order.shipping.cidade, uf: order.shipping.uf }
+      : { cep: "", logradouro: "", numero: "", complemento: null, bairro: "", cidade: "", uf: "" },
+    serviceName: order.shipping?.serviceName ?? "",
+    trackingCode: order.shipping?.trackingCode ?? null,
+    orderUrl: `${siteUrl}/pedido/${order.id}?t=${token}`,
+  };
 }
