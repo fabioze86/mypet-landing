@@ -8,7 +8,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export type FakeResult = { data?: unknown; error?: { message: string; code?: string } | null };
 export type FakeCall = { table: string; method: string; args: unknown[] };
 
-const CHAIN_METHODS = ["select", "eq", "is", "gte", "order", "limit", "insert", "update", "upsert"] as const;
+const CHAIN_METHODS = ["select", "eq", "neq", "in", "is", "gte", "order", "limit", "insert", "update", "upsert", "delete"] as const;
 
 export function fakeSupabase(results: Record<string, FakeResult[]>) {
   const calls: FakeCall[] = [];
@@ -31,9 +31,17 @@ export function fakeSupabase(results: Record<string, FakeResult[]>) {
         calls.push({ table, method: "maybeSingle", args: [] });
         return next();
       };
+      builder.single = () => {
+        calls.push({ table, method: "single", args: [] });
+        return next();
+      };
       builder.then = (resolve: (value: unknown) => unknown, reject: (reason: unknown) => unknown) =>
         next().then(resolve, reject);
       return builder;
+    },
+    rpc(fn: string, args: unknown) {
+      calls.push({ table: `rpc:${fn}`, method: "rpc", args: [args] });
+      return Promise.resolve({ data: null, error: null, ...(queues[`rpc:${fn}`]?.shift() ?? {}) });
     },
   };
 

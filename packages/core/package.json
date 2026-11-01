@@ -43,6 +43,7 @@
     "./melhor-envio": "./src/melhor-envio.ts",
     "./retail": "./src/retail.ts",
     "./retail-checkout": "./src/retail-checkout.ts",
+    "./retail-checkout-server": "./src/retail-checkout-server.ts",
     "./retail-order-status": "./src/retail-order-status.ts",
     "./seo": "./src/seo.ts",
     "./shipping-package": "./src/shipping-package.ts",
