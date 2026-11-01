@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SITES, FEATURE_REGISTRY, showsListPrice, type SiteId, type Features } from "./features";
+import { SITES, FEATURE_REGISTRY, showsListPrice, checkoutOptions, type SiteId, type Features } from "./features";
 
 describe("features registry", () => {
   it("declara os 5 sites esperados", () => {
@@ -43,5 +43,32 @@ describe("showsListPrice", () => {
   });
   it("false no modo cotação", () => {
     expect(showsListPrice({ commerce: "quote" })).toBe(false);
+  });
+});
+
+describe("checkoutOptions", () => {
+  it("whatsapp (ou ausente) só oferece o WhatsApp", () => {
+    expect(checkoutOptions({ commerce: "cart" })).toEqual({ online: false, whatsapp: true });
+    expect(checkoutOptions({ commerce: "cart", checkout: "whatsapp" })).toEqual({ online: false, whatsapp: true });
+  });
+
+  it("online só oferece o pagamento", () => {
+    expect(checkoutOptions({ commerce: "cart", checkout: "online" })).toEqual({ online: true, whatsapp: false });
+  });
+
+  it("ambos oferece os dois", () => {
+    expect(checkoutOptions({ commerce: "cart", checkout: "ambos" })).toEqual({ online: true, whatsapp: true });
+  });
+
+  it("azpetshop usa ambos e os demais sites seguem no WhatsApp", () => {
+    expect(SITES.azpetshop.features.checkout).toBe("ambos");
+    for (const id of ["mypet", "distribuidora", "madpet", "distribuidoraInstagram"] as const) {
+      expect(SITES[id].features.checkout).toBe("whatsapp");
+    }
+  });
+
+  it("registra a feature checkout com as três opções", () => {
+    const def = FEATURE_REGISTRY.find((f) => f.id === "checkout");
+    expect(def?.options.map((o) => o.value)).toEqual(["whatsapp", "online", "ambos"]);
   });
 });
