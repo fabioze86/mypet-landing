@@ -226,7 +226,7 @@ Fase 1 entregue e enviada para a `main` (`f4c7d99..853bc57`). Itens abaixo ficam
   produto com variações, políticas, rodapé (possível emenda de cor entre o fundo do body e o rodapé).
 
 ### Para as próximas fases
-- [ ] **Fase 2:** feature `checkout` (`whatsapp` | `online` | `ambos`) por site; azpetshop = `ambos`.
+- [x] **Fase 2:** feature `checkout` (`whatsapp` | `online` | `ambos`) por site; azpetshop = `ambos`.
   As promessas das políticas viram critério de aceite (parcelamento sem juros configurado no Asaas,
   expiração automática do Pix, página do pedido com rastreio).
 - [ ] **Fase 2 (acessibilidade):** link do WhatsApp com `target=_blank` sem aviso para leitor de tela;
@@ -244,6 +244,14 @@ Fase 1 entregue e enviada para a `main` (`f4c7d99..853bc57`). Itens abaixo ficam
   confirmar se a versão exige o cliente já cadastrado como subscriber para `/api/tx`.
 - [ ] **Aviso de pedido pago por WhatsApp para a equipe**: fora da fase 2 (não há API de WhatsApp); só e-mail.
 - [ ] **Parcelamento sem juros configurado no Asaas** (a política de pagamento promete).
+
+### Após a fase 2 (registrado em 2026-11-01)
+- [x] Migrations `20261101120000_retail_checkout` e `20261101130000_mark_order_paid` aplicadas no `hub_catalogo`.
+- [ ] **Teste ponta a ponta em sandbox** (Task 13 do plano da fase 2): não feito, faltam credenciais.
+- [ ] **Credenciais de produção** do Asaas e Melhor Envio, webhook de produção, `SITE_URL`, SMTP e Listmonk nos projetos Vercel (azpetshop e admin).
+- [ ] **Pedidos órfãos** em `aguardando_pagamento` quando o Asaas falha ao criar a cobrança (sem varredura que os expire).
+- [ ] **Rastreio não reeditável** se a gravação falhar depois de o pedido virar `enviado`.
+- [ ] Timeouts nas chamadas ao Asaas e ao Melhor Envio (`AbortSignal.timeout`).
 
 ### Menores (quando conveniente)
 - [ ] Ano do copyright fixo (`ANO_COPYRIGHT = 2026` em `app/site-footer.tsx`): atualizar a cada ano.
