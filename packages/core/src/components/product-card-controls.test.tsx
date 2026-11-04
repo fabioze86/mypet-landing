@@ -8,12 +8,16 @@ vi.mock("next/image", () => ({
   default: ({ src, alt }: { src: string; alt: string }) => createElement("img", { src, alt }),
 }));
 
-const data = vi.hoisted(() => ({ items: [] as unknown[] }));
+const data = vi.hoisted(() => ({ items: [] as unknown[], withoutPhoto: [] as unknown[] }));
+const catalogResult = vi.hoisted(() => (photo?: string) => {
+  const items = photo === "without" ? data.withoutPhoto : data.items;
+  return { items, total: items.length, page: 1, totalPages: 1 };
+});
 vi.mock("../catalog", () => ({
   getCategories: async () => [],
   getChannelCategories: async () => [{ id: "c1", name: "Coleiras", slug: "coleiras", parentId: null }],
-  getCatalog: async () => ({ items: data.items, total: data.items.length, page: 1, totalPages: 1 }),
-  queryCatalogByChannelCategory: async () => ({ items: data.items, total: data.items.length, page: 1, totalPages: 1 }),
+  getCatalog: async (p: { photo?: string }) => catalogResult(p.photo),
+  queryCatalogByChannelCategory: async (p: { photo?: string }) => catalogResult(p.photo),
 }));
 vi.mock("../banners", () => ({ getBanners: async () => [] }));
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound"); } }));
@@ -69,9 +73,37 @@ describe("ProductCard — controle de adicionar", () => {
   });
 });
 
+describe("CategoryListing — Conheça também", () => {
+  it("lista os produtos sem foto no fim, como links, sem card", async () => {
+    data.items = [product];
+    data.withoutPhoto = [{ ...product, id: "sem-foto-1", name: "COMEDOURO SEM FOTO", brand: "MARCA", sku: "123", img: "/placeholder-produto.svg" }];
+    const element = await CategoryListing({
+      slug: "coleiras", channel: "ffa_fabrica", palette: config.palette, domain: "t.com", useChannelCategories: true,
+    });
+    render(wrap(element));
+    expect(screen.getByRole("heading", { name: "Conheça também" })).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: /COMEDOURO SEM FOTO/ });
+    expect(link).toHaveAttribute("href", "/produtos/sem-foto-1");
+    expect(link).toHaveTextContent("MARCA · Ref. 123");
+    expect(screen.getByText("2 produtos em Coleiras")).toBeInTheDocument();
+    expect(screen.queryByAltText("COMEDOURO SEM FOTO")).toBeNull();
+  });
+
+  it("sem produtos sem foto, não mostra a seção", async () => {
+    data.items = [product];
+    data.withoutPhoto = [];
+    const element = await CategoryListing({
+      slug: "coleiras", channel: "ffa_fabrica", palette: config.palette, domain: "t.com", useChannelCategories: true,
+    });
+    render(wrap(element));
+    expect(screen.queryByRole("heading", { name: "Conheça também" })).toBeNull();
+  });
+});
+
 describe("CategoryListing — addControl", () => {
   async function renderListing(addControl?: "default" | "stepper") {
     data.items = [product];
+    data.withoutPhoto = [];
     const element = await CategoryListing({
       slug: "coleiras", channel: "ffa_fabrica", palette: config.palette, domain: "t.com",
       useChannelCategories: true, addControl,

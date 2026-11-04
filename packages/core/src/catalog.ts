@@ -23,6 +23,19 @@ import {
 export const CATALOG_SELECT =
   "id, name, reference, brand, category_id, stock_qty, categories(id, name, slug), product_assets(url, type), product_badges(code, label, kind, priority, starts_at, ends_at), product_channel_prices(channel, sale_price, sale_updated_at)";
 
+/**
+ * "with": só produtos com foto principal (inner join em product_assets).
+ * "without": só os sem foto (anti-join do PostgREST: product_assets=is.null).
+ * Hoje product_assets só tem o tipo main_image, então "ter asset" = "ter foto".
+ */
+export type PhotoFilter = "with" | "without";
+
+function catalogSelect(photo?: PhotoFilter): string {
+  return photo === "with"
+    ? CATALOG_SELECT.replace("product_assets(url, type)", "product_assets!inner(url, type)")
+    : CATALOG_SELECT;
+}
+
 type RawCatalogVariantPriceRow = {
   parent_product_id: string | null;
   reference: string | null;
@@ -83,20 +96,23 @@ export async function queryCatalog(params: {
   categoryId?: string | string[];
   page: number;
   channel: string;
+  photo?: PhotoFilter;
+  pageSize?: number;
 }): Promise<CatalogResult> {
-  const { q, brand, categoryId, page, channel } = params;
+  const { q, brand, categoryId, page, channel, photo, pageSize } = params;
   const supabase = getCatalogClient();
-  const { from, to } = pageRange(page);
+  const { from, to } = pageRange(page, pageSize);
 
   let query = supabase
     .from("products")
-    .select(`${CATALOG_SELECT}, product_channel_links!inner(channel)`, { count: "exact" })
+    .select(`${catalogSelect(photo)}, product_channel_links!inner(channel)`, { count: "exact" })
     .eq("status", "active")
     .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
     .eq("product_channel_prices.channel", channel)
     .order("name", { ascending: true });
 
+  if (photo === "without") query = query.is("product_assets", null);
   if (q) query = query.or(buildSearchOrFilter(q));
   if (brand) query = query.eq("brand", brand);
   if (Array.isArray(categoryId)) {
@@ -117,7 +133,7 @@ export async function queryCatalog(params: {
   items = await applyStartingVariantPrices(items, channel);
 
   const total = count ?? 0;
-  return { items, total, page, totalPages: totalPages(total) };
+  return { items, total, page, totalPages: totalPages(total, pageSize) };
 }
 
 export async function getCatalog(params: {
@@ -126,6 +142,8 @@ export async function getCatalog(params: {
   categoryId?: string | string[];
   page: number;
   channel: string;
+  photo?: PhotoFilter;
+  pageSize?: number;
 }): Promise<CatalogResult> {
   "use cache";
   cacheLife("days");
@@ -386,26 +404,29 @@ export async function queryCatalogByChannelCategory(params: {
   channel: string;
   categoryId: string;
   page: number;
+  photo?: PhotoFilter;
+  pageSize?: number;
 }): Promise<CatalogResult> {
-  const { channel, categoryId, page } = params;
+  const { channel, categoryId, page, photo, pageSize } = params;
   const supabase = getCatalogClient();
-  const { from, to } = pageRange(page);
-  const { data, count, error } = await supabase
+  const { from, to } = pageRange(page, pageSize);
+  let query = supabase
     .from("products")
-    .select(`${CATALOG_SELECT}, product_channel_links!inner(channel), product_channel_categories!inner(channel, category_id)`, { count: "exact" })
+    .select(`${catalogSelect(photo)}, product_channel_links!inner(channel), product_channel_categories!inner(channel, category_id)`, { count: "exact" })
     .eq("status", "active")
     .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
     .eq("product_channel_prices.channel", channel)
     .eq("product_channel_categories.channel", channel)
     .eq("product_channel_categories.category_id", categoryId)
-    .order("name", { ascending: true })
-    .range(from, to);
+    .order("name", { ascending: true });
+  if (photo === "without") query = query.is("product_assets", null);
+  const { data, count, error } = await query.range(from, to);
 
   if (error) {
     console.error("[catalog] erro ao consultar categoria do canal:", error.message);
     return { items: [], total: 0, page, totalPages: 1 };
   }
   const items = ((data as unknown as RawProductRow[]) ?? []).map((row) => mapProduct(row));
-  return { items, total: count ?? 0, page, totalPages: totalPages(count ?? 0) };
+  return { items, total: count ?? 0, page, totalPages: totalPages(count ?? 0, pageSize) };
 }

@@ -1,13 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getCatalog, getCategories, getChannelCategories, queryCatalogByChannelCategory } from "../catalog";
+import { getCatalog, getCategories, getChannelCategories, queryCatalogByChannelCategory, type PhotoFilter } from "../catalog";
+import type { CatalogProduct } from "../catalog-utils";
 import { parsePage, collectCategorySubtreeIds, getCategoryPath } from "../catalog-utils";
 import { ProductCard } from "./product-card";
 import type { Palette } from "../theme";
 import { getBanners } from "../banners";
 import type { Channel } from "../channels";
 import { breadcrumbJsonLd, jsonLdScript } from "../seo";
+
+/** Teto da lista "Conheça também"; hoje a maior categoria tem bem menos que isso. */
+const WITHOUT_PHOTO_LIMIT = 200;
 
 export async function CategoryListing({
   slug,
@@ -42,10 +46,19 @@ export async function CategoryListing({
   ];
   const children = categories.filter((c) => c.parentId === node.id);
   const subtreeIds = collectCategorySubtreeIds(categories, node.id);
-  const catalog = useChannelCategories
-    ? await queryCatalogByChannelCategory({ channel, categoryId: node.id, page })
-    : await getCatalog({ categoryId: subtreeIds, page, channel });
-  const [categoryBanner] = await getBanners(channel as Channel, "categoria", node.id);
+  const fetchCatalog = (photo: PhotoFilter, pageNumber: number, pageSize?: number) =>
+    useChannelCategories
+      ? queryCatalogByChannelCategory({ channel, categoryId: node.id, page: pageNumber, photo, pageSize })
+      : getCatalog({ categoryId: subtreeIds, page: pageNumber, channel, photo, pageSize });
+  // A grade paginada só mostra produto com foto. Os sem foto vão para a lista
+  // "Conheça também" no fim da categoria (última página da grade).
+  const [catalog, withoutPhoto, [categoryBanner]] = await Promise.all([
+    fetchCatalog("with", page),
+    fetchCatalog("without", 1, WITHOUT_PHOTO_LIMIT),
+    getBanners(channel as Channel, "categoria", node.id),
+  ]);
+  const totalProducts = catalog.total + withoutPhoto.total;
+  const showMoreList = withoutPhoto.items.length > 0 && page >= catalog.totalPages;
 
   return (
     <>
@@ -110,19 +123,23 @@ export async function CategoryListing({
       )}
 
       <p style={{ fontSize: 14, color: palette.gray600, marginBottom: 20 }}>
-        {catalog.total} produtos em {node.name}
+        {totalProducts} produtos em {node.name}
       </p>
 
-      {catalog.items.length === 0 ? (
+      {catalog.items.length === 0 && withoutPhoto.items.length === 0 ? (
         <p style={{ fontSize: 15, color: palette.gray600, padding: "40px 0", textAlign: "center" }}>
           Nenhum produto encontrado nesta categoria.
         </p>
-      ) : (
+      ) : catalog.items.length === 0 ? null : (
         <div className="products-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 22 }}>
           {catalog.items.map((product) => (
             <ProductCard key={product.id} product={product} addControl={addControl} />
           ))}
         </div>
+      )}
+
+      {showMoreList && (
+        <MoreProductsList items={withoutPhoto.items} categoryName={node.name} palette={palette} spaced={catalog.items.length > 0} />
       )}
 
       {catalog.totalPages > 1 && (
@@ -141,5 +158,71 @@ export async function CategoryListing({
         </div>
       )}
     </>
+  );
+}
+
+function MoreProductsList({
+  items,
+  categoryName,
+  palette,
+  spaced,
+}: {
+  items: CatalogProduct[];
+  categoryName: string;
+  palette: Palette;
+  spaced: boolean;
+}) {
+  return (
+    <section aria-labelledby="conheca-tambem" style={{ marginTop: spaced ? 48 : 0 }}>
+      <h2 id="conheca-tambem" style={{ fontSize: 20, fontWeight: 900, color: palette.navy, marginBottom: 4 }}>
+        Conheça também
+      </h2>
+      <p style={{ fontSize: 14, color: palette.gray600, marginBottom: 14 }}>
+        Mais itens de {categoryName}. Toque em um item para ver os detalhes.
+      </p>
+      <ul
+        style={{
+          listStyle: "none",
+          margin: 0,
+          padding: 0,
+          background: palette.white,
+          border: `1px solid ${palette.gray200}`,
+          borderRadius: 16,
+          overflow: "hidden",
+        }}
+      >
+        {items.map((product, i) => {
+          const meta = [product.brand, product.sku ? `Ref. ${product.sku}` : null].filter(Boolean).join(" · ");
+          return (
+            <li key={product.id} style={{ borderTop: i === 0 ? "none" : `1px solid ${palette.gray200}` }}>
+              <Link
+                href={`/produtos/${product.id}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  padding: "12px 16px",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
+              >
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 14, fontWeight: 700, color: palette.navy, overflowWrap: "anywhere" }}>
+                    {product.name}
+                  </span>
+                  {meta && (
+                    <span style={{ display: "block", fontSize: 12, color: palette.gray600, marginTop: 2 }}>{meta}</span>
+                  )}
+                </span>
+                <span aria-hidden="true" style={{ flexShrink: 0, fontSize: 13, fontWeight: 700, color: palette.pink }}>
+                  Ver →
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

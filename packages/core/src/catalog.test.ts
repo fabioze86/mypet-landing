@@ -16,6 +16,7 @@ type QueryBuilder = {
   in: (...args: unknown[]) => QueryBuilder;
   order: (...args: unknown[]) => QueryBuilder;
   not: (...args: unknown[]) => QueryBuilder;
+  is: (...args: unknown[]) => QueryBuilder;
   range: (...args: unknown[]) => Promise<{ data: unknown[]; count: number; error: null }>;
   single: () => Promise<{ data: unknown; error: null }>;
   maybeSingle: () => Promise<{ data: unknown; error: null }>;
@@ -43,6 +44,7 @@ vi.mock("./supabase", () => {
       builder.in = accumulate("in");
       builder.order = chain("order");
       builder.not = chain("not");
+      builder.is = chain("is");
       builder.range = (...args: unknown[]) => {
         calls["range"] = args;
         return Promise.resolve({
@@ -140,6 +142,33 @@ describe("queryCatalog", () => {
       category: { id: "cat-1", name: "Banho & Tosa", slug: "banho-tosa" },
     });
     for (const item of result.items) expect(item.hasVariants).toBeUndefined();
+  });
+});
+
+describe("filtro de foto", () => {
+  it("photo=with exige foto via inner join e não usa anti-join", async () => {
+    await queryCatalog({ page: 1, channel: "mypetbrasil", photo: "with" });
+    expect(selectContains("product_assets!inner(url, type)")).toBe(true);
+    expect(calls["is"]).toBeUndefined();
+  });
+
+  it("photo=without filtra quem não tem asset e respeita o pageSize", async () => {
+    const result = await queryCatalog({ page: 1, channel: "mypetbrasil", photo: "without", pageSize: 200 });
+    expect(selectContains("product_assets!inner")).toBe(false);
+    expect(calls["is"]).toEqual(["product_assets", null]);
+    expect(calls["range"]).toEqual([0, 199]);
+    expect(result.totalPages).toBe(1);
+  });
+
+  it("sem photo mantém a consulta antiga", async () => {
+    await queryCatalog({ page: 1, channel: "mypetbrasil" });
+    expect(selectContains("product_assets!inner")).toBe(false);
+    expect(calls["is"]).toBeUndefined();
+  });
+
+  it("categoria do canal também aplica o anti-join", async () => {
+    await queryCatalogByChannelCategory({ channel: "ffa_fabrica", categoryId: "c1", page: 1, photo: "without" });
+    expect(calls["is"]).toEqual(["product_assets", null]);
   });
 });
 
