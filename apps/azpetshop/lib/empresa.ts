@@ -21,26 +21,28 @@ export type Empresa = {
   horario: string;
 };
 
-// Trava de publicação: enquanto true, o build de produção na Vercel é bloqueado (ver next.config.ts). Trocar para false junto com os dados reais da empresa e o checkout da fase 2.
-export const DADOS_DE_EXEMPLO = true;
+// Trava de publicação: enquanto true, o build de produção na Vercel é bloqueado (ver next.config.ts).
+// Liberada em 2026-11-09 com os dados reais da DPZ Commerce.
+export const DADOS_DE_EXEMPLO = false;
 
-// DADOS GENÉRICOS DE EXEMPLO (decisão do usuário em 2026-11-01) — trocar pelos reais antes do deploy de produção e do cadastro no Merchant Center. Vendedor oficial = mesmo CNPJ da My Pet / Grupo AZ. Fonte única para rodapé, políticas e JSON-LD.
+// Dados reais (informados pelo usuário em 2026-11-09). Bairro e CEP conferidos no ViaCEP.
+// Fonte única para rodapé, políticas e JSON-LD.
 export const EMPRESA: Empresa = {
-  razaoSocial: "Empresa Exemplo Ltda",
+  razaoSocial: "DPZ Commerce Ltda",
   nomeFantasia: "AZ Pet Shop",
-  cnpj: "11222333000181",
+  cnpj: "67145989000100",
   endereco: {
-    logradouro: "Rua Exemplo",
-    numero: "100",
-    complemento: "",
-    bairro: "Centro",
+    logradouro: "Rua Alencar Araripe",
+    numero: "212",
+    complemento: "Andar 3",
+    bairro: "Sacomã",
     cidade: "São Paulo",
     uf: "SP",
-    cep: "01001000",
+    cep: "04253000",
   },
   email: "contato@azpetshop.com.br",
-  whatsapp: "5511900000000",
-  horario: "Segunda a sexta, das 9h às 18h",
+  whatsapp: "5511940091284",
+  horario: "Segunda a sexta, das 8h às 17h",
 };
 
 export function cepFormatado(cep: string): string {

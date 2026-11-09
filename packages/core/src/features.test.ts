@@ -60,8 +60,8 @@ describe("checkoutOptions", () => {
     expect(checkoutOptions({ commerce: "cart", checkout: "ambos" })).toEqual({ online: true, whatsapp: true });
   });
 
-  it("azpetshop usa ambos e os demais sites seguem no WhatsApp", () => {
-    expect(SITES.azpetshop.features.checkout).toBe("ambos");
+  it("todos os sites no WhatsApp até a azpetshop ter credenciais de pagamento", () => {
+    expect(SITES.azpetshop.features.checkout).toBe("whatsapp");
     for (const id of ["mypet", "distribuidora", "madpet", "distribuidoraInstagram"] as const) {
       expect(SITES[id].features.checkout).toBe("whatsapp");
     }

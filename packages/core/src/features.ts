@@ -66,7 +66,8 @@ export const SITES: Record<SiteId, { name: string; features: Features }> = {
   },
   azpetshop: {
     name: "AZ Pet Shop",
-    features: { commerce: "cart", checkout: "ambos" },
+    // "whatsapp" até as credenciais de produção do Asaas e do Melhor Envio; depois volta a "ambos".
+    features: { commerce: "cart", checkout: "whatsapp" },
   },
   distribuidoraInstagram: {
     name: "Distribuidora Pet Shop",
