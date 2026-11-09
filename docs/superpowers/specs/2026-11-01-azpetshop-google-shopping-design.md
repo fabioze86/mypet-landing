@@ -211,10 +211,13 @@ Checkout transparente, NF-e automática, etiqueta automática, cupons, avaliaç�
 Fase 1 entregue e enviada para a `main` (`f4c7d99..853bc57`). Itens abaixo ficam para resolução futura.
 
 ### Bloqueantes para produção (dono)
-- [ ] **Dados reais da empresa** em `apps/azpetshop/lib/empresa.ts` (hoje "Empresa Exemplo Ltda", CNPJ de teste)
-  e depois `DADOS_DE_EXEMPLO = false`. Enquanto for `true`, `next.config.ts` derruba o build com
-  `VERCEL_ENV=production`, de propósito.
-- [ ] **Confirmar a branch de produção da azpetshop na Vercel** e se o primeiro deploy após o push falhou pela trava.
+- [x] **Dados reais da empresa** (2026-11-09): DPZ Commerce Ltda, CNPJ 67.145.989/0001-00 (substitui a decisão 6,
+  "mesmo CNPJ da My Pet"), e `DADOS_DE_EXEMPLO = false`. Até aqui a produção estava presa no deploy de 2026-10-25.
+- [x] **Branch de produção na Vercel** é a `main`; o deploy de 2026-11-09 entrou no ar.
+- [ ] **Checkout da azpetshop em `whatsapp`** (`packages/core/src/features.ts`) desde 2026-11-09, até as credenciais
+  de produção do Asaas e do Melhor Envio. Voltar para `ambos` junto com elas. Enquanto isso, conferir as frases que
+  pressupõem pagamento no site: home ("Frete e prazo calculados pelo CEP antes de pagar", "Pix ou cartão parcelado"),
+  rodapé ("Pagamento") e a política de pagamento (Asaas).
 - [ ] **Revisão jurídica das 4 políticas** (`apps/azpetshop/lib/politicas.ts`). Promessas a confirmar ou ajustar:
   reembolso incluindo o frete; 30 dias para defeito com devolução sem custo; estorno do Pix em 5 dias úteis;
   código de postagem reversa; NF-e em todo pedido; cancelamento automático do Pix não pago; texto
