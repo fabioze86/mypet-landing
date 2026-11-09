@@ -7,6 +7,7 @@ import { SkipLink } from "./_components/skip-link";
 import { SiteHeader } from "./_components/site-header";
 import { SiteFooter } from "./_components/site-footer";
 import { GoogleAnalytics } from "./_components/google-analytics";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="flex-1">{children}</div>
         <SiteFooter />
         <GoogleAnalytics />
+        <Analytics />
       </body>
     </html>
   );
