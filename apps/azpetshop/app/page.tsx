@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
+import { BlogHighlights } from "./blog-highlights";
 import { SearchBar } from "@mypet/core/components/search-bar";
 import { getCategories } from "@mypet/core/catalog";
 import { clientConfig } from "@/client.config";
@@ -225,7 +227,7 @@ export default async function Home({
         }
       `}</style>
 
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <SearchBar action="/busca" />
 
       <Hero />
@@ -235,6 +237,10 @@ export default async function Home({
           <Catalog searchParams={searchParams} />
         </Suspense>
       </div>
+
+      <Suspense fallback={null}>
+        <BlogHighlights />
+      </Suspense>
 
       <QuoteCta />
       <TrustRow />

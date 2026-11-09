@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
 import { formatBRL } from "@mypet/core/catalog-utils";
 import { formatCep } from "@mypet/core/br-validation";
 import { getHubServiceClient } from "@mypet/core/supabase";
@@ -38,7 +39,7 @@ async function PedidoConteudo({ params, searchParams }: PedidoProps) {
 
   return (
     <div style={{ background: P.gray50, minHeight: "100vh", color: P.gray800 }}>
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <main style={{ maxWidth: 640, margin: "0 auto", padding: 24, display: "grid", gap: 16 }}>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: P.navy }}>Pedido {order.number}</h1>
         <p style={{ fontSize: 16, fontWeight: 800 }}>{label}</p>

@@ -33,4 +33,9 @@ describe("SiteFooter", () => {
     expect(screen.getByText(/Pix/)).toBeInTheDocument();
     expect(screen.getByText(/cartão de crédito/i)).toBeInTheDocument();
   });
+
+  it("linka o blog", () => {
+    render(<SiteFooter />);
+    expect(screen.getByRole("link", { name: /Blog/ })).toHaveAttribute("href", "/blog/");
+  });
 });

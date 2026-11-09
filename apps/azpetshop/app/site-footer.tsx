@@ -3,6 +3,7 @@ import { formatCnpj, formatWhatsapp } from "@mypet/core/br-validation";
 import { clientConfig } from "@/client.config";
 import { EMPRESA, enderecoEmLinha } from "@/lib/empresa";
 import { POLITICAS } from "@/lib/politicas";
+import { BLOG_HREF } from "@/lib/blog-origin";
 
 const { palette: PALETTE } = clientConfig;
 const muted = "rgba(255,255,255,0.72)";
@@ -57,6 +58,15 @@ export function SiteFooter() {
                 <Link href={`/politicas/${p.slug}`} style={{ color: muted }}>{p.titulo}</Link>
               </li>
             ))}
+          </ul>
+        </nav>
+        <nav aria-label="Conteúdo">
+          <b style={{ fontSize: 14 }}>Conteúdo</b>
+          <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", fontSize: 13, lineHeight: 1.9 }}>
+            <li>
+              {/* <a>, não <Link>: o blog é um rewrite externo (ver lib/blog-origin.ts). */}
+              <a href={BLOG_HREF} style={{ color: muted }}>Blog: dicas e guias para pets</a>
+            </li>
           </ul>
         </nav>
         <div>

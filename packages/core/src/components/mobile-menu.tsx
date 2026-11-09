@@ -7,7 +7,8 @@ import * as Accordion from "@radix-ui/react-accordion";
 import { useClientConfig } from "../theme";
 import type { CategoryTreeNode } from "../catalog-utils";
 
-export type MobileMenuLink = { href: string; label: string };
+/** `external`: rota fora do Next (ex.: blog via rewrite externo) — vira <a>, sem navegação client-side. */
+export type MobileMenuLink = { href: string; label: string; external?: boolean };
 
 export function MobileMenu({ tree, links = [] }: { tree: CategoryTreeNode[]; links?: MobileMenuLink[] }) {
   const { palette } = useClientConfig();
@@ -46,16 +47,18 @@ export function MobileMenu({ tree, links = [] }: { tree: CategoryTreeNode[]; lin
 
           {links.length > 0 && (
             <div style={{ padding: "8px 0", borderBottom: `6px solid ${palette.gray100}` }}>
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  style={{ display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 700, color: palette.navy, textDecoration: "none" }}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {links.map((link) => {
+                const style = { display: "block", padding: "14px 20px", fontSize: 15, fontWeight: 700, color: palette.navy, textDecoration: "none" } as const;
+                return link.external ? (
+                  <a key={link.href} href={link.href} onClick={() => setOpen(false)} style={style}>
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link key={link.href} href={link.href} onClick={() => setOpen(false)} style={style}>
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           )}
 

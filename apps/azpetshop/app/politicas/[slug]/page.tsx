@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
 import { getCategories } from "@mypet/core/catalog";
 import { canonicalUrl } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
@@ -30,7 +31,7 @@ export default async function PoliticaPage({ params }: { params: Promise<{ slug:
 
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 24px 64px" }}>
         <h1 style={{ fontFamily: "var(--font-baloo)", fontSize: 32, fontWeight: 800, color: PALETTE.navy }}>
           {politica.titulo}

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getCategories } from "@mypet/core/catalog";
 import { CategoryListing } from "@mypet/core/components/category-listing";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
 import { SearchBar } from "@mypet/core/components/search-bar";
 import type { Palette } from "@mypet/core/theme";
 import { clientConfig } from "@/client.config";
@@ -58,7 +59,7 @@ export default async function CategoriaPage({
           .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px !important; }
         }
       `}</style>
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <SearchBar action="/busca" />
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "24px" }}>
         <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando…</p>}>

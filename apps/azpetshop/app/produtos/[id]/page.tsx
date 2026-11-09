@@ -4,6 +4,7 @@ import { getCategoryPath } from "@mypet/core/catalog-utils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
 import { SearchBar } from "@mypet/core/components/search-bar";
 import { inStockFromQty } from "@mypet/core/retail";
 import { ProductVariantPanel } from "@mypet/core/components/product-variant-panel";
@@ -66,7 +67,7 @@ export default async function ProductPage({
         .info-table td.label { color: ${PALETTE.gray600}; font-weight: 600; width: 35%; }
         .info-table td.value { color: ${PALETTE.navyDark}; font-weight: 700; }
       `}</style>
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <SearchBar action="/busca" />
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "24px" }}>
         <Link href="/" className="back-link">← Voltar</Link>

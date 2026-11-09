@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { CatalogSection } from "@mypet/core/components/catalog-section";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
 import { SearchBar } from "@mypet/core/components/search-bar";
 import { getCategories } from "@mypet/core/catalog";
 import { clientConfig } from "@/client.config";
@@ -52,7 +53,7 @@ export default async function BuscaPage({
   const categories = await getCategories();
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <SearchBar action="/busca" />
       <Suspense fallback={<p style={{ padding: 24, color: PALETTE.gray600 }}>Buscando…</p>}>
         <Resultados searchParams={searchParams} />

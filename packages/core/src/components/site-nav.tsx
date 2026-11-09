@@ -15,6 +15,7 @@ export function SiteNav({
   pedidoRapidoHref,
   pedidosHref,
   faqHref,
+  blogHref,
   homeHref = "/",
   audienceLabel,
   showMegaMenu = true,
@@ -25,6 +26,8 @@ export function SiteNav({
   pedidoRapidoHref?: string;
   pedidosHref?: string;
   faqHref?: string;
+  /** Blog servido fora do Next (rewrite externo): vira <a>, com navegação completa. */
+  blogHref?: string;
   homeHref?: string;
   audienceLabel?: string | null;
   showMegaMenu?: boolean;
@@ -60,6 +63,7 @@ export function SiteNav({
     ...(balcaoHref ? [{ href: balcaoHref, label: "Balcão de Negócios" }] : []),
     ...(pedidosHref ? [{ href: pedidosHref, label: "Meus pedidos" }] : []),
     ...(faqHref ? [{ href: faqHref, label: "Todas as dúvidas" }] : []),
+    ...(blogHref ? [{ href: blogHref, label: "Blog", external: true }] : []),
   ];
 
   return (
@@ -129,6 +133,15 @@ export function SiteNav({
             >
               Todas as dúvidas
             </Link>
+          )}
+          {blogHref && (
+            <a
+              href={blogHref}
+              className="site-nav-text-link"
+              style={{ fontSize: 13, fontWeight: 800, color: palette.navy, textDecoration: "none", whiteSpace: "nowrap" }}
+            >
+              Blog
+            </a>
           )}
           <CartBadge />
         </div>

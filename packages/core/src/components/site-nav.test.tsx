@@ -121,3 +121,24 @@ describe("SiteNav — link do Agente", () => {
     expect(markup).toContain(">Agente<");
   });
 });
+
+describe("SiteNav — link do Blog", () => {
+  const render = (props: { blogHref?: string }) =>
+    renderToStaticMarkup(
+      createElement(
+        ClientConfigProvider,
+        { config },
+        createElement(CartProvider, null, createElement(SiteNav, { categories: [], ...props })),
+      ),
+    );
+
+  it("renderiza o link Blog quando blogHref é informado", () => {
+    const markup = render({ blogHref: "/blog/" });
+    expect(markup).toContain('href="/blog/"');
+    expect(markup).toContain(">Blog<");
+  });
+
+  it("não renderiza o link Blog sem blogHref", () => {
+    expect(render({})).not.toContain(">Blog<");
+  });
+});

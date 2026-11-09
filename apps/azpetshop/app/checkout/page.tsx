@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
 import { checkoutOptions } from "@mypet/core/features";
 import { clientConfig } from "@/client.config";
 import { CheckoutForm } from "./checkout-form";
@@ -19,7 +20,7 @@ export default async function CheckoutPage() {
         .cta-primary { background: ${PALETTE.pink}; color: #fff; border: none; border-radius: 100px; padding: 10px 22px; font-size: 14px; font-weight: 800; cursor: pointer; }
         .cta-primary:disabled { opacity: 0.5; cursor: not-allowed; }
       `}</style>
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <main style={{ maxWidth: 640, margin: "0 auto", padding: 24 }}>
         <Link href="/cotacao" style={{ color: PALETTE.gray600, fontSize: 14, fontWeight: 700, textDecoration: "none" }}>← Voltar ao carrinho</Link>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, margin: "16px 0 20px" }}>Finalizar compra</h1>

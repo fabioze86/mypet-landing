@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCategories } from "@mypet/core/catalog";
 import { SiteNav } from "@mypet/core/components/site-nav";
+import { BLOG_HREF } from "@/lib/blog-origin";
 import { checkoutOptions } from "@mypet/core/features";
 import { clientConfig } from "@/client.config";
 import { CotacaoContent } from "./cotacao-content";
@@ -21,7 +22,7 @@ export default async function CotacaoPage() {
           padding: 10px 22px; font-size: 14px; font-weight: 800; cursor: pointer;
         }
       `}</style>
-      <SiteNav categories={categories} audienceLabel={null} />
+      <SiteNav categories={categories} audienceLabel={null} blogHref={BLOG_HREF} />
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "24px" }}>
         <Link href="/" style={{ color: PALETTE.gray600, fontSize: 14, fontWeight: 700, textDecoration: "none", display: "inline-block", marginBottom: 24 }}>← Continuar comprando</Link>
         <h1 style={{ fontSize: 24, fontWeight: 900, color: PALETTE.navy, marginBottom: 20 }}>Seu pedido</h1>
