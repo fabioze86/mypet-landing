@@ -28,6 +28,7 @@
     "./channels": "./src/channels.ts",
     "./datetime": "./src/datetime.ts",
     "./features": "./src/features.ts",
+    "./frete": "./src/frete.ts",
     "./guest-orders-server": "./src/guest-orders-server.ts",
     "./help-center": "./src/help-center.ts",
     "./identity-leads-server": "./src/identity-leads-server.ts",
