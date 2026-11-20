@@ -30,6 +30,10 @@ export const CATALOG_SELECT =
  */
 export type PhotoFilter = "with" | "without";
 
+// Recorte: o produto também precisa estar ligado a `alsoInChannel` (ex.: linha de fábrica).
+// Usa um segundo embed de product_channel_links com alias, filtrado por "fab.channel".
+const alsoEmbed = (alsoInChannel?: string) => (alsoInChannel ? ", fab:product_channel_links!inner(channel)" : "");
+
 function catalogSelect(photo?: PhotoFilter): string {
   return photo === "with"
     ? CATALOG_SELECT.replace("product_assets(url, type)", "product_assets!inner(url, type)")
@@ -98,20 +102,22 @@ export async function queryCatalog(params: {
   channel: string;
   photo?: PhotoFilter;
   pageSize?: number;
+  alsoInChannel?: string;
 }): Promise<CatalogResult> {
-  const { q, brand, categoryId, page, channel, photo, pageSize } = params;
+  const { q, brand, categoryId, page, channel, photo, pageSize, alsoInChannel } = params;
   const supabase = getCatalogClient();
   const { from, to } = pageRange(page, pageSize);
 
   let query = supabase
     .from("products")
-    .select(`${catalogSelect(photo)}, product_channel_links!inner(channel)`, { count: "exact" })
+    .select(`${catalogSelect(photo)}, product_channel_links!inner(channel)${alsoEmbed(alsoInChannel)}`, { count: "exact" })
     .eq("status", "active")
     .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
     .eq("product_channel_prices.channel", channel)
     .order("name", { ascending: true });
 
+  if (alsoInChannel) query = query.eq("fab.channel", alsoInChannel);
   if (photo === "without") query = query.is("product_assets", null);
   if (q) query = query.or(buildSearchOrFilter(q));
   if (brand) query = query.eq("brand", brand);
@@ -144,6 +150,7 @@ export async function getCatalog(params: {
   channel: string;
   photo?: PhotoFilter;
   pageSize?: number;
+  alsoInChannel?: string;
 }): Promise<CatalogResult> {
   "use cache";
   cacheLife("days");
@@ -151,40 +158,44 @@ export async function getCatalog(params: {
   return queryCatalog(params);
 }
 
-export async function getBrands(channel: string): Promise<string[]> {
+export async function getBrands(channel: string, alsoInChannel?: string): Promise<string[]> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
   const supabase = getCatalogClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("products")
-    .select("brand, product_channel_links!inner(channel)")
+    .select(`brand, product_channel_links!inner(channel)${alsoEmbed(alsoInChannel)}`)
     .eq("status", "active")
     .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
     .not("brand", "is", null);
+  if (alsoInChannel) query = query.eq("fab.channel", alsoInChannel);
+  const { data, error } = await query;
   if (error) {
     console.error("[catalog] erro ao consultar marcas:", error.message);
     return [];
   }
   const set = new Set<string>();
-  for (const r of (data as { brand: string | null }[]) ?? []) {
+  for (const r of (data as unknown as { brand: string | null }[]) ?? []) {
     if (r.brand) set.add(r.brand);
   }
   return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
-export async function getProductCount(channel: string): Promise<number> {
+export async function getProductCount(channel: string, alsoInChannel?: string): Promise<number> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
   const supabase = getCatalogClient();
-  const { count, error } = await supabase
+  let query = supabase
     .from("products")
-    .select("id, product_channel_links!inner(channel)", { count: "exact", head: true })
+    .select(`id, product_channel_links!inner(channel)${alsoEmbed(alsoInChannel)}`, { count: "exact", head: true })
     .eq("status", "active")
     .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel);
+  if (alsoInChannel) query = query.eq("fab.channel", alsoInChannel);
+  const { count, error } = await query;
   if (error) {
     console.error("[catalog] erro ao contar produtos:", error.message);
     return 0;
@@ -192,19 +203,21 @@ export async function getProductCount(channel: string): Promise<number> {
   return count ?? 0;
 }
 
-export async function getProductCategoryIds(channel: string): Promise<string[]> {
+export async function getProductCategoryIds(channel: string, alsoInChannel?: string): Promise<string[]> {
   "use cache";
   cacheLife("days");
   cacheTag("catalog");
   const supabase = getCatalogClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("products")
-    .select("category_id, product_channel_links!inner(channel), product_channel_prices!inner(channel)")
+    .select(`category_id, product_channel_links!inner(channel), product_channel_prices!inner(channel)${alsoEmbed(alsoInChannel)}`)
     .eq("status", "active")
     .neq("product_role", "variant")
     .eq("product_channel_links.channel", channel)
     .eq("product_channel_prices.channel", channel)
     .not("category_id", "is", null);
+  if (alsoInChannel) query = query.eq("fab.channel", alsoInChannel);
+  const { data, error } = await query;
 
   if (error) {
     console.error("[catalog] erro ao consultar categorias com produtos:", error.message);
@@ -212,18 +225,35 @@ export async function getProductCategoryIds(channel: string): Promise<string[]> 
   }
 
   return [...new Set(
-    ((data as { category_id: string | null }[]) ?? [])
+    ((data as unknown as { category_id: string | null }[]) ?? [])
       .map((row) => row.category_id)
       .filter((categoryId): categoryId is string => Boolean(categoryId)),
   )];
 }
 
-export async function getCategoriesWithProducts(channel: string): Promise<CategoryNode[]> {
+export async function getCategoriesWithProducts(channel: string, alsoInChannel?: string): Promise<CategoryNode[]> {
   const [categories, productCategoryIds] = await Promise.all([
     getCategories(),
-    getProductCategoryIds(channel),
+    getProductCategoryIds(channel, alsoInChannel),
   ]);
   return filterCategoriesWithProducts(categories, productCategoryIds);
+}
+
+export async function isProductInChannel(id: string, channel: string): Promise<boolean> {
+  "use cache";
+  cacheLife("days");
+  cacheTag("catalog");
+  const { data, error } = await getCatalogClient()
+    .from("product_channel_links")
+    .select("product_id")
+    .eq("product_id", id)
+    .eq("channel", channel)
+    .maybeSingle();
+  if (error) {
+    console.error("[catalog] erro ao conferir canal do produto:", error.message);
+    return false;
+  }
+  return Boolean(data);
 }
 
 export async function getProductById(id: string, channel: string) {

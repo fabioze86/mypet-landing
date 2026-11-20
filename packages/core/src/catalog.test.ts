@@ -7,6 +7,7 @@ vi.mock("next/cache", () => ({
 
 const calls: Record<string, unknown> = {};
 let variantRows: unknown[] = [];
+let maybeSingleData: unknown = { stock_qty: 7 };
 
 type QueryBuilder = {
   select: (...args: unknown[]) => QueryBuilder;
@@ -64,7 +65,7 @@ vi.mock("./supabase", () => {
           error: null,
         });
       };
-      builder.maybeSingle = () => Promise.resolve({ data: { stock_qty: 7 }, error: null });
+      builder.maybeSingle = () => Promise.resolve({ data: maybeSingleData, error: null });
       builder.single = () => Promise.resolve({
         data: {
           id: "p1",
@@ -112,12 +113,13 @@ vi.mock("./supabase", () => {
   };
 });
 
-import { queryCatalog, getCategories, getProductById, getChannelCategories, queryCatalogByChannelCategory } from "./catalog";
+import { queryCatalog, isProductInChannel, getCategories, getProductById, getChannelCategories, queryCatalogByChannelCategory } from "./catalog";
 import * as catalog from "./catalog";
 
 beforeEach(() => {
   for (const k of Object.keys(calls)) delete calls[k];
   variantRows = [];
+  maybeSingleData = { stock_qty: 7 };
 });
 
 const selectContains = (needle: string) =>
@@ -297,5 +299,29 @@ describe("getCategoriesWithProducts", () => {
     const categories = await (getCategoriesWithProducts?.("ffa_fabrica") ?? Promise.resolve([]));
 
     expect(categories.map((category) => category.id)).toEqual(["cat-1", "cat-2"]);
+  });
+});
+
+describe("alsoInChannel", () => {
+  it("queryCatalog filtra pelo segundo canal com alias", async () => {
+    await queryCatalog({ page: 1, channel: "mypetbrasil", alsoInChannel: "ffa_fabrica" });
+    expect(selectContains("fab:product_channel_links!inner(channel)")).toBe(true);
+    expect(calls["eq"]).toContainEqual(["fab.channel", "ffa_fabrica"]);
+  });
+
+  it("sem alsoInChannel, a consulta não muda", async () => {
+    await queryCatalog({ page: 1, channel: "mypetbrasil" });
+    expect(selectContains("fab:")).toBe(false);
+    expect(
+      ((calls["eq"] as unknown[][] | undefined) ?? []).some((args) => args[0] === "fab.channel"),
+    ).toBe(false);
+  });
+
+  it("isProductInChannel", async () => {
+    maybeSingleData = { product_id: "p1" };
+    expect(await isProductInChannel("p1", "ffa_fabrica")).toBe(true);
+    expect(calls["eq"]).toContainEqual(["channel", "ffa_fabrica"]);
+    maybeSingleData = null;
+    expect(await isProductInChannel("p2", "ffa_fabrica")).toBe(false);
   });
 });

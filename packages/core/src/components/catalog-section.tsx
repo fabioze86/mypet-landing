@@ -7,6 +7,8 @@ import type { Palette } from "../theme";
 export async function CatalogSection({
   q,
   brand,
+  categoryId,
+  alsoInChannel,
   page: pageRaw,
   channel,
   palette,
@@ -16,6 +18,8 @@ export async function CatalogSection({
 }: {
   q?: string;
   brand?: string;
+  categoryId?: string | string[];
+  alsoInChannel?: string;
   page?: string;
   channel: string;
   palette: Palette;
@@ -26,8 +30,8 @@ export async function CatalogSection({
 }) {
   const page = parsePage(pageRaw);
   const [catalog, brands] = await Promise.all([
-    getCatalog({ q, brand, page, channel }),
-    getBrands(channel),
+    getCatalog({ q, brand, page, channel, alsoInChannel, categoryId }),
+    getBrands(channel, alsoInChannel),
   ]);
 
   return (
