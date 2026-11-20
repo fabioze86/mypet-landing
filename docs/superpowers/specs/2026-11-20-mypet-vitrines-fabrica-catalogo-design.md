@@ -6,7 +6,7 @@ Data: 2026-11-20 · App: `apps/mypet` · Status: aprovado no brainstorming
 
 O mypet ganha duas vitrines de e-commerce independentes, abertas a qualquer comprador cadastrado:
 
-- **Catálogo completo** (`/catalogo`): portfólio inteiro do canal `mypetbrasil`, frete por zona de SP.
+- **Catálogo completo** (`/produtos`): portfólio inteiro do canal `mypetbrasil`, frete por zona de SP.
 - **Linha de Fábrica** (`/fabrica`): só os produtos de fábrica, frete grátis para todo o Brasil a partir de R$ 299.
 
 Cada vitrine tem o seu carrinho, a sua regra de frete e o seu pedido pelo WhatsApp. Uma não substitui
@@ -40,7 +40,7 @@ edição de zonas e valores pelo admin.
 
 `orders`:
 
-- `vitrine text` com check em (`catalogo`, `fabrica`), pode ficar vazio (pedidos antigos e de outros apps)
+- `vitrine text` com check em (`completo`, `fabrica`), pode ficar vazio (pedidos antigos e de outros apps)
 - `shipping_mode text` com check em (`normal`, `prioritaria`, `a_combinar`), pode ficar vazio
 - Reaproveita `subtotal`, `shipping_price` e `total` (numeric 12,2, em reais), criadas pela migration
   `20261101120000_retail_checkout.sql`. No frete a combinar, `shipping_price` fica vazio.
@@ -145,13 +145,13 @@ minimoGratisCentavos | null, prioritariaDisponivel, prazo | null }`.
 
 | Rota | Conteúdo | Carrinho |
 |---|---|---|
-| `/catalogo` | Vitrine do portfólio completo (corpo do `/loja` atual, sem o redirecionamento) | `mypet_cart` |
+| `/produtos` | Vitrine do portfólio completo (página nova com os componentes de catálogo do core; o `/catalogo` continua sendo o Catálogo digital estático) | `mypet_cart` |
 | `/pedido-rapido` | Tabela atual, com a barra de frete do catálogo | `mypet_cart` |
 | `/fabrica` | Vitrine com o recorte de fábrica | `mypet_cart_fabrica` |
 | `/fabrica/produtos/[id]` | Reaproveita a página de produto, com o recorte | `mypet_cart_fabrica` |
 | `/fabrica/categoria/[slug]` | Reaproveita a página de categoria, com o recorte | `mypet_cart_fabrica` |
 | `/fabrica/cotacao` | Reaproveita a finalização, com a regra da fábrica | `mypet_cart_fabrica` |
-| `/loja` | Redireciona para `/catalogo` | |
+| `/loja` | Redireciona para `/produtos` | |
 
 Se um produto não for de fábrica, `/fabrica/produtos/[id]` responde 404.
 
@@ -161,11 +161,18 @@ Se um produto não for de fábrica, `/fabrica/produtos/[id]` responde 404.
   `"mypet_cart"`. Assim os outros apps não mudam e ninguém perde o carrinho que já tem.
 - `apps/mypet/app/fabrica/layout.tsx` envolve as páginas com um `CartProvider storageKey="mypet_cart_fabrica"`.
   O contexto mais interno vence, e os componentes de produto e de carrinho não mudam.
+- O mesmo layout coloca o `VitrinePathProvider basePath="/fabrica"` (novo, em
+  `packages/core/src/components/vitrine-path.tsx`). `ProductCard`, `CategoryChips` e o link "Seu pedido" do
+  `HubNav` leem `useVitrinePath()` e montam `${basePath}/produtos/...`, `${basePath}/categoria/...` e
+  `${basePath}/cotacao`. Fora de um provider, `basePath` é `""` e nada muda nos outros apps.
+- `order_items.unit_price` (a coluna já existe e o mypet nunca preencheu) passa a receber o preço
+  recalculado no servidor.
 
 ### Recorte de fábrica no catálogo
 
-`packages/core/src/catalog.ts`: as funções de lista, categorias, marcas, contagem e produto por id ganham
-o parâmetro opcional `alsoInChannel?: Channel`. Quando informado, o produto também precisa estar ligado
+`packages/core/src/catalog.ts`: as funções de lista, categorias, marcas e contagem ganham o parâmetro
+opcional `alsoInChannel?: Channel`, e uma função nova `isProductInChannel(id, channel)` decide o 404 de
+`/fabrica/produtos/[id]` (a página de produto atual é reaproveitada sem mudança). Quando informado, o produto também precisa estar ligado
 a esse canal em `product_channel_links` (embed com alias e `!inner`). O preço continua vindo de `channel`.
 A configuração da vitrine de fábrica passa `channel: "mypetbrasil", alsoInChannel: "ffa_fabrica"`.
 
@@ -175,7 +182,7 @@ A configuração da vitrine de fábrica passa `channel: "mypetbrasil", alsoInCha
 
 ```ts
 type Vitrine = {
-  id: "catalogo" | "fabrica";
+  id: "completo" | "fabrica";
   rotulo: string;              // "Catálogo completo" | "Linha de Fábrica"
   basePath: string;            // "" | "/fabrica"
   alsoInChannel?: Channel;     // fábrica: "ffa_fabrica"
@@ -195,7 +202,9 @@ As páginas recebem a vitrine e repassam a configuração para o catálogo, a fa
   - "Faltam R$ X para o frete grátis", ou "Frete grátis garantido";
   - no catálogo, escolha entre entrega normal e prioritária quando a zona permite;
   - total com o frete.
-- **`HubNav`:** abas "Catálogo", "Linha de Fábrica" e "Tabela de Preços".
+- **`HubNav`:** abas "Tabela de preços", "Produtos" (`/produtos`), "Linha de Fábrica" (`/fabrica`),
+  "Catálogo" (o Catálogo digital em `/catalogo`, que não muda), "Agente" e "Dúvidas". `/produtos` e
+  `/fabrica` entram em `NEXT_ALLOWED` do cadastro.
 - **Copy:** sem "loja", "atacado" e "cotação" em qualquer texto visível (regra do mypet).
 
 ### Finalização do pedido
@@ -236,7 +245,7 @@ atualiza o carrinho antes de abrir o WhatsApp.
 - `catalog.test.ts`: `alsoInChannel` aplicado em lista, categorias, marcas, contagem e produto.
 - `cart-provider`: chaves diferentes não se misturam; sem `storageKey`, usa `mypet_cart`.
 - `apps/mypet`: finalização grava vitrine, modalidade e valores recalculados; `/fabrica/produtos/[id]`
-  de produto que não é de fábrica dá 404; `/loja` redireciona para `/catalogo`; teste de copy sem
+  de produto que não é de fábrica dá 404; `/loja` redireciona para `/produtos`; teste de copy sem
   "loja", "atacado" e "cotação" nas páginas novas.
 
 ## 5. Entrega
@@ -246,7 +255,7 @@ Cada etapa pode ir para a main sozinha:
 1. Migration, `receitaws.ts`, `localizarComprador`, consulta no cadastro e no acesso, script de
    preenchimento. Nada aparece para o cliente.
 2. `frete.ts` e `frete.config.ts`, com zonas, faixas de CEP e municípios. **O Fábio revisa as listas.**
-3. `/catalogo` religado, com a faixa, a barra de frete, a finalização recalculada no servidor e a barra
+3. `/produtos`, com a faixa, a barra de frete, a finalização recalculada no servidor e a barra
    no `/pedido-rapido`.
 4. `/fabrica`, com carrinho próprio, recorte no catálogo e as páginas internas.
 5. `HubNav`, redirecionamento do `/loja` e revisão da copy.
