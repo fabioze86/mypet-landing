@@ -9,6 +9,7 @@ import { HubHeaderSlot } from "../../_components/hub/hub-header";
 import { ProductVariantPanel } from "@mypet/core/components/product-variant-panel";
 import { productGroupJsonLd, productJsonLd, breadcrumbJsonLd, canonicalUrl, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
+import { VITRINES, type VitrineId } from "@/lib/vitrines";
 
 const { palette: PALETTE } = clientConfig;
 
@@ -39,9 +40,12 @@ export async function generateMetadata({
 
 export default async function ProductPage({
   params,
+  vitrineId = "completo",
 }: {
   params: Promise<{ id: string }>;
+  vitrineId?: VitrineId;
 }) {
+  const vitrine = VITRINES[vitrineId];
   return (
     <div style={{ background: PALETTE.gray50, minHeight: "100vh", color: PALETTE.gray800 }}>
       <style>{`
@@ -169,13 +173,13 @@ export default async function ProductPage({
         {/* CONTAINER */}
         <main style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 24px 80px" }}>
           {/* VOLTAR */}
-          <Link href="/" className="back-link">
-            ← Voltar ao catálogo
+          <Link href={vitrine.homePath} className="back-link">
+            ← Voltar aos produtos
           </Link>
 
           {/* GRID */}
           <Suspense fallback={<p style={{ color: PALETTE.gray600 }}>Carregando produto…</p>}>
-            <ProductDetail params={params} />
+            <ProductDetail params={params} vitrineId={vitrineId} />
           </Suspense>
         </main>
 
@@ -204,7 +208,8 @@ export default async function ProductPage({
   );
 }
 
-async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
+async function ProductDetail({ params, vitrineId }: { params: Promise<{ id: string }>; vitrineId: VitrineId }) {
+  const vitrine = VITRINES[vitrineId];
   const { id } = await params;
   const [product, categories] = await Promise.all([
     getProductById(id, clientConfig.catalogChannel),
@@ -229,6 +234,9 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
     ...categoryPath.map((c) => ({ name: c.name, path: `/categoria/${c.slug}` })),
     { name: product.name, path: `/produtos/${product.id}` },
   ];
+  // links visíveis ficam dentro da vitrine; o JSON-LD segue com os caminhos canônicos
+  const crumbHref = (i: number, path: string) =>
+    i === 0 ? vitrine.homePath : path.startsWith("/categoria/") ? `${vitrine.basePath}${path}` : path;
 
   const jsonLd = productGroupJsonLd(product, clientConfig.domain) ?? productJsonLd(product, clientConfig.domain);
 
@@ -246,7 +254,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
               {i === breadcrumbItems.length - 1 ? (
                 <span style={{ color: PALETTE.navy, fontWeight: 700 }} aria-current="page">{item.name}</span>
               ) : (
-                <Link href={item.path} style={{ color: PALETTE.gray600, textDecoration: "none" }}>{item.name}</Link>
+                <Link href={crumbHref(i, item.path)} style={{ color: PALETTE.gray600, textDecoration: "none" }}>{item.name}</Link>
               )}
             </li>
           ))}
@@ -257,7 +265,7 @@ async function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
       )}
 
-      {balcaoEligible && (
+      {balcaoEligible && vitrineId !== "fabrica" && (
         <Link
           href="/balcao"
           style={{ display: "inline-block", background: PALETTE.pinkLight, color: PALETTE.pink, fontSize: 12, fontWeight: 800, padding: "4px 10px", borderRadius: 100, textDecoration: "none", marginBottom: 8 }}

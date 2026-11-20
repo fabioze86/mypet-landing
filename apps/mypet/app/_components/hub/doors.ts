@@ -1,5 +1,5 @@
-// Portas do hub: as entradas do cabeçalho de todas as páginas. Tabela
-// e catálogo exigem cadastro; para o visitante elas levam ao cadastro e,
+// Portas do hub: as entradas do cabeçalho de todas as páginas. Tabela,
+// produtos, linha de fábrica e catálogo exigem cadastro; para o visitante levam ao cadastro e,
 // depois dele, de volta à porta escolhida.
 
 export type HubDoorId = "tabela" | "produtos" | "fabrica" | "catalogo" | "agente" | "duvidas";

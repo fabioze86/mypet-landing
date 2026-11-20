@@ -64,6 +64,8 @@ export async function finalizeQuote(
 
   const supabase = getHubServiceClient();
   const channel = clientConfig.catalogChannel as Channel;
+  // Reprecificação no servidor: preços de campanha (campaignId) NÃO são preservados.
+  // Rever se balcão/ofertas voltarem para o mypet.
   const priced = await priceCart(
     supabase,
     channel,

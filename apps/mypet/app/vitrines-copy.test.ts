@@ -26,7 +26,7 @@ function textosVisiveis(src: string): string[] {
   const semImports = src.replace(/^import .*$/gm, "").replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
   const literais = [...semImports.matchAll(/(["'`])((?:(?!\1)[^\\]|\\.)*)\1/g)].map((m) => m[2]);
   const jsx = [...semImports.matchAll(/>([^<>{}]+)</g)].map((m) => m[1]);
-  return [...literais, ...jsx].filter((t) => !t.startsWith("/") && !t.startsWith("@") && !t.startsWith(".") && !/^\$\{[^}]*\}\//.test(t));
+  return [...literais, ...jsx].filter((t) => !t.startsWith("/") && !t.startsWith("@") && !t.startsWith(".") && !/^\$\{[^}]*\}\/\S*$/.test(t));
 }
 
 describe("copy das vitrines", () => {

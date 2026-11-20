@@ -13,6 +13,8 @@ export type QuoteMessageOptions = {
   showPrices?: boolean;
   /** Número do pedido gravado; vira a primeira linha da mensagem. */
   orderNumber?: number;
+  /** Rótulo da linha de total dos produtos (padrão "Total"). */
+  totalLabel?: string;
 };
 
 function quoteItemLine(item: CartItem, showPrices: boolean): string {
@@ -23,12 +25,12 @@ function quoteItemLine(item: CartItem, showPrices: boolean): string {
   return `- ${item.name}${skuPart} — ${item.qty} × ${formatPrice(item.unitPrice)} = ${formatPrice(lineTotal)}`;
 }
 
-function quoteTotalsLines(items: CartItem[]): string[] {
+function quoteTotalsLines(items: CartItem[], totalLabel: string): string[] {
   const totals = cartTotals(items);
   const lines = ["", `Total de unidades: ${totals.totalUnits}`];
   if (totals.pricedLines > 0) {
     const pending = totals.unpricedLines > 0 ? " + itens a consultar" : "";
-    lines.push(`Total: ${formatPrice(totals.totalValue)}${pending}`);
+    lines.push(`${totalLabel}: ${formatPrice(totals.totalValue)}${pending}`);
   }
   return lines;
 }
@@ -52,7 +54,7 @@ export function buildQuoteMessage(
     intro,
     "",
     itemLines,
-    ...(showPrices ? quoteTotalsLines(items) : []),
+    ...(showPrices ? quoteTotalsLines(items, options.totalLabel ?? "Total") : []),
     "",
     "Meus dados:",
     ...customerLines,

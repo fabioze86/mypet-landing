@@ -118,6 +118,12 @@ describe("buildQuoteMessage com options", () => {
     expect(message).toContain(`Total: ${formatPrice(118.8)} + itens a consultar`);
   });
 
+  it("totalLabel troca o rótulo da linha de total", () => {
+    const message = buildQuoteMessage(items, customer, undefined, { showPrices: true, totalLabel: "Subtotal dos produtos" });
+    expect(message).toContain(`Subtotal dos produtos: ${formatPrice(118.8)} + itens a consultar`);
+    expect(message).not.toMatch(/^Total: /m);
+  });
+
   it("sem nenhum preço não mostra linha de Total", () => {
     const message = buildQuoteMessage([items[1]], customer, undefined, { showPrices: true });
     expect(message).toContain("Total de unidades: 2");

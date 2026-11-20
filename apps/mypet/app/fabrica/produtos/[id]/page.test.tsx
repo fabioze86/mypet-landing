@@ -23,3 +23,11 @@ describe("FabricaProdutoBody", () => {
     expect(el).toBeTruthy();
   });
 });
+
+describe("FabricaProdutoBody vitrine", () => {
+  it("passa vitrineId fabrica para a página de produto", async () => {
+    isProductInChannel.mockResolvedValue(true);
+    const el = (await FabricaProdutoBody({ params: Promise.resolve({ id: "p1" }) })) as { props: { vitrineId: string } };
+    expect(el.props.vitrineId).toBe("fabrica");
+  });
+});

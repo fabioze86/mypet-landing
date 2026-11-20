@@ -10,7 +10,7 @@ import { useLogout } from "./use-logout";
 const { name: SITE_NAME, logo } = clientConfig;
 
 // Cabeçalho único do hub: as portas aparecem para todos. Para o
-// visitante, tabela e catálogo levam o selo "com cadastro".
+// visitante, as portas que exigem cadastro levam o selo "com cadastro".
 export function HubNav({ viewer, current, inert }: { viewer: HubViewer; current?: HubDoorId; inert?: boolean }) {
   return (
     <header className="hub-header" inert={inert}>

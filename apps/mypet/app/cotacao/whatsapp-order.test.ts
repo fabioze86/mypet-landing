@@ -51,6 +51,8 @@ describe("buildOrderWhatsAppUrl com frete", () => {
     expect(text.startsWith("Pedido · Linha de Fábrica\n")).toBe(true);
     expect(text).toMatch(/Frete: R\$\s19,90/);
     expect(text).toMatch(/Total com frete: R\$\s119,90/);
+    expect(text).toContain("Subtotal dos produtos: ");
+    expect(text).not.toMatch(/^Total: /m);
     expect(text).toContain("Região: Fora da área de entrega direta");
   });
 

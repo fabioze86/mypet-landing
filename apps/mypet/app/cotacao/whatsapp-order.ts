@@ -29,6 +29,6 @@ function freteLines(pedido: PedidoResumo): string[] {
 export function buildOrderWhatsAppUrl(buyer: OrderBuyer, pedido: PedidoResumo): string | null {
   if (!hasWhatsAppNumber()) return null;
   const intro = `Pedido · ${VITRINES[pedido.vitrine].rotulo}\n${WHATSAPP_INTRO}`;
-  const base = buildQuoteMessage(pedido.items, { ...buyer, cnpj: buyer.cnpj ?? undefined }, intro, { showPrices: true });
+  const base = buildQuoteMessage(pedido.items, { ...buyer, cnpj: buyer.cnpj ?? undefined }, intro, { showPrices: true, totalLabel: "Subtotal dos produtos" });
   return buildWhatsAppLink(WHATSAPP_NUMBER, [base, ...freteLines(pedido)].join("\n"));
 }
