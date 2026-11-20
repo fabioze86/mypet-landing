@@ -2,7 +2,7 @@
 // e catálogo exigem cadastro; para o visitante elas levam ao cadastro e,
 // depois dele, de volta à porta escolhida.
 
-export type HubDoorId = "tabela" | "catalogo" | "agente" | "duvidas";
+export type HubDoorId = "tabela" | "produtos" | "fabrica" | "catalogo" | "agente" | "duvidas";
 
 export type HubViewer = { kind: "visitante" } | { kind: "cliente"; displayName: string | null };
 
