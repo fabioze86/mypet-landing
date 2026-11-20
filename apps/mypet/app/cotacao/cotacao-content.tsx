@@ -104,7 +104,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
       return;
     }
 
-    const url = buildOrderWhatsAppUrl(cart.items, result.buyer);
+    const url = buildOrderWhatsAppUrl(result.buyer, result.pedido);
     if (url) window.open(url, "_blank");
 
     clear();

@@ -89,6 +89,13 @@ describe("CotacaoContent — envio", () => {
     vi.mocked(finalizeQuote).mockResolvedValue({
       ok: true,
       buyer: { nome: "Ana", empresa: "Loja", whatsapp: "11999998888", cnpj: null },
+      pedido: {
+        vitrine: "completo",
+        items: [],
+        subtotal: 0,
+        zona: "fora",
+        frete: { tipo: "a_combinar", modalidade: "normal", valorCentavos: null, faltaParaGratisCentavos: null, minimoGratisCentavos: null, prioritariaDisponivel: false, prazo: null },
+      },
     });
     renderWithCart([{ id: "p1", name: "Ração X", sku: "100", brand: "NAPI", img: "/img.jpg", qty: 2, unitPrice: 42.9 }]);
     fireEvent.click(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" }));

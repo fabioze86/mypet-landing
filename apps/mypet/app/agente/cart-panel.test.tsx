@@ -27,6 +27,7 @@ vi.mock("../cotacao/whatsapp-order", () => ({
 
 import { CartPanel } from "./cart-panel";
 
+const PEDIDO = { vitrine: "completo", items: [], subtotal: 0, zona: "fora", frete: { tipo: "a_combinar", modalidade: "normal", valorCentavos: null, faltaParaGratisCentavos: null, minimoGratisCentavos: null, prioritariaDisponivel: false, prazo: null } };
 const item = { id: "p1", name: "Shampoo Neutro — 5L", sku: "S1", brand: "Pet Clean", img: "/x.jpg", qty: 10, unitPrice: 89.9 };
 const open = vi.fn();
 
@@ -59,7 +60,7 @@ describe("CartPanel", () => {
 
   it("envia pelo WhatsApp com a conversa de origem e limpa o pedido", async () => {
     cartState.items = [item];
-    finalizeQuote.mockResolvedValue({ ok: true, buyer: { nome: "Ana", empresa: "X", whatsapp: "55", cnpj: null } });
+    finalizeQuote.mockResolvedValue({ ok: true, buyer: { nome: "Ana", empresa: "X", whatsapp: "55", cnpj: null }, pedido: PEDIDO });
     render(<CartPanel conversationId="3f1c2a7e-8b4d-4c1a-9f2e-1a2b3c4d5e6f" />);
     fireEvent.click(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" }));
     await waitFor(() => expect(cartState.clear).toHaveBeenCalled());
@@ -71,7 +72,7 @@ describe("CartPanel", () => {
   it("depois do envio mostra o link visível Abrir WhatsApp com a URL do pedido e leva o foco à confirmação", async () => {
     cartState.items = [item];
     buildOrderWhatsAppUrl.mockReturnValueOnce("https://wa.me/5511999998888?text=pedido");
-    finalizeQuote.mockResolvedValue({ ok: true, buyer: { nome: "Ana", empresa: "X", whatsapp: "55", cnpj: null } });
+    finalizeQuote.mockResolvedValue({ ok: true, buyer: { nome: "Ana", empresa: "X", whatsapp: "55", cnpj: null }, pedido: PEDIDO });
     render(<CartPanel conversationId={null} />);
     fireEvent.click(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" }));
     const link = await screen.findByRole("link", { name: "Abrir WhatsApp" });
@@ -126,7 +127,7 @@ describe("CartPanel", () => {
 
   it("depois de enviado, novos itens trazem a lista e o botão de volta", async () => {
     cartState.items = [item];
-    finalizeQuote.mockResolvedValue({ ok: true, buyer: { nome: "Ana", empresa: "X", whatsapp: "55", cnpj: null } });
+    finalizeQuote.mockResolvedValue({ ok: true, buyer: { nome: "Ana", empresa: "X", whatsapp: "55", cnpj: null }, pedido: PEDIDO });
     const { rerender } = render(<CartPanel conversationId={null} />);
     fireEvent.click(screen.getByRole("button", { name: "Enviar pedido pelo WhatsApp" }));
     await screen.findByRole("status");

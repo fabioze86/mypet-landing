@@ -63,7 +63,7 @@ export function CartPanel({
       setState({ kind: "error", message: result.error });
       return;
     }
-    const url = buildOrderWhatsAppUrl(cart.items, result.buyer);
+    const url = buildOrderWhatsAppUrl(result.buyer, result.pedido);
     if (url) window.open(url, "_blank");
     clear();
     setState({ kind: "sent", whatsappUrl: url });
