@@ -7,6 +7,7 @@ const redirect = vi.fn((_to: string) => {
 
 vi.mock("@/lib/require-buyer", () => ({ requireBuyer: () => requireBuyer() }));
 vi.mock("next/navigation", () => ({ redirect: (to: string) => redirect(to) }));
+vi.mock("@/lib/localizacao", () => ({ agendarLocalizacao: vi.fn() }));
 vi.mock("@mypet/core/catalog", () => ({
   getCategories: async () => [],
   getBrands: async () => ["NAPI"],

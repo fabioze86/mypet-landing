@@ -46,6 +46,7 @@ function renderTable(result = baseResult) {
           brands: ["NAPI"],
           categories: [],
           palette: config.palette,
+          zona: "capital",
         }),
       ),
     }),
@@ -66,6 +67,7 @@ describe("PedidoRapidoTable", () => {
     const cart = JSON.parse(localStorage.getItem("mypet_cart") ?? "{}");
     expect(cart.items[0]).toMatchObject({ id: "p1", unitPrice: 42.9, qty: 1 });
     expect(screen.getByText("1 item — R$ 42,90")).toBeInTheDocument();
+    expect(screen.getByText(/Faltam R\$\s?157,10 para o frete grátis/)).toBeInTheDocument();
   });
 
   it("clicar em adicionar quando o item já está no carrinho SUBSTITUI a quantidade, não soma", () => {

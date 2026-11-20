@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, beforeEach, vi } from "vitest";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { ClientConfigProvider, type ClientConfig } from "@mypet/core/theme";
+import { VITRINES } from "@/lib/vitrines";
 import { CotacaoContent } from "./cotacao-content";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
@@ -35,7 +36,7 @@ function renderWithCart(cartItems: Record<string, unknown>[]) {
   return render(
     createElement(ClientConfigProvider, {
       config,
-      children: createElement(CartProvider, null, createElement(CotacaoContent, { palette: config.palette })),
+      children: createElement(CartProvider, null, createElement(CotacaoContent, { palette: config.palette, vitrine: VITRINES.completo, zona: "capital" })),
     }),
   );
 }
@@ -53,7 +54,8 @@ describe("CotacaoContent — subtotal e total", () => {
 
     expect(screen.getByText("R$ 85,80")).toBeInTheDocument();
     expect(screen.getByText("R$ 30,00")).toBeInTheDocument();
-    expect(screen.getByText("R$ 115,80")).toBeInTheDocument();
+    expect(screen.getAllByText("R$ 115,80").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Faltam R\$\s?84,20 para o frete grátis/)).toBeInTheDocument();
   });
 
   it("mostra — no subtotal de item sem unitPrice e não o inclui no total geral", () => {
@@ -71,7 +73,7 @@ describe("CotacaoContent — subtotal e total", () => {
       { id: "p1", name: "Ração X", sku: "100", brand: "NAPI", img: "/img.jpg", qty: 3, unitPrice: 50 },
     ]);
 
-    expect(screen.getByText(/Total:/)).toBeInTheDocument();
+    expect(screen.getByText(/Produtos:/)).toBeInTheDocument();
     expect(screen.getAllByText("R$ 150,00").length).toBeGreaterThanOrEqual(1);
   });
 });
@@ -105,6 +107,7 @@ describe("CotacaoContent — envio", () => {
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
     expect(buildOrderWhatsAppUrl).toHaveBeenCalled();
+    expect(finalizeQuote).toHaveBeenCalledWith(expect.any(Array), { vitrine: "completo", modalidade: "normal" });
     // a tentativa automática continua
     expect(open).toHaveBeenCalledWith("https://wa.me/5511999998888?text=pedido", "_blank");
     expect(screen.getByText("Pedido enviado!")).toBeInTheDocument();

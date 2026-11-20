@@ -7,6 +7,8 @@ import { buildCategoryTree, flattenCategoryTree } from "@mypet/core/catalog-util
 import type { Channel } from "@mypet/core/channels";
 import { clientConfig } from "@/client.config";
 import { requireBuyer } from "@/lib/require-buyer";
+import { agendarLocalizacao } from "@/lib/localizacao";
+import { zonaDoComprador } from "@/lib/zona";
 import { BUYER_STYLES } from "../_components/buyer-area/styles";
 import { HubNav } from "../_components/hub/hub-nav";
 import { cadastroHref, viewerFromBuyer } from "../_components/hub/doors";
@@ -31,6 +33,7 @@ export default function PedidoRapidoPage() {
 export async function PedidoRapidoPageBody() {
   const buyer = await requireBuyer();
   if (!buyer) redirect(cadastroHref("/pedido-rapido"));
+  agendarLocalizacao(buyer);
 
   const channel = clientConfig.catalogChannel as Channel;
   const [categories, brands, firstPage] = await Promise.all([
@@ -54,6 +57,7 @@ export async function PedidoRapidoPageBody() {
           brands={brands}
           categories={orderedCategories}
           palette={PALETTE}
+          zona={zonaDoComprador(buyer)}
         />
       </main>
     </div>

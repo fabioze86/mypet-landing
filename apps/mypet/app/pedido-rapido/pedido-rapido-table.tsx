@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useCart } from "@mypet/core/components/cart-provider";
+import { calcularFrete, paraCentavos, type Zona } from "@mypet/core/frete";
 import type { Palette } from "@mypet/core/theme";
+import { FRETE_CONFIG } from "@/lib/frete.config";
 import type { CatalogLineItem, CatalogLineItemsResult } from "@mypet/core/catalog-line-items";
 import type { CategoryNode } from "@mypet/core/catalog-utils";
 import { searchLineItems } from "./actions";
@@ -100,11 +102,13 @@ export function PedidoRapidoTable({
   brands,
   categories,
   palette: P,
+  zona,
 }: {
   initialResult: CatalogLineItemsResult;
   brands: string[];
   categories: CategoryNode[];
   palette: Palette;
+  zona: Zona;
 }) {
   const { cart, addItem, updateQty, totalItems } = useCart();
   const [q, setQ] = useState("");
@@ -253,6 +257,12 @@ export function PedidoRapidoTable({
           <div className="pr-cartbar-inner">
             <span style={{ fontSize: 14, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
               {totalItems} {totalItems === 1 ? "item" : "itens"} — {brl(cartTotal)}
+              {(() => {
+                const f = calcularFrete({ regra: "zona", zona, subtotalCentavos: paraCentavos(cartTotal), modalidade: "normal" }, FRETE_CONFIG);
+                if (f.tipo === "gratis") return <span className="pr-cartbar-frete">Frete grátis</span>;
+                if (f.faltaParaGratisCentavos) return <span className="pr-cartbar-frete">Faltam {brl(f.faltaParaGratisCentavos / 100)} para o frete grátis</span>;
+                return null;
+              })()}
             </span>
             <Link href="/cotacao" className="pr-cartbar-cta" style={{ background: P.pink, color: P.white }}>
               Ver meu pedido →
@@ -295,6 +305,7 @@ function tableStyles(P: Palette) {
 
     .pr-cartbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -8px 24px rgba(15,31,69,.18); }
     .pr-cartbar-inner { max-width: 1100px; margin: 0 auto; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .pr-cartbar-frete { display: block; font-size: 12px; font-weight: 600; opacity: 0.85; }
     .pr-cartbar-cta { padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; text-decoration: none; white-space: nowrap; }
 
     @media (max-width: 640px) {

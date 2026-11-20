@@ -5,16 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatBRL } from "@mypet/core/catalog-utils";
 import { useCart } from "@mypet/core/components/cart-provider";
+import type { Modalidade, Zona } from "@mypet/core/frete";
 import type { Palette } from "@mypet/core/theme";
+import type { Vitrine } from "@/lib/vitrines";
+import { FreteResumo } from "../_components/frete/frete-resumo";
 import { finalizeQuote } from "./actions";
 import { buildOrderWhatsAppUrl, hasWhatsAppNumber } from "./whatsapp-order";
 
-export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
+export function CotacaoContent({ palette: PALETTE, vitrine, zona }: { palette: Palette; vitrine: Vitrine; zona: Zona }) {
   const { cart, removeItem, updateQty, clear } = useCart();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [modalidade, setModalidade] = useState<Modalidade>("normal");
   // window.open roda depois do await e pode ser bloqueado (ex.: iOS Safari):
   // a confirmação mostra a URL como link visível.
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
@@ -48,7 +52,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
           </p>
         )}
         <div className="cq-done-actions">
-          <Link href="/pedido-rapido" className="ba-btn ba-btn-primary">
+          <Link href={vitrine.homePath} className="ba-btn ba-btn-primary">
             Fazer novo pedido
           </Link>
           <Link href="/pedidos" className="ba-btn ba-btn-ghost">
@@ -68,10 +72,10 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
           Seu pedido está vazio
         </h2>
         <p style={{ fontSize: 14, lineHeight: 1.55, color: PALETTE.gray600, margin: "0 0 20px" }}>
-          Consulte a tabela e adicione produtos para montar seu pedido.
+          Adicione produtos para montar seu pedido.
         </p>
-        <Link href="/pedido-rapido" className="ba-btn ba-btn-primary">
-          Abrir tabela de preços
+        <Link href={vitrine.homePath} className="ba-btn ba-btn-primary">
+          Ver produtos
         </Link>
       </div>
     );
@@ -87,7 +91,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
 
     let result: Awaited<ReturnType<typeof finalizeQuote>>;
     try {
-      result = await finalizeQuote(cart.items);
+      result = await finalizeQuote(cart.items, { vitrine: vitrine.id, modalidade });
     } catch {
       setSubmitError("Não foi possível enviar seu pedido agora. Tente novamente em instantes.");
       setSubmitting(false);
@@ -170,9 +174,10 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
 
       <div className="ba-card" style={{ padding: 20 }}>
         <div className="cq-total" style={{ color: PALETTE.navy }}>
-          <span style={{ fontSize: 15, fontWeight: 600 }}>Total:</span>
+          <span style={{ fontSize: 15, fontWeight: 600 }}>Produtos:</span>
           <span style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{formatBRL(total)}</span>
         </div>
+        <FreteResumo regra={vitrine.regraFrete} zona={zona} subtotal={total} modalidade={modalidade} onModalidade={setModalidade} palette={PALETTE} />
         {submitError && (
           <p style={{ color: "#C0392B", fontSize: 13, fontWeight: 600, margin: "0 0 12px", textAlign: "center" }}>{submitError}</p>
         )}
@@ -180,7 +185,7 @@ export function CotacaoContent({ palette: PALETTE }: { palette: Palette }) {
           {submitting ? "Enviando..." : "Enviar pedido pelo WhatsApp"}
         </button>
         <p style={{ fontSize: 12, lineHeight: 1.5, color: PALETTE.gray600, margin: "10px 0 0", textAlign: "center" }}>
-          Abriremos o WhatsApp com o pedido pronto. Nosso time confirma estoque, frete e pagamento com você.
+          Abriremos o WhatsApp com o pedido pronto. Nosso time confirma estoque e pagamento com você.
         </p>
       </div>
     </>
