@@ -33,7 +33,7 @@ export const ZONA_ROTULO: Record<Zona, string> = {
 export const paraCentavos = (reais: number) => Math.round(reais * 100);
 
 const normalizar = (v: string) =>
-  v.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toUpperCase().replace(/\s+/g, " ");
+  v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toUpperCase().replace(/\s+/g, " ");
 
 export function classificarZona(
   loc: { uf: string | null; municipio: string | null; cep: string | null; status: "localizado" | "nao_localizado" | null },
@@ -42,12 +42,12 @@ export function classificarZona(
   if (loc.status !== "localizado") return "fora";
   const cep = (loc.cep ?? "").replace(/\D/g, "");
   if (cep.length === 8 && config.bairrosProximos.some((f) => cep >= f.de && cep <= f.ate)) return "bairros_proximos";
+  if ((loc.uf ?? "").trim().toUpperCase() !== "SP") return "fora";
   const municipio = normalizar(loc.municipio ?? "");
   if (municipio === "SAO PAULO") return "capital";
   if (config.grandeSp.some((m) => normalizar(m) === municipio)) return "grande_sp";
   if (config.interior30km.some((m) => normalizar(m) === municipio)) return "interior_30";
-  if ((loc.uf ?? "").trim().toUpperCase() === "SP") return "interior_alem";
-  return "fora";
+  return "interior_alem";
 }
 
 export function calcularFrete(

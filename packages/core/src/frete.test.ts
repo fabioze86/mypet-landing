@@ -41,6 +41,14 @@ describe("classificarZona", () => {
     expect(classificarZona(loc({ status: "nao_localizado" }), CONFIG)).toBe("fora");
     expect(classificarZona(loc({ status: null }), CONFIG)).toBe("fora");
   });
+  it("município de mesmo nome em outra UF cai em fora", () => {
+    expect(classificarZona(loc({ uf: "PA", municipio: "Santo André", cep: "68000000" }), CONFIG)).toBe("fora");
+    expect(classificarZona(loc({ uf: "RN", municipio: "Jundiaí", cep: "59000000" }), CONFIG)).toBe("fora");
+  });
+  it("aceita CEP com máscara e nome com hífen sem acento", () => {
+    expect(classificarZona(loc({ cep: "04210-000" }), CONFIG)).toBe("bairros_proximos");
+    expect(classificarZona(loc({ municipio: "EMBU-GUACU", cep: "06900000" }), { ...CONFIG, grandeSp: ["Embu-Guaçu"] })).toBe("grande_sp");
+  });
 });
 
 describe("calcularFrete — fábrica", () => {
