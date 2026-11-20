@@ -20,15 +20,15 @@ beforeEach(() => {
 });
 
 describe("LojaPage", () => {
-  it("redireciona para /pedido-rapido — navegação da loja está temporariamente oculta", async () => {
+  it("redireciona para /produtos — navegação da loja está temporariamente oculta", async () => {
     requireBuyer.mockResolvedValue(null);
     await expect(LojaContent({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT");
-    expect(redirect).toHaveBeenCalledWith("/pedido-rapido");
+    expect(redirect).toHaveBeenCalledWith("/produtos");
   });
 
-  it("redireciona para /pedido-rapido mesmo com comprador autenticado", async () => {
+  it("redireciona para /produtos mesmo com comprador autenticado", async () => {
     requireBuyer.mockResolvedValue({ id: "b1" });
     await expect(LojaContent({ searchParams: Promise.resolve({}) })).rejects.toThrow("REDIRECT");
-    expect(redirect).toHaveBeenCalledWith("/pedido-rapido");
+    expect(redirect).toHaveBeenCalledWith("/produtos");
   });
 });

@@ -116,9 +116,9 @@ export async function LojaContent({
 }: {
   searchParams: Promise<{ q?: string; brand?: string; page?: string }>;
 }) {
-  // Navegação da /loja temporariamente oculta — fluxo principal é /pedido-rapido.
+  // /loja antiga: a vitrine agora é /produtos.
   // Removível quando a loja completa voltar a ficar disponível para o cliente.
-  redirect("/pedido-rapido");
+  redirect("/produtos");
 
   const buyer = await requireBuyer();
   if (!buyer) redirect("/");

@@ -1,4 +1,4 @@
-// Portas do hub: as quatro entradas do cabeçalho de todas as páginas. Tabela
+// Portas do hub: as entradas do cabeçalho de todas as páginas. Tabela
 // e catálogo exigem cadastro; para o visitante elas levam ao cadastro e,
 // depois dele, de volta à porta escolhida.
 
@@ -12,6 +12,8 @@ export const VISITANTE: HubViewer = { kind: "visitante" };
 
 const DOORS: { id: HubDoorId; label: string; path: string; needsAccess: boolean }[] = [
   { id: "tabela", label: "Tabela de preços", path: "/pedido-rapido", needsAccess: true },
+  { id: "produtos", label: "Produtos", path: "/produtos", needsAccess: true },
+  { id: "fabrica", label: "Linha de Fábrica", path: "/fabrica", needsAccess: true },
   { id: "catalogo", label: "Catálogo", path: "/catalogo", needsAccess: true },
   { id: "agente", label: "Agente", path: "/agente", needsAccess: false },
   { id: "duvidas", label: "Dúvidas", path: "/central-de-ajuda", needsAccess: false },
@@ -19,7 +21,7 @@ const DOORS: { id: HubDoorId; label: string; path: string; needsAccess: boolean 
 
 // destinos aceitos no ?next= do cadastro: só páginas do próprio hub, para o
 // link não virar redirecionamento aberto
-const NEXT_ALLOWED = ["/pedido-rapido", "/catalogo", "/agente", "/pedidos", "/cotacao"];
+const NEXT_ALLOWED = ["/pedido-rapido", "/produtos", "/fabrica", "/fabrica/cotacao", "/catalogo", "/agente", "/pedidos", "/cotacao"];
 
 export function cadastroHref(next: string): string {
   return `/cadastro?next=${encodeURIComponent(next)}`;

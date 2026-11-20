@@ -5,17 +5,36 @@ import { cadastroHref, hubDoors, safeNext, viewerFromBuyer, VISITANTE } from "./
 describe("hubDoors", () => {
   it("visitante: tabela e catálogo levam ao cadastro e voltam para a porta", () => {
     const doors = hubDoors(VISITANTE);
-    expect(doors.map((d) => d.label)).toEqual(["Tabela de preços", "Catálogo", "Agente", "Dúvidas"]);
+    expect(doors.map((d) => d.label)).toEqual(["Tabela de preços", "Produtos", "Linha de Fábrica", "Catálogo", "Agente", "Dúvidas"]);
     expect(doors[0]).toMatchObject({ id: "tabela", href: "/cadastro?next=%2Fpedido-rapido", locked: true });
-    expect(doors[1]).toMatchObject({ id: "catalogo", href: "/cadastro?next=%2Fcatalogo", locked: true });
-    expect(doors[2]).toMatchObject({ id: "agente", href: "/agente", locked: false });
-    expect(doors[3]).toMatchObject({ id: "duvidas", href: "/central-de-ajuda", locked: false });
+    expect(doors[3]).toMatchObject({ id: "catalogo", href: "/cadastro?next=%2Fcatalogo", locked: true });
+    expect(doors[4]).toMatchObject({ id: "agente", href: "/agente", locked: false });
+    expect(doors[5]).toMatchObject({ id: "duvidas", href: "/central-de-ajuda", locked: false });
   });
 
   it("cliente: todas as portas abertas", () => {
     const doors = hubDoors({ kind: "cliente", displayName: "Ana" });
-    expect(doors.map((d) => d.href)).toEqual(["/pedido-rapido", "/catalogo", "/agente", "/central-de-ajuda"]);
+    expect(doors.map((d) => d.href)).toEqual(["/pedido-rapido", "/produtos", "/fabrica", "/catalogo", "/agente", "/central-de-ajuda"]);
     expect(doors.every((d) => !d.locked)).toBe(true);
+  });
+});
+
+describe("hubDoors ordem", () => {
+  it("tem as portas na ordem combinada", () => {
+    expect(hubDoors({ kind: "cliente", displayName: null }).map((d) => [d.id, d.label, d.href])).toEqual([
+      ["tabela", "Tabela de preços", "/pedido-rapido"],
+      ["produtos", "Produtos", "/produtos"],
+      ["fabrica", "Linha de Fábrica", "/fabrica"],
+      ["catalogo", "Catálogo", "/catalogo"],
+      ["agente", "Agente", "/agente"],
+      ["duvidas", "Dúvidas", "/central-de-ajuda"],
+    ]);
+  });
+
+  it("aceita as vitrines no next do cadastro", () => {
+    expect(safeNext("/produtos", "/x")).toBe("/produtos");
+    expect(safeNext("/fabrica", "/x")).toBe("/fabrica");
+    expect(safeNext("/fabrica/cotacao", "/x")).toBe("/fabrica/cotacao");
   });
 });
 
