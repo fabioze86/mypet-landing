@@ -18,7 +18,7 @@ export const HUB_STYLES = `
     align-items: center; gap: 8px 24px;
   }
   .hub-brand { grid-area: brand; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; color: var(--hub-navy); text-decoration: none; white-space: nowrap; }
-  .hub-doors { grid-area: doors; display: flex; gap: 4px; justify-content: center; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .hub-doors { grid-area: doors; display: flex; gap: 4px; justify-content: safe center; min-width: 0; overflow-x: auto; scrollbar-width: none; }
   .hub-doors::-webkit-scrollbar { display: none; }
   .hub-door { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 999px; color: var(--hub-muted); font-weight: 500; font-size: 14px; text-decoration: none; white-space: nowrap; }
   .hub-door:hover { color: var(--hub-navy); background: #F0F2F6; }
