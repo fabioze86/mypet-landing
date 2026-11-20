@@ -17,6 +17,7 @@
     "test": "pnpm --filter @mypet/core test && pnpm --filter azpetshop test && pnpm --filter zemann test",
     "push:send": "tsx scripts/push-send.ts",
     "azpetshop:import-precos": "tsx scripts/azpetshop-import-precos.ts",
+    "buyers:backfill-localizacao": "tsx scripts/backfill-buyers-localizacao.ts",
     "central-ajuda:seed": "tsx scripts/seed-central-ajuda.ts"
   },
   "devDependencies": {
@@ -27,6 +28,7 @@
     "tsx": "^4.23.9"
   },
   "dependencies": {
-    "@mypet/core": "workspace:*"
+    "@mypet/core": "workspace:*",
+    "@supabase/supabase-js": "^2.108.2"
   }
 }
