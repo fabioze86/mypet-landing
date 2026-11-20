@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { NextRequest } from "next/server";
 
 const provisionBuyer = vi.fn();
+const agendarLocalizacao = vi.fn();
+const getBuyerById = vi.fn();
+
+vi.mock("@/lib/localizacao", () => ({ agendarLocalizacao: (b: unknown) => agendarLocalizacao(b) }));
+vi.mock("@mypet/core/supabase", () => ({ getHubServiceClient: () => ({ hub: true }) }));
+vi.mock("@mypet/core/buyers-server", () => ({ getBuyerById: (...a: unknown[]) => getBuyerById(...a) }));
 
 vi.mock("@mypet/core/pre-access-server", () => ({
   provisionBuyer: (...args: unknown[]) => provisionBuyer(...args),
@@ -32,6 +38,9 @@ function fakeRequest(body: unknown): NextRequest {
 
 beforeEach(() => {
   provisionBuyer.mockReset();
+  agendarLocalizacao.mockReset();
+  getBuyerById.mockReset();
+  getBuyerById.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -52,6 +61,24 @@ describe("POST /api/pre-acesso", () => {
     expect(cookie).toContain("SameSite=Lax");
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("Secure");
+  });
+
+  it("agenda a localização do comprador depois do cadastro", async () => {
+    const buyer = { id: "b-1", cnpj: "12345678000195", localizacao_status: null };
+    provisionBuyer.mockResolvedValue({ buyerId: "b-1" });
+    getBuyerById.mockResolvedValue(buyer);
+    const res = await POST(fakeRequest({ cnpj: "12.345.678/0001-95", whatsapp: "5511999990000" }));
+    expect(res.status).toBe(201);
+    expect(getBuyerById).toHaveBeenCalledWith({ hub: true }, "b-1");
+    expect(agendarLocalizacao).toHaveBeenCalledWith(buyer);
+  });
+
+  it("responde 201 mesmo se a busca do comprador falhar", async () => {
+    provisionBuyer.mockResolvedValue({ buyerId: "b-1" });
+    getBuyerById.mockRejectedValue(new Error("db"));
+    const res = await POST(fakeRequest({ cnpj: "12.345.678/0001-95", whatsapp: "5511999990000" }));
+    expect(res.status).toBe(201);
+    expect(agendarLocalizacao).not.toHaveBeenCalled();
   });
 
   it("responde 400 quando o corpo não é JSON válido", async () => {

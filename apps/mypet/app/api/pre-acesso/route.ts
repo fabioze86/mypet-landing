@@ -2,6 +2,9 @@ import { createHash } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { provisionBuyer, PreAccessError } from "@mypet/core/pre-access-server";
 import { signAccessToken, ACCESS_COOKIE, ACCESS_COOKIE_OPTS } from "@mypet/core/access-session";
+import { getHubServiceClient } from "@mypet/core/supabase";
+import { getBuyerById } from "@mypet/core/buyers-server";
+import { agendarLocalizacao } from "@/lib/localizacao";
 
 const MESSAGES: Record<string, { status: number; message: string; field?: "cnpj" | "whatsapp" | "email" }> = {
   INVALID_INPUT: { status: 400, message: "Confira os dados informados e tente novamente." },
@@ -45,6 +48,8 @@ export async function POST(request: NextRequest): Promise<Response> {
     const { buyerId } = await provisionBuyer(body, {
       ipHash: hashIp(request.headers.get("x-forwarded-for")),
     });
+    const buyer = await getBuyerById(getHubServiceClient(), buyerId).catch(() => null);
+    if (buyer) agendarLocalizacao(buyer);
     const res = Response.json({ ok: true }, { status: 201 });
     res.headers.append(
       "Set-Cookie",
