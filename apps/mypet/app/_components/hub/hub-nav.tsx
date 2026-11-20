@@ -1,6 +1,7 @@
 "use client";
 
 import { useCart } from "@mypet/core/components/cart-provider";
+import { useVitrinePath } from "@mypet/core/components/vitrine-path";
 import { clientConfig } from "@/client.config";
 import { cadastroHref, hubDoors, type HubDoorId, type HubViewer } from "./doors";
 import { HUB_STYLES } from "./styles";
@@ -54,13 +55,14 @@ export function HubNav({ viewer, current, inert }: { viewer: HubViewer; current?
 // só o cliente usa carrinho e logout: o cabeçalho do visitante não depende do CartProvider
 function ClienteActions({ displayName }: { displayName: string | null }) {
   const { cart } = useCart();
+  const basePath = useVitrinePath();
   const { logout, loggingOut, error } = useLogout();
   const count = cart.items.reduce((sum, item) => sum + item.qty, 0);
   return (
     <div className="hub-actions">
       <span className="hub-hello">{displayName ? `Olá, ${displayName}` : "Olá!"}</span>
       <a href="/pedidos" className="hub-orders">Meus pedidos</a>
-      <a href="/cotacao">Seu pedido{count > 0 ? ` (${count})` : ""}</a>
+      <a href={`${basePath}/cotacao`}>Seu pedido{count > 0 ? ` (${count})` : ""}</a>
       <button type="button" className="hub-logout" onClick={logout} disabled={loggingOut}>
         Sair
       </button>

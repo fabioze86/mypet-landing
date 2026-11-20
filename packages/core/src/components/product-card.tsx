@@ -9,6 +9,7 @@ import { AddToCartControl } from "./add-to-cart-control";
 import { inStockFromQty } from "../retail";
 import { RetailBuyAction } from "./retail-buy-action";
 import { CartStepperControl } from "./cart-stepper-control";
+import { useVitrinePath } from "./vitrine-path";
 import type { CatalogProduct } from "../catalog-utils";
 
 export function ProductCard({
@@ -21,12 +22,13 @@ export function ProductCard({
   /** "masonry": estilo Pinterest — imagem na proporção natural, sem moldura de card. */
   layout?: "grid" | "masonry";
 }) {
+  const basePath = useVitrinePath();
   const { palette, features, retail } = useClientConfig();
   const style = product.badge ? badgeStyle(product.badge.code, palette) : null;
   const masonry = layout === "masonry";
   return (
     <div className={masonry ? "product-card product-card--masonry" : "product-card"}>
-      <Link href={`/produtos/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+      <Link href={`${basePath}/produtos/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
         <div
           className="product-card-media"
           style={
@@ -138,9 +140,10 @@ export function ProductCard({
 }
 
 function VerOpcoesLink({ id, color }: { id: string; color: string }) {
+  const basePath = useVitrinePath();
   return (
     <Link
-      href={`/produtos/${id}`}
+      href={`${basePath}/produtos/${id}`}
       style={{
         display: "flex",
         alignItems: "center",

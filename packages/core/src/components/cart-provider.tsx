@@ -11,33 +11,42 @@ import {
   type CartItem,
 } from "../cart";
 
-const STORAGE_KEY = "mypet_cart";
+const DEFAULT_KEY = "mypet_cart";
 const CART_EVENT = "mypet_cart_updated";
 const EMPTY_CART: Cart = { items: [] };
 
-let cachedRaw: string | null = null;
-let cachedSnapshot: Cart = EMPTY_CART;
+type CartStore = { read: () => Cart; write: (cart: Cart) => void };
+const stores = new Map<string, CartStore>();
 
-function readCart(): Cart {
-  let raw: string | null;
-  try {
-    raw = localStorage.getItem(STORAGE_KEY);
-  } catch {
-    raw = null;
-  }
-  if (raw === cachedRaw) return cachedSnapshot;
-  cachedRaw = raw;
-  try {
-    cachedSnapshot = raw ? (JSON.parse(raw) as Cart) : EMPTY_CART;
-  } catch {
-    cachedSnapshot = EMPTY_CART;
-  }
-  return cachedSnapshot;
-}
-
-function writeCart(cart: Cart) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-  window.dispatchEvent(new Event(CART_EVENT));
+function storeFor(key: string): CartStore {
+  const existing = stores.get(key);
+  if (existing) return existing;
+  let cachedRaw: string | null = null;
+  let cachedSnapshot: Cart = EMPTY_CART;
+  const store: CartStore = {
+    read() {
+      let raw: string | null;
+      try {
+        raw = localStorage.getItem(key);
+      } catch {
+        raw = null;
+      }
+      if (raw === cachedRaw) return cachedSnapshot;
+      cachedRaw = raw;
+      try {
+        cachedSnapshot = raw ? (JSON.parse(raw) as Cart) : EMPTY_CART;
+      } catch {
+        cachedSnapshot = EMPTY_CART;
+      }
+      return cachedSnapshot;
+    },
+    write(cart) {
+      localStorage.setItem(key, JSON.stringify(cart));
+      window.dispatchEvent(new Event(CART_EVENT));
+    },
+  };
+  stores.set(key, store);
+  return store;
 }
 
 function subscribe(callback: () => void) {
@@ -72,28 +81,29 @@ export function useCart(): CartContextValue {
   return ctx;
 }
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const cart = useSyncExternalStore(subscribe, readCart, getServerSnapshot);
+export function CartProvider({ children, storageKey = DEFAULT_KEY }: { children: React.ReactNode; storageKey?: string }) {
+  const store = storeFor(storageKey);
+  const cart = useSyncExternalStore(subscribe, store.read, getServerSnapshot);
 
   const addItemFn = useCallback((product: Omit<CartItem, "qty">, qty: number) => {
-    writeCart(addItemPure(readCart(), product, qty));
-  }, []);
+    store.write(addItemPure(store.read(), product, qty));
+  }, [store]);
 
   const removeItemFn = useCallback((id: string, campaignId?: string) => {
-    writeCart(removeItemPure(readCart(), id, campaignId));
-  }, []);
+    store.write(removeItemPure(store.read(), id, campaignId));
+  }, [store]);
 
   const updateQtyFn = useCallback((id: string, qty: number, campaignId?: string) => {
-    writeCart(updateQtyPure(readCart(), id, qty, campaignId));
-  }, []);
+    store.write(updateQtyPure(store.read(), id, qty, campaignId));
+  }, [store]);
 
   const setLineFn = useCallback((product: Omit<CartItem, "qty" | "campaignId" | "campaignSlug">, qty: number) => {
-    writeCart(setLinePure(readCart(), product, qty));
-  }, []);
+    store.write(setLinePure(store.read(), product, qty));
+  }, [store]);
 
   const clearFn = useCallback(() => {
-    writeCart(EMPTY_CART);
-  }, []);
+    store.write(EMPTY_CART);
+  }, [store]);
 
   return (
     <CartContext.Provider

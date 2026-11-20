@@ -25,6 +25,7 @@ vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound"
 import { CartProvider } from "./cart-provider";
 import { ClientConfigProvider, type ClientConfig } from "../theme";
 import { ProductCard } from "./product-card";
+import { VitrinePathProvider } from "./vitrine-path";
 import { CategoryListing } from "./category-listing";
 import type { CatalogProduct } from "../catalog-utils";
 
@@ -70,6 +71,13 @@ describe("ProductCard — controle de adicionar", () => {
     render(wrap(createElement(ProductCard, { product: { ...product, hasVariants: true }, addControl: "stepper" })));
     expect(screen.getByRole("link", { name: "Ver opções" })).toHaveAttribute("href", "/produtos/coleira-p");
     expect(screen.queryByRole("button", { name: /Adicionar/ })).toBeNull();
+  });
+});
+
+describe("ProductCard — caminho da vitrine", () => {
+  it("usa o caminho da vitrine no link do produto", () => {
+    render(wrap(createElement(VitrinePathProvider, { basePath: "/fabrica" }, createElement(ProductCard, { product }))));
+    expect(screen.getAllByRole("link")[0].getAttribute("href")).toBe("/fabrica/produtos/coleira-p");
   });
 });
 
