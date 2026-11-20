@@ -81,6 +81,26 @@ describe("priceCart", () => {
     const r = await priceCart(client, "azpetshop", [{ id: ID_A, qty: 2 }]);
     expect(r).toEqual({ ok: false, error: "Só temos 1 unidade(s) de Shampoo em estoque." });
   });
+
+  it("com alsoInChannel, filtra pelo segundo canal com alias", async () => {
+    const { client, calls } = fakeSupabase({ products: [{ data: [productRow(ID_A, "Shampoo", 25, 5)] }] });
+    await priceCart(client, "azpetshop", [{ id: ID_A, qty: 1 }], { alsoInChannel: "ffa_fabrica" });
+    const select = calls.find((c) => c.method === "select");
+    expect(String(select?.args[0])).toContain("fab:product_channel_links!inner(channel)");
+    expect(calls.some((c) => c.method === "eq" && c.args[0] === "fab.channel" && c.args[1] === "ffa_fabrica")).toBe(true);
+  });
+
+  it("com alsoInChannel, item fora do recorte some da resposta e é recusado", async () => {
+    const { client } = fakeSupabase({ products: [{ data: [] }] });
+    const r = await priceCart(client, "azpetshop", [{ id: ID_A, qty: 1 }], { alsoInChannel: "ffa_fabrica" });
+    expect(r).toEqual({ ok: false, error: "Algum item do carrinho não está mais à venda. Revise o carrinho." });
+  });
+
+  it("com checkStock false, aceita item sem estoque", async () => {
+    const { client } = fakeSupabase({ products: [{ data: [productRow(ID_A, "Shampoo", 25, 0)] }] });
+    const r = await priceCart(client, "azpetshop", [{ id: ID_A, qty: 3 }], { checkStock: false });
+    expect(r).toMatchObject({ ok: true, subtotal: 75 });
+  });
 });
 
 describe("quoteCheckout", () => {

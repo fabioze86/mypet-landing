@@ -31,14 +31,19 @@ export async function priceCart(
   supabase: SupabaseClient,
   channel: string,
   lines: CheckoutLine[],
+  options: { alsoInChannel?: string; checkStock?: boolean } = {},
 ): Promise<{ ok: true; lines: PricedLine[]; subtotal: number } | { ok: false; error: string }> {
-  const { data, error } = await supabase
+  const checkStock = options.checkStock !== false;
+  const alsoEmbed = options.alsoInChannel ? ", fab:product_channel_links!inner(channel)" : "";
+  let query = supabase
     .from("products")
-    .select("id, name, stock_qty, product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)")
+    .select(`id, name, stock_qty, product_channel_prices(channel, sale_price, sale_updated_at), product_channel_links!inner(channel)${alsoEmbed}`)
     .in("id", lines.map((l) => l.id))
     .eq("status", "active")
     .eq("product_channel_links.channel", channel)
     .eq("product_channel_prices.channel", channel);
+  if (options.alsoInChannel) query = query.eq("fab.channel", options.alsoInChannel);
+  const { data, error } = await query;
   if (error || !data) {
     console.error("[retail-checkout] erro ao buscar preços:", error?.message);
     return { ok: false, error: ERRO_PEDIDO };
@@ -52,10 +57,10 @@ export async function priceCart(
     if (!row || !hasSellablePrice(price)) {
       return { ok: false, error: "Algum item do carrinho não está mais à venda. Revise o carrinho." };
     }
-    if (inStockFromQty(row.stock_qty) === false) {
+    if (checkStock && inStockFromQty(row.stock_qty) === false) {
       return { ok: false, error: `${row.name} está esgotado. Remova do carrinho para continuar.` };
     }
-    if (row.stock_qty !== null && line.qty > row.stock_qty) {
+    if (checkStock && row.stock_qty !== null && line.qty > row.stock_qty) {
       return { ok: false, error: `Só temos ${row.stock_qty} unidade(s) de ${row.name} em estoque.` };
     }
     priced.push({ id: line.id, name: row.name, qty: line.qty, unitPrice: price });

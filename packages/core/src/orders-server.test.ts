@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fakeSupabase } from "./test-utils/fake-supabase";
 import { createOrder, fetchRecentOrdersByBuyer, getOrdersByBuyer } from "./orders-server";
 import type { CartItem } from "./cart";
 
@@ -34,7 +35,7 @@ describe("createOrder", () => {
     expect(supabase.from).toHaveBeenCalledWith("orders");
     expect(supabase.from).toHaveBeenCalledWith("order_items");
     expect(orderItemsInsert).toHaveBeenCalledWith([
-      { order_id: "o1", product_id: "p1", product_name_snapshot: "Ração Premium 15kg", qty: 2 },
+      { order_id: "o1", product_id: "p1", product_name_snapshot: "Ração Premium 15kg", qty: 2, unit_price: null },
     ]);
     expect(result).toEqual({ orderId: "o1", error: null });
   });
@@ -99,7 +100,7 @@ describe("createOrder", () => {
     expect(retried).toEqual({ buyer_id: "b1", channel: "mypetbrasil", status: "pendente" });
     expect("agent_conversation_id" in retried).toBe(false);
     expect(orderItemsInsert).toHaveBeenCalledWith([
-      { order_id: "o2", product_id: "p1", product_name_snapshot: "Ração Premium 15kg", qty: 2 },
+      { order_id: "o2", product_id: "p1", product_name_snapshot: "Ração Premium 15kg", qty: 2, unit_price: null },
     ]);
   });
 
@@ -152,6 +153,43 @@ describe("createOrder", () => {
     const result = await createOrder(supabase, { buyerId: "b1", channel: "mypetbrasil", items });
     expect(result.orderId).toBeNull();
     expect(result.error).toBe("Não foi possível registrar seu pedido. Tente novamente em instantes.");
+  });
+});
+
+describe("createOrder com vitrine e frete", () => {
+  const item = { id: "p1", name: "Ração", sku: "R1", brand: null, img: "", qty: 2, unitPrice: 10.5 };
+
+  it("grava vitrine, modalidade, valores e unit_price", async () => {
+    const { client, calls } = fakeSupabase({ orders: [{ data: { id: "o1" } }], order_items: [{}] });
+    const r = await createOrder(client, {
+      buyerId: "b1",
+      channel: "mypetbrasil",
+      items: [item],
+      vitrine: "fabrica",
+      shipping: { mode: "normal", subtotal: 21, shippingPrice: 19.9, total: 40.9 },
+    });
+    expect(r).toEqual({ orderId: "o1", error: null });
+    const orderInsert = calls.find((c) => c.table === "orders" && c.method === "insert");
+    expect(orderInsert?.args[0]).toMatchObject({
+      vitrine: "fabrica",
+      shipping_mode: "normal",
+      subtotal: 21,
+      shipping_price: 19.9,
+      total: 40.9,
+    });
+    const itemsInsert = calls.find((c) => c.table === "order_items" && c.method === "insert");
+    expect(itemsInsert?.args[0]).toEqual([
+      { order_id: "o1", product_id: "p1", product_name_snapshot: "Ração", qty: 2, unit_price: 10.5 },
+    ]);
+  });
+
+  it("sem vitrine e sem frete, não manda as colunas novas", async () => {
+    const { client, calls } = fakeSupabase({ orders: [{ data: { id: "o1" } }], order_items: [{}] });
+    await createOrder(client, { buyerId: "b1", channel: "mypetbrasil", items: [{ ...item, unitPrice: undefined }] });
+    const orderInsert = calls.find((c) => c.table === "orders" && c.method === "insert");
+    expect(orderInsert?.args[0]).toEqual({ buyer_id: "b1", channel: "mypetbrasil", status: "pendente" });
+    const itemsInsert = calls.find((c) => c.table === "order_items" && c.method === "insert");
+    expect((itemsInsert?.args[0] as { unit_price: unknown }[])[0].unit_price).toBeNull();
   });
 });
 

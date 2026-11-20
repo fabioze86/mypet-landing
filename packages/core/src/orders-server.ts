@@ -6,13 +6,27 @@ const MISSING_COLUMN_CODES = new Set(["PGRST204", "42703"]);
 
 export async function createOrder(
   supabase: SupabaseClient,
-  input: { buyerId: string; channel: Channel; items: CartItem[]; agentConversationId?: string | null }
+  input: {
+    buyerId: string;
+    channel: Channel;
+    items: CartItem[];
+    agentConversationId?: string | null;
+    vitrine?: "completo" | "fabrica";
+    shipping?: { mode: "normal" | "prioritaria" | "a_combinar"; subtotal: number; shippingPrice: number | null; total: number };
+  }
 ): Promise<{ orderId: string | null; error: string | null }> {
   if (input.items.length === 0) {
     return { orderId: null, error: "O carrinho está vazio." };
   }
 
-  const baseRow = { buyer_id: input.buyerId, channel: input.channel, status: "pendente" };
+  const baseRow: Record<string, unknown> = { buyer_id: input.buyerId, channel: input.channel, status: "pendente" };
+  if (input.vitrine) baseRow.vitrine = input.vitrine;
+  if (input.shipping) {
+    baseRow.shipping_mode = input.shipping.mode;
+    baseRow.subtotal = input.shipping.subtotal;
+    baseRow.shipping_price = input.shipping.shippingPrice;
+    baseRow.total = input.shipping.total;
+  }
   const insertOrder = (row: Record<string, unknown>) => supabase.from("orders").insert(row).select("id").single();
 
   // só manda a coluna quando há conversa
@@ -43,6 +57,7 @@ export async function createOrder(
       product_id: item.id,
       product_name_snapshot: item.name,
       qty: item.qty,
+      unit_price: typeof item.unitPrice === "number" ? item.unitPrice : null,
     }))
   );
 
