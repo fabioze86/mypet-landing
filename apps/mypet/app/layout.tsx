@@ -5,6 +5,7 @@ import { ClientConfigProvider } from "@mypet/core/theme";
 import { CartProvider } from "@mypet/core/components/cart-provider";
 import { organizationJsonLd, jsonLdScript } from "@mypet/core/seo";
 import { clientConfig } from "@/client.config";
+import { GoogleAnalytics } from "./google-analytics";
 import "./globals.css";
 
 const geist = Geist({
@@ -45,6 +46,7 @@ export default function RootLayout({
           <CartProvider>{children}</CartProvider>
         </ClientConfigProvider>
         <Analytics />
+        <GoogleAnalytics />
       </body>
     </html>
   );

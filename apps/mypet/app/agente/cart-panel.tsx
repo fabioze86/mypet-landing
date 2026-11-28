@@ -5,6 +5,7 @@ import { formatBRL } from "@mypet/core/catalog-utils";
 import { useCart } from "@mypet/core/components/cart-provider";
 import { finalizeQuote } from "../cotacao/actions";
 import { buildOrderWhatsAppUrl, hasWhatsAppNumber } from "../cotacao/whatsapp-order";
+import { trackPedidoEnviado } from "@/lib/analytics";
 
 const SEND_FAILED = "Não foi possível enviar seu pedido agora. Tente novamente em instantes.";
 const NO_WHATSAPP = "Não foi possível abrir o WhatsApp agora. Tente novamente mais tarde.";
@@ -64,6 +65,7 @@ export function CartPanel({
       return;
     }
     const url = buildOrderWhatsAppUrl(result.buyer, result.pedido);
+    trackPedidoEnviado(result.pedido, "agente");
     if (url) window.open(url, "_blank");
     clear();
     setState({ kind: "sent", whatsappUrl: url });

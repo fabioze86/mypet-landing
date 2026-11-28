@@ -11,6 +11,7 @@ import type { Vitrine } from "@/lib/vitrines";
 import { FreteResumo } from "../_components/frete/frete-resumo";
 import { finalizeQuote } from "./actions";
 import { buildOrderWhatsAppUrl, hasWhatsAppNumber } from "./whatsapp-order";
+import { trackPedidoEnviado } from "@/lib/analytics";
 
 export function CotacaoContent({ palette: PALETTE, vitrine, zona }: { palette: Palette; vitrine: Vitrine; zona: Zona }) {
   const { cart, removeItem, updateQty, clear } = useCart();
@@ -109,6 +110,7 @@ export function CotacaoContent({ palette: PALETTE, vitrine, zona }: { palette: P
     }
 
     const url = buildOrderWhatsAppUrl(result.buyer, result.pedido);
+    trackPedidoEnviado(result.pedido, "cotacao");
     if (url) window.open(url, "_blank");
 
     clear();
