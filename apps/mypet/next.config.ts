@@ -6,10 +6,13 @@ const nextConfig: NextConfig = {
   // Catálogo digital: HTML estático gerado em public/catalogo/index.html
   // (gerador em MarketingOS/tmp/catalogo-digital). Deixa /catalogo abrir direto.
   // Show Room: landing estática e pública em public/show-room/index.html.
+  // Jornal de ofertas: edição vigente, pública, em public/jornal-ofertas/index.html
+  // (publicada por MarketingOS/jornal-ofertas/publicar.py).
   async rewrites() {
     return [
       { source: "/catalogo", destination: "/catalogo/index.html" },
       { source: "/show-room", destination: "/show-room/index.html" },
+      { source: "/jornal-ofertas", destination: "/jornal-ofertas/index.html" },
     ];
   },
   images: {

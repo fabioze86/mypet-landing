@@ -39,6 +39,13 @@ describe("proxy", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
+  it("o jornal de ofertas é público", async () => {
+    for (const path of ["/jornal-ofertas", "/jornal-ofertas/index.html"]) {
+      const res = await proxy(fakeRequest(`https://app.test${path}`));
+      expect(res.headers.get("location")).toBeNull();
+    }
+  });
+
   it("não protege rotas parecidas como /catalogos", async () => {
     const res = await proxy(fakeRequest("https://app.test/catalogos"));
     expect(res.headers.get("location")).toBeNull();
